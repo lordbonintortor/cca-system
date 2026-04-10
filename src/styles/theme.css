@@ -1,0 +1,15 @@
+:root {
+  --primary-dark: #1a1a2e;
+  --secondary-dark: #16213e;
+  --accent-red: #e94560;
+  --gold-accent: #ffd700;
+  --dark-accent: #000;
+}
+
+.page-content h1 {
+  color: var(--accent-red);
+}
+
+.page-content p {
+  color: #555;
+}
