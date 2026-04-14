@@ -52,6 +52,9 @@ function Login() {
           <button type="submit">Sign In</button>
         </form>
       </div>
+      <div className="copyright">
+        © 2026 Calinan Cockpit Arena. All rights reserved.
+      </div>
     </div>
   )
 }
