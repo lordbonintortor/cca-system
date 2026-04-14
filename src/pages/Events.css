@@ -14,6 +14,10 @@
   flex: 1;
   border: none !important;
   border-bottom: none !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .page-content h1 {
@@ -28,14 +32,62 @@
 .page-content p {
   font-size: 1.1rem;
   color: #888;
-  margin: 0;
+  margin: 0 0 1.5rem 0;
   font-weight: 400;
   letter-spacing: 0.3px;
 }
 
+.search-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.search-input {
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 290px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fff;
+  color: #333;
+}
+
+.search-input:focus {
+  border-color: var(--accent-red);
+  box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-btn {
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  background-color: var(--accent-red);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.search-btn:hover {
+  background-color: #d63047;
+  transform: translateY(-2px);
+}
+
+.search-btn:active {
+  transform: translateY(0);
+}
+
 .page-copyright {
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.6rem;
   color: #999;
   padding: 10rem 1rem 1rem 1rem;
   margin-top: auto;
