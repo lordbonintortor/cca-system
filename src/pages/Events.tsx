@@ -1,3 +1,5 @@
+import './Events.css'
+
 function Events() {
   return (
     <div className="page-content">
