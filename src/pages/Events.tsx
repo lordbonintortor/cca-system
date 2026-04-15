@@ -15,11 +15,22 @@ const EVENTS_DATA: Event[] = [
   { id: 3, name: 'Summer Grand Event', type: 'Premium', derbyInfo: 'All Divisions', date: '2026-06-10' },
   { id: 4, name: 'Rookie Training Match', type: 'Training', derbyInfo: 'Beginners Only', date: '2026-05-25' },
   { id: 5, name: 'Inter-Region Challenge', type: 'Championship', derbyInfo: 'Regional Qualifiers', date: '2026-06-15' },
+  { id: 6, name: 'Youth Division Tournament', type: 'Regular', derbyInfo: 'Youth Only', date: '2026-07-02' },
+  { id: 7, name: 'National Championships', type: 'Championship', derbyInfo: 'All Divisions', date: '2026-07-10' },
+  { id: 8, name: 'Exhibition Match', type: 'Premium', derbyInfo: 'Featured Fighters', date: '2026-07-15' },
+  { id: 9, name: 'Regional Qualifier Round 1', type: 'Championship', derbyInfo: 'Regional Divisions', date: '2026-07-20' },
+  { id: 10, name: 'Friendly Match Series', type: 'Regular', derbyInfo: 'Mixed Divisions', date: '2026-07-25' },
+  { id: 11, name: 'Fall Classic Derby', type: 'Premium', derbyInfo: 'Senior Division', date: '2026-08-05' },
+  { id: 12, name: 'State Championship Finals', type: 'Championship', derbyInfo: 'State Qualifiers', date: '2026-08-15' },
+  { id: 13, name: 'Beginner Fundamentals', type: 'Training', derbyInfo: 'New Players', date: '2026-08-20' },
+  { id: 14, name: 'Inter-Club Challenge', type: 'Regular', derbyInfo: 'Club Representatives', date: '2026-08-28' },
+  { id: 15, name: 'Season Finale Bash', type: 'Premium', derbyInfo: 'All Divisions', date: '2026-09-10' },
 ]
 
 function Events() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 5
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -34,6 +45,14 @@ function Events() {
       event.derbyInfo.toLowerCase().includes(searchQuery.toLowerCase())
     )
   }, [searchQuery])
+
+  const paginatedEvents = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage
+    const endIdx = startIdx + itemsPerPage
+    return filteredEvents.slice(startIdx, endIdx)
+  }, [filteredEvents, currentPage])
+
+  const totalPages = Math.ceil(filteredEvents.length / itemsPerPage)
 
   return (
     <div className="page-content">
@@ -64,7 +83,7 @@ function Events() {
               </tr>
             </thead>
             <tbody>
-              {filteredEvents.map((event) => (
+              {paginatedEvents.map((event) => (
                 <tr key={event.id}>
                   <td>{event.name}</td>
                   <td>{event.type}</td>
@@ -75,11 +94,27 @@ function Events() {
             </tbody>
           </table>
           <div className="pagination">
-            <button className="pagination-btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
               Previous
             </button>
-            <span className="page-info">{currentPage}</span>
-            <button className="pagination-btn" onClick={() => setCurrentPage(p => p + 1)}>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`page-number-btn ${currentPage === page ? 'active' : ''}`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              className="pagination-btn"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
               Next
             </button>
           </div>

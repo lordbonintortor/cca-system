@@ -31,9 +31,10 @@
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  border: 1px solid #e0e0e0;
+  border: 2px solid #ddd;
   border-radius: 6px;
   overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .events-table thead {
@@ -103,6 +104,32 @@
   text-align: center;
 }
 
+.page-number-btn {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.page-number-btn:hover {
+  border-color: var(--accent-red);
+  background-color: #fff;
+}
+
+.page-number-btn.active {
+  background-color: var(--accent-red);
+  color: white;
+  border-color: var(--accent-red);
+  font-weight: 600;
+}
+
 .page-content h1 {
   font-size: 3rem;
   font-weight: 800;
@@ -126,12 +153,12 @@
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: -0.50rem;
 }
 
 .btn-add-event {
-  padding: 0.7rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
   background-color: var(--accent-red);
   color: white;
   border: none;
@@ -141,6 +168,7 @@
   transition: background-color 0.2s, transform 0.2s;
   position: relative;
   right: 75px;
+  white-space: nowrap;
 }
 
 .btn-add-event:hover {
@@ -157,11 +185,11 @@
 }
 
 .search-input {
-  padding: 0.7rem 1rem;
-  font-size: 1rem;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
   border: 1px solid #ddd;
   border-radius: 6px;
-  width: 290px;
+  width: 220px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   background-color: #fff;
@@ -178,8 +206,8 @@
 }
 
 .search-btn {
-  padding: 0.7rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
   background-color: var(--accent-red);
   color: white;
   border: none;
@@ -248,29 +276,6 @@
   font-size: 2.5rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-}
-
-.btn-add-event {
-  padding: 0.8rem 2rem;
-  background: #e94560;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(233, 69, 96, 0.3);
-}
-
-.btn-add-event:hover {
-  background: #d13853;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
-}
-
-.btn-add-event:active {
-  transform: translateY(0);
 }
 
 /* Body Section */
