@@ -40,15 +40,18 @@ function Events() {
       <div className="page-main">
         <h1>Events</h1>
         <p>Manage your events here</p>
-        <div className="search-container">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search events"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button className="search-btn">Search</button>
+        <div className="search-action-row">
+          <div className="search-container">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search events"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button className="search-btn">Search</button>
+          </div>
+          <button className="btn-add-event">+ Add New Event</button>
         </div>
         <div className="events-table-wrapper">
           <table className="events-table">
