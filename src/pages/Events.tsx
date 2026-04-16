@@ -32,6 +32,8 @@ function Events() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [eventName, setEventName] = useState('')
+  const [eventType, setEventType] = useState('Hack Fight')
+  const [hackFightType, setHackFightType] = useState('Stag')
   const itemsPerPage = 5
 
   const formatDate = (dateString: string) => {
@@ -46,6 +48,8 @@ function Events() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setEventName('')
+    setEventType('Hack Fight')
+    setHackFightType('Stag')
   }
 
   const filteredEvents = useMemo(() => {
@@ -141,17 +145,45 @@ function Events() {
             </div>
             
             <div className="modal-body">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="eventName">Event Name <span className="required-asterisk">*</span></label>
+                  <input
+                    id="eventName"
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter event name"
+                    value={eventName}
+                    onChange={(e) => setEventName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="eventType">Event Type</label>
+                  <input
+                    id="eventType"
+                    type="text"
+                    className="form-input"
+                    value={eventType}
+                    disabled
+                    readOnly
+                  />
+                </div>
+              </div>
               <div className="form-group">
-                <label htmlFor="eventName">Event Name <span className="required-asterisk">*</span></label>
-                <input
-                  id="eventName"
-                  type="text"
+                <label htmlFor="hackFightType">Type of Hack Fight <span className="required-asterisk">*</span></label>
+                <select
+                  id="hackFightType"
                   className="form-input"
-                  placeholder="Enter event name"
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
-                  required
-                />
+                  value={hackFightType}
+                  onChange={(e) => setHackFightType(e.target.value)}
+                >
+                  <option value="Stag">Stag</option>
+                  <option value="Bullstag">Bullstag</option>
+                  <option value="Cock">Cock</option>
+                  <option value="Stag / Bullstag">Stag / Bullstag</option>
+                  <option value="Bullstag / Cock">Bullstag / Cock</option>
+                </select>
               </div>
             </div>
 
