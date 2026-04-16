@@ -34,6 +34,10 @@ function Events() {
   const [eventName, setEventName] = useState('')
   const [eventType, setEventType] = useState('Hack Fight')
   const [hackFightType, setHackFightType] = useState('Stag')
+  const [weightRangeMin, setWeightRangeMin] = useState('')
+  const [weightRangeMax, setWeightRangeMax] = useState('')
+  const [eliminationType, setEliminationType] = useState<'yes' | 'no'>('yes')
+  const [winnerTakesAll, setWinnerTakesAll] = useState<'yes' | 'no'>('yes')
   const itemsPerPage = 5
 
   const formatDate = (dateString: string) => {
@@ -50,6 +54,10 @@ function Events() {
     setEventName('')
     setEventType('Hack Fight')
     setHackFightType('Stag')
+    setWeightRangeMin('')
+    setWeightRangeMax('')
+    setEliminationType('yes')
+    setWinnerTakesAll('yes')
   }
 
   const filteredEvents = useMemo(() => {
@@ -93,7 +101,7 @@ function Events() {
               <tr>
                 <th>Event Name</th>
                 <th>Event Type</th>
-                <th>Derby Information</th>
+                <th>Hack Fight Info</th>
                 <th>Event Date</th>
               </tr>
             </thead>
@@ -184,6 +192,74 @@ function Events() {
                   <option value="Stag / Bullstag">Stag / Bullstag</option>
                   <option value="Bullstag / Cock">Bullstag / Cock</option>
                 </select>
+              </div>
+              <div className="form-group">
+                <label>Weight Range: <span className="required-asterisk">*</span></label>
+                <div className="weight-range-container">
+                  <input
+                    type="number"
+                    className="form-input form-input-weight"
+                    placeholder=""
+                    value={weightRangeMin}
+                    onChange={(e) => setWeightRangeMin(e.target.value)}
+                  />
+                  <span className="weight-separator">-</span>
+                  <input
+                    type="number"
+                    className="form-input form-input-weight"
+                    placeholder=""
+                    value={weightRangeMax}
+                    onChange={(e) => setWeightRangeMax(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label className="radio-group-label">Elimination Type <span className="required-asterisk">*</span></label>
+                  <div className="radio-group">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="eliminationType"
+                        checked={eliminationType === 'yes'}
+                        onChange={() => setEliminationType('yes')}
+                      />
+                      <span>Yes</span>
+                    </label>
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="eliminationType"
+                        checked={eliminationType === 'no'}
+                        onChange={() => setEliminationType('no')}
+                      />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="radio-group-label">Winner Takes All <span className="required-asterisk">*</span></label>
+                  <div className="radio-group">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="winnerTakesAll"
+                        checked={winnerTakesAll === 'yes'}
+                        onChange={() => setWinnerTakesAll('yes')}
+                      />
+                      <span>Yes</span>
+                    </label>
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="winnerTakesAll"
+                        checked={winnerTakesAll === 'no'}
+                        onChange={() => setWinnerTakesAll('no')}
+                      />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
 
