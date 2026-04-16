@@ -91,6 +91,50 @@
   filter: brightness(0) invert(1);
 }
 
+.nav-item-active {
+  background: #e94560 !important;
+  color: white !important;
+}
+
+.nav-item-active .nav-icon {
+  opacity: 1 !important;
+  filter: brightness(0) invert(1) !important;
+}
+
+.nav-item-with-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.nav-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 12px;
+  margin-top: 8px;
+  border-left: 2px solid #ddd;
+  padding-top: 8px;
+}
+
+.nav-submenu-item {
+  background: #fff5f5;
+  border: 1px solid #e0d0d0;
+  color: #666;
+  padding: 10px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.nav-submenu-item:hover {
+  background: #ffe8e8;
+  border-color: #d9a5a5;
+  color: #333;
+}
+
 .sidebar-footer {
   padding-top: 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);

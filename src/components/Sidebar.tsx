@@ -1,15 +1,25 @@
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useState } from 'react'
 import './Sidebar.css'
 
 function Sidebar() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, logout } = useAuth()
+  const [isEventsExpanded, setIsEventsExpanded] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/')
   }
+
+  const handleEventsClick = () => {
+    setIsEventsExpanded(!isEventsExpanded)
+    navigate('/events')
+  }
+
+  const isActive = (path: string) => location.pathname === path
 
   return (
     <div className="layout">
@@ -23,21 +33,48 @@ function Sidebar() {
         <nav className="sidebar-nav">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="nav-item"
+            className={`nav-item ${isActive('/dashboard') ? 'nav-item-active' : ''}`}
           >
             <img src="/dashboard.png" alt="Dashboard" className="nav-icon" />
             Dashboard
           </button>
-          <button 
-            onClick={() => navigate('/events')}
-            className="nav-item"
-          >
-            <img src="/event.png" alt="Events" className="nav-icon" />
-            Events
-          </button>
+          <div className="nav-item-with-submenu">
+            <button 
+              onClick={handleEventsClick}
+              className={`nav-item ${isActive('/events') ? 'nav-item-active' : ''}`}
+            >
+              <img src="/event.png" alt="Events" className="nav-icon" />
+              Events
+            </button>
+            {isEventsExpanded && (
+              <div className="nav-submenu">
+                <button className="nav-submenu-item">
+                  Registration
+                </button>
+                <button className="nav-submenu-item">
+                  Pairing
+                </button>
+                <button className="nav-submenu-item">
+                  Tagging
+                </button>
+                <button className="nav-submenu-item">
+                  Releasing
+                </button>
+                <button className="nav-submenu-item">
+                  Reports
+                </button>
+                <button className="nav-submenu-item">
+                  Results
+                </button>
+                <button className="nav-submenu-item">
+                  Raffle
+                </button>
+              </div>
+            )}
+          </div>
           <button 
             onClick={() => navigate('/settings')}
-            className="nav-item"
+            className={`nav-item ${isActive('/settings') ? 'nav-item-active' : ''}`}
           >
             <img src="/setting.png" alt="Settings" className="nav-icon" />
             Settings
