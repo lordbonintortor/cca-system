@@ -30,11 +30,22 @@ const EVENTS_DATA: Event[] = [
 function Events() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [eventName, setEventName] = useState('')
   const itemsPerPage = 5
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  }
+
+  const handleAddEvent = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setEventName('')
   }
 
   const filteredEvents = useMemo(() => {
@@ -70,7 +81,7 @@ function Events() {
             />
             <button className="search-btn">Search</button>
           </div>
-          <button className="btn-add-event">+ Add New Event</button>
+          <button className="btn-add-event" onClick={handleAddEvent}>+ Add New Event</button>
         </div>
         <div className="events-table-wrapper">
           <table className="events-table">
@@ -120,6 +131,38 @@ function Events() {
           </div>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add New Event</h2>
+              <button className="modal-close" onClick={handleCloseModal}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="eventName">Event Name <span className="required-asterisk">*</span></label>
+                <input
+                  id="eventName"
+                  type="text"
+                  className="form-input"
+                  placeholder="Enter event name"
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={handleCloseModal}>Cancel</button>
+              <button className="btn-add">Add</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page-copyright">
         © 2026 Calinan Cockpit Arena. All rights reserved.
       </div>
