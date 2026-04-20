@@ -49,7 +49,6 @@
   color: #333;
   font-size: 0.95rem;
 }
-}
 
 .events-table tbody tr {
   border-bottom: 1px solid #e8e8e8;
@@ -65,6 +64,23 @@
   color: #555;
   font-size: 0.95rem;
   text-align: left;
+}
+
+.btn-add-event {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  background-color: var(--accent-red);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-add-event:hover {
+  background-color: #d63047;
+  transform: translateY(-2px);
 }
 
 .pagination {
@@ -382,11 +398,34 @@
   padding: 1rem;
   border-bottom: 1px solid #e8e8e8;
   background: #f9f9f9;
+  position: relative;
 }
 
 .modal-header h2 {
   margin: 0 0 0.5rem 0;
   font-size: 1.2rem;
+  color: var(--accent-red);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
   color: var(--accent-red);
 }
 
@@ -407,6 +446,12 @@
   flex-direction: column;
   gap: 0.3rem;
   margin-bottom: 0.8rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .form-group label {
@@ -487,4 +532,13 @@
   .modal-content {
     max-width: 90%;
   }
+}
+
+.page-copyright {
+  text-align: center;
+  padding: 1.5rem;
+  color: #999;
+  font-size: 0.85rem;
+  border-top: 1px solid #e8e8e8;
+  margin-top: auto;
 }

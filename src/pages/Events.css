@@ -168,18 +168,20 @@
 }
 
 .btn-add-event {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.05rem 0.1rem;
+  font-size: 0.5rem;
+  line-height: 1;
   background-color: var(--accent-red);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 500;
   transition: background-color 0.2s, transform 0.2s;
   position: relative;
   right: 75px;
   white-space: nowrap;
+  height: fit-content;
 }
 
 .btn-add-event:hover {
