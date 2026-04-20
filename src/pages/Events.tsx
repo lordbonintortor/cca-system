@@ -27,8 +27,6 @@ const INITIAL_EVENTS: Event[] = [
   { id: 15, name: 'Season Finale Bash', type: 'Premium', derbyInfo: 'All Divisions', date: '2026-09-10' },
 ]
 
-const EVENTS_DATA: Event[] = INITIAL_EVENTS
-
 function Events() {
   const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS)
   const [searchQuery, setSearchQuery] = useState('')
@@ -91,7 +89,7 @@ function Events() {
       event.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.derbyInfo.toLowerCase().includes(searchQuery.toLowerCase())
     )
-  }, [searchQuery])
+  }, [searchQuery, events])
 
   const paginatedEvents = useMemo(() => {
     const startIdx = (currentPage - 1) * itemsPerPage
