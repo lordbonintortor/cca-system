@@ -66,6 +66,17 @@
   text-align: left;
 }
 
+.event-name-editable {
+  cursor: pointer;
+  color: #000;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.event-name-editable:hover {
+  opacity: 0.7;
+}
+
 .pagination {
   margin-top: 1.5rem;
   display: flex;

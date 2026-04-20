@@ -11,8 +11,20 @@ interface Event {
 
 const INITIAL_EVENTS: Event[] = [
   { id: 1, name: 'Monday Night Match', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (45-50 lbs)', date: '2026-04-20' },
-  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-21' },
-  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-22' },
+  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-19' },
+  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-18' },
+  { id: 4, name: 'Spring Classic Derby', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 4 per Entry (50-60 lbs)', date: '2026-04-17' },
+  { id: 5, name: 'Inter-Club Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 2 per Entry (60-75 lbs)', date: '2026-04-16' },
+  { id: 6, name: 'Regional Qualifier', type: 'Hack Fight', derbyInfo: 'Cock - 3 per Entry (75-90 lbs)', date: '2026-04-15' },
+  { id: 7, name: 'Friendly Match Series', type: 'Hack Fight', derbyInfo: 'Stag - 3 per Entry (40-55 lbs)', date: '2026-04-14' },
+  { id: 8, name: 'Championship Round', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 2 per Entry (65-80 lbs)', date: '2026-04-13' },
+  { id: 9, name: 'Rising Stars Tournament', type: 'Hack Fight', derbyInfo: 'Stag - 4 per Entry (35-50 lbs)', date: '2026-04-12' },
+  { id: 10, name: 'Elite Division Match', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (80-95 lbs)', date: '2026-04-11' },
+  { id: 11, name: 'April Opener', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 3 per Entry (48-62 lbs)', date: '2026-04-10' },
+  { id: 12, name: 'Grand Festival Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (58-72 lbs)', date: '2026-04-09' },
+  { id: 13, name: 'Provincial Challenge', type: 'Hack Fight', derbyInfo: 'Cock - 4 per Entry (72-88 lbs)', date: '2026-04-08' },
+  { id: 14, name: 'Spring Warmup Series', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (42-58 lbs)', date: '2026-04-07' },
+  { id: 15, name: 'National Preliminaries', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 3 per Entry (60-78 lbs)', date: '2026-04-06' },
 ]
 
 function Events() {
@@ -20,6 +32,8 @@ function Events() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingEventId, setEditingEventId] = useState<number | null>(null)
   const [eventName, setEventName] = useState('')
   const [eventType, setEventType] = useState('Hack Fight')
   const [hackFightType, setHackFightType] = useState('Stag')
@@ -43,6 +57,8 @@ function Events() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
+    setIsEditMode(false)
+    setEditingEventId(null)
     setEventName('')
     setEventType('Hack Fight')
     setHackFightType('Stag')
@@ -52,21 +68,49 @@ function Events() {
     setEventDate('')
   }
 
+  const handleEditEvent = (event: Event) => {
+    const derbyInfoParts = event.derbyInfo.match(/(.*?) - (\d+) per Entry \((\d+)-(\d+) lbs\)/)
+    if (derbyInfoParts) {
+      setHackFightType(derbyInfoParts[1])
+      setNoPerEntry(derbyInfoParts[2])
+      setWeightRangeMin(derbyInfoParts[3])
+      setWeightRangeMax(derbyInfoParts[4])
+    }
+    setEventName(event.name)
+    setEventDate(event.date)
+    setEditingEventId(event.id)
+    setIsEditMode(true)
+    setIsModalOpen(true)
+  }
+
   const handleSaveEvent = () => {
     if (!eventName.trim() || !weightRangeMin || !weightRangeMax || !noPerEntry || !eventDate) {
       alert('Please fill in all required fields')
       return
     }
 
-    const newEvent: Event = {
-      id: Math.max(...events.map(e => e.id), 0) + 1,
-      name: eventName,
-      type: eventType,
-      derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
-      date: eventDate,
+    if (isEditMode && editingEventId) {
+      const updatedEvents = events.map((e) =>
+        e.id === editingEventId
+          ? {
+              ...e,
+              name: eventName,
+              derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
+              date: eventDate,
+            }
+          : e
+      )
+      setEvents(updatedEvents)
+    } else {
+      const newEvent: Event = {
+        id: Math.max(...events.map(e => e.id), 0) + 1,
+        name: eventName,
+        type: eventType,
+        derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
+        date: eventDate,
+      }
+      setEvents([newEvent, ...events])
     }
-
-    setEvents([newEvent, ...events])
     handleCloseModal()
   }
 
@@ -118,7 +162,14 @@ function Events() {
             <tbody>
               {paginatedEvents.map((event) => (
                 <tr key={event.id}>
-                  <td>{event.name}</td>
+                  <td>
+                    <span
+                      className="event-name-editable"
+                      onClick={() => handleEditEvent(event)}
+                    >
+                      {event.name}
+                    </span>
+                  </td>
                   <td>{event.type}</td>
                   <td>{event.derbyInfo}</td>
                   <td>{formatDate(event.date)}</td>
@@ -158,7 +209,7 @@ function Events() {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Add New Event</h2>
+              <h2>{isEditMode ? 'Edit Event' : 'Add New Event'}</h2>
               <button className="modal-close" onClick={handleCloseModal}>×</button>
             </div>
             
@@ -250,7 +301,7 @@ function Events() {
 
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleCloseModal}>Cancel</button>
-              <button className="btn-add" onClick={handleSaveEvent}>Add</button>
+              <button className="btn-add" onClick={handleSaveEvent}>{isEditMode ? 'Update' : 'Add'}</button>
             </div>
           </div>
         </div>
