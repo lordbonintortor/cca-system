@@ -136,6 +136,13 @@
   color: #333;
 }
 
+.nav-submenu-item-active {
+  background: #e94560;
+  border-color: #d4344a;
+  color: white;
+  font-weight: 500;
+}
+
 .sidebar-footer {
   margin-top: auto;
   padding-top: 20px;

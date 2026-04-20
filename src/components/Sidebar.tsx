@@ -9,6 +9,10 @@ function Sidebar() {
   const { user, logout } = useAuth()
   const [isEventsExpanded, setIsEventsExpanded] = useState(false)
 
+  const handleRegistrationClick = () => {
+    navigate('/registration')
+  }
+
   const handleLogout = () => {
     logout()
     navigate('/')
@@ -48,25 +52,46 @@ function Sidebar() {
             </button>
             {isEventsExpanded && (
               <div className="nav-submenu">
-                <button className="nav-submenu-item">
+                <button 
+                  onClick={handleRegistrationClick}
+                  className={`nav-submenu-item ${isActive('/registration') ? 'nav-submenu-item-active' : ''}`}
+                >
                   Registration
                 </button>
-                <button className="nav-submenu-item">
+                <button 
+                  onClick={() => navigate('/pairing')}
+                  className={`nav-submenu-item ${isActive('/pairing') ? 'nav-submenu-item-active' : ''}`}
+                >
                   Pairing
                 </button>
-                <button className="nav-submenu-item">
+                <button 
+                  onClick={() => navigate('/tagging')}
+                  className={`nav-submenu-item ${isActive('/tagging') ? 'nav-submenu-item-active' : ''}`}
+                >
                   Tagging
                 </button>
-                <button className="nav-submenu-item">
+                <button 
+                  onClick={() => navigate('/releasing')}
+                  className={`nav-submenu-item ${isActive('/releasing') ? 'nav-submenu-item-active' : ''}`}
+                >
                   Releasing
                 </button>
-                <button className="nav-submenu-item">
+                <button 
+                  onClick={() => navigate('/reports')}
+                  className={`nav-submenu-item ${isActive('/reports') ? 'nav-submenu-item-active' : ''}`}
+                >
                   Reports
                 </button>
-                <button className="nav-submenu-item">
+                <button 
+                  onClick={() => navigate('/results')}
+                  className={`nav-submenu-item ${isActive('/results') ? 'nav-submenu-item-active' : ''}`}
+                >
                   Results
                 </button>
-                <button className="nav-submenu-item">
+                <button 
+                  onClick={() => navigate('/raffle')}
+                  className={`nav-submenu-item ${isActive('/raffle') ? 'nav-submenu-item-active' : ''}`}
+                >
                   Raffle
                 </button>
               </div>
