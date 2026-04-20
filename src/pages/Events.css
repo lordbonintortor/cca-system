@@ -605,7 +605,12 @@
 .weight-range-container {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+}
+
+.form-group:has(.weight-range-container) label {
+  text-align: center;
 }
 
 .weight-separator {

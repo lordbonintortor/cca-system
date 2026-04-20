@@ -9,7 +9,7 @@ interface Event {
   date: string
 }
 
-const EVENTS_DATA: Event[] = [
+const INITIAL_EVENTS: Event[] = [
   { id: 1, name: 'Spring Derby Championship', type: 'Championship', derbyInfo: 'Senior Division', date: '2026-05-15' },
   { id: 2, name: 'Weekend Cockpit Battle', type: 'Regular', derbyInfo: 'Open Division', date: '2026-05-20' },
   { id: 3, name: 'Summer Grand Event', type: 'Premium', derbyInfo: 'All Divisions', date: '2026-06-10' },
@@ -27,7 +27,10 @@ const EVENTS_DATA: Event[] = [
   { id: 15, name: 'Season Finale Bash', type: 'Premium', derbyInfo: 'All Divisions', date: '2026-09-10' },
 ]
 
+const EVENTS_DATA: Event[] = INITIAL_EVENTS
+
 function Events() {
+  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -36,9 +39,9 @@ function Events() {
   const [hackFightType, setHackFightType] = useState('Stag')
   const [weightRangeMin, setWeightRangeMin] = useState('')
   const [weightRangeMax, setWeightRangeMax] = useState('')
-  const [eliminationType, setEliminationType] = useState<'yes' | 'no'>('yes')
-  const [winnerTakesAll, setWinnerTakesAll] = useState<'yes' | 'no'>('yes')
-  const itemsPerPage = 5
+  const [noPerEntry, setNoPerEntry] = useState('')
+  const [eventDate, setEventDate] = useState('')
+  const itemsPerPage = 10
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -46,6 +49,9 @@ function Events() {
   }
 
   const handleAddEvent = () => {
+    const today = new Date()
+    const formattedDate = today.toISOString().split('T')[0]
+    setEventDate(formattedDate)
     setIsModalOpen(true)
   }
 
@@ -56,13 +62,31 @@ function Events() {
     setHackFightType('Stag')
     setWeightRangeMin('')
     setWeightRangeMax('')
-    setEliminationType('yes')
-    setWinnerTakesAll('yes')
+    setNoPerEntry('')
+    setEventDate('')
+  }
+
+  const handleSaveEvent = () => {
+    if (!eventName.trim() || !weightRangeMin || !weightRangeMax || !noPerEntry || !eventDate) {
+      alert('Please fill in all required fields')
+      return
+    }
+
+    const newEvent: Event = {
+      id: Math.max(...events.map(e => e.id), 0) + 1,
+      name: eventName,
+      type: eventType,
+      derbyInfo: `${hackFightType} (${weightRangeMin}-${weightRangeMax} lbs)`,
+      date: eventDate,
+    }
+
+    setEvents([...events, newEvent])
+    handleCloseModal()
   }
 
   const filteredEvents = useMemo(() => {
-    if (!searchQuery) return EVENTS_DATA
-    return EVENTS_DATA.filter((event) =>
+    if (!searchQuery) return events
+    return events.filter((event) =>
       event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.derbyInfo.toLowerCase().includes(searchQuery.toLowerCase())
@@ -213,59 +237,34 @@ function Events() {
                   />
                 </div>
               </div>
-              <div className="form-group-row">
-                <div className="form-group">
-                  <label className="radio-group-label">Elimination Type <span className="required-asterisk">*</span></label>
-                  <div className="radio-group">
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="eliminationType"
-                        checked={eliminationType === 'yes'}
-                        onChange={() => setEliminationType('yes')}
-                      />
-                      <span>Yes</span>
-                    </label>
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="eliminationType"
-                        checked={eliminationType === 'no'}
-                        onChange={() => setEliminationType('no')}
-                      />
-                      <span>No</span>
-                    </label>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label className="radio-group-label">Winner Takes All <span className="required-asterisk">*</span></label>
-                  <div className="radio-group">
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="winnerTakesAll"
-                        checked={winnerTakesAll === 'yes'}
-                        onChange={() => setWinnerTakesAll('yes')}
-                      />
-                      <span>Yes</span>
-                    </label>
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="winnerTakesAll"
-                        checked={winnerTakesAll === 'no'}
-                        onChange={() => setWinnerTakesAll('no')}
-                      />
-                      <span>No</span>
-                    </label>
-                  </div>
-                </div>
+              <div className="form-group">
+                <label htmlFor="noPerEntry">No. of (Stag/Bullstag/Cock) per Entry <span className="required-asterisk">*</span></label>
+                <input
+                  id="noPerEntry"
+                  type="number"
+                  className="form-input"
+                  placeholder="Enter number"
+                  value={noPerEntry}
+                  onChange={(e) => setNoPerEntry(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="eventDate">Event Date <span className="required-asterisk">*</span></label>
+                <input
+                  id="eventDate"
+                  type="date"
+                  className="form-input"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  required
+                />
               </div>
             </div>
 
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleCloseModal}>Cancel</button>
-              <button className="btn-add">Add</button>
+              <button className="btn-add" onClick={handleSaveEvent}>Add</button>
             </div>
           </div>
         </div>
