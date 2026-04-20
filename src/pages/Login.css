@@ -96,6 +96,42 @@
   border-color: #e94560;
 }
 
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: opacity 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  opacity: 0.7;
+}
+
+.password-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
 .login-box button {
   padding: 12px;
   background: #e94560;
