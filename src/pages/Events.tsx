@@ -10,21 +10,9 @@ interface Event {
 }
 
 const INITIAL_EVENTS: Event[] = [
-  { id: 1, name: 'Spring Derby Championship', type: 'Championship', derbyInfo: 'Senior Division', date: '2026-05-15' },
-  { id: 2, name: 'Weekend Cockpit Battle', type: 'Regular', derbyInfo: 'Open Division', date: '2026-05-20' },
-  { id: 3, name: 'Summer Grand Event', type: 'Premium', derbyInfo: 'All Divisions', date: '2026-06-10' },
-  { id: 4, name: 'Rookie Training Match', type: 'Training', derbyInfo: 'Beginners Only', date: '2026-05-25' },
-  { id: 5, name: 'Inter-Region Challenge', type: 'Championship', derbyInfo: 'Regional Qualifiers', date: '2026-06-15' },
-  { id: 6, name: 'Youth Division Tournament', type: 'Regular', derbyInfo: 'Youth Only', date: '2026-07-02' },
-  { id: 7, name: 'National Championships', type: 'Championship', derbyInfo: 'All Divisions', date: '2026-07-10' },
-  { id: 8, name: 'Exhibition Match', type: 'Premium', derbyInfo: 'Featured Fighters', date: '2026-07-15' },
-  { id: 9, name: 'Regional Qualifier Round 1', type: 'Championship', derbyInfo: 'Regional Divisions', date: '2026-07-20' },
-  { id: 10, name: 'Friendly Match Series', type: 'Regular', derbyInfo: 'Mixed Divisions', date: '2026-07-25' },
-  { id: 11, name: 'Fall Classic Derby', type: 'Premium', derbyInfo: 'Senior Division', date: '2026-08-05' },
-  { id: 12, name: 'State Championship Finals', type: 'Championship', derbyInfo: 'State Qualifiers', date: '2026-08-15' },
-  { id: 13, name: 'Beginner Fundamentals', type: 'Training', derbyInfo: 'New Players', date: '2026-08-20' },
-  { id: 14, name: 'Inter-Club Challenge', type: 'Regular', derbyInfo: 'Club Representatives', date: '2026-08-28' },
-  { id: 15, name: 'Season Finale Bash', type: 'Premium', derbyInfo: 'All Divisions', date: '2026-09-10' },
+  { id: 1, name: 'Monday Night Match', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (45-50 lbs)', date: '2026-04-20' },
+  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-21' },
+  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-22' },
 ]
 
 function Events() {
@@ -74,11 +62,11 @@ function Events() {
       id: Math.max(...events.map(e => e.id), 0) + 1,
       name: eventName,
       type: eventType,
-      derbyInfo: `${hackFightType} (${weightRangeMin}-${weightRangeMax} lbs)`,
+      derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
       date: eventDate,
     }
 
-    setEvents([...events, newEvent])
+    setEvents([newEvent, ...events])
     handleCloseModal()
   }
 
