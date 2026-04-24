@@ -634,6 +634,7 @@
 .form-input-weight {
   flex: 1;
   max-width: 120px;
+  text-align: center;
 }
 
 .radio-group-label {
