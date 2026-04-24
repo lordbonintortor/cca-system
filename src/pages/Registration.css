@@ -542,3 +542,99 @@
   border-top: 1px solid #e8e8e8;
   margin-top: auto;
 }
+
+/* Force Light Mode for entire page */
+@media (prefers-color-scheme: dark) {
+  .page-content {
+    color-scheme: light;
+    background: #fff !important;
+    color: #555 !important;
+  }
+
+  .page-content h1,
+  .page-content h2,
+  .page-content h3 {
+    color: var(--accent-red) !important;
+  }
+
+  .page-content button,
+  .page-content input,
+  .page-content select,
+  .page-content textarea {
+    background-color: #fff !important;
+    color: #333 !important;
+    border-color: #ddd !important;
+  }
+
+  .page-content button:focus,
+  .page-content input:focus,
+  .page-content select:focus,
+  .page-content textarea:focus {
+    background-color: #fff !important;
+    border-color: var(--accent-red) !important;
+  }
+
+  .modal-overlay {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .modal-content {
+    background: #fff !important;
+    color: #333 !important;
+  }
+
+  .events-table,
+  .registrations-table,
+  .data-table {
+    background-color: #fff !important;
+    border-color: #ddd !important;
+  }
+
+  .events-table thead,
+  .registrations-table thead {
+    background-color: #f8f8f8 !important;
+  }
+
+  .events-table th,
+  .registrations-table th {
+    color: #333 !important;
+    border-color: #ddd !important;
+  }
+
+  .events-table td,
+  .registrations-table td {
+    color: #555 !important;
+    border-color: #e8e8e8 !important;
+  }
+
+  .events-table tbody tr:hover,
+  .registrations-table tbody tr:hover {
+    background-color: #fafafa !important;
+  }
+
+  .form-group label {
+    color: #333 !important;
+  }
+
+  .form-input {
+    background-color: #fff !important;
+    color: #333 !important;
+    border-color: #ddd !important;
+  }
+
+  .form-input:focus {
+    border-color: var(--accent-red) !important;
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1) !important;
+  }
+
+  .search-input {
+    background-color: #fff !important;
+    color: #333 !important;
+    border-color: #ddd !important;
+  }
+
+  .search-input:focus {
+    border-color: var(--accent-red) !important;
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1) !important;
+  }
+}
