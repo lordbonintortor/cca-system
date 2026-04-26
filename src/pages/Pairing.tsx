@@ -100,11 +100,251 @@ function Pairing() {
 
   const calculatedDiferencia = useMemo(() => {
     if (!mayronBetting || !walaBetting) return ''
-    const mayron = parseFloat(mayronBetting)
-    const wala = parseFloat(walaBetting)
+    const mayron = parseFloat(mayronBetting.replace(/,/g, ''))
+    const wala = parseFloat(walaBetting.replace(/,/g, ''))
     if (isNaN(mayron) || isNaN(wala)) return ''
-    return Math.abs(mayron - wala).toString()
+    const diff = Math.abs(mayron - wala).toString()
+    return diff.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }, [mayronBetting, walaBetting])
+
+  const formatNumberWithCommas = (value: string) => {
+    const numberOnly = value.replace(/,/g, '')
+    if (!numberOnly) return ''
+    return numberOnly.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  }
+
+  const handlePrintFight = (pairing: PairingRecord) => {
+    const printWindow = window.open('', '', 'height=800,width=600')
+    if (!printWindow) return
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Fight ${pairing.fightNumber}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+          }
+          .print-container {
+            background: white;
+            padding: 40px;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+          }
+          .header h2 {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            color: #666;
+          }
+          .event-info {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 14px;
+          }
+          .event-info p {
+            margin: 5px 0;
+          }
+          .fight-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            background: #333;
+            color: white;
+            padding: 15px;
+          }
+          .parada {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+          }
+          .parada-section {
+            flex: 1;
+            text-align: center;
+          }
+          .parada-header {
+            background: #333;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 16px;
+          }
+          .parada-label {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+          }
+          .entry-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            text-decoration: underline;
+          }
+          .handler-name {
+            font-size: 14px;
+            margin: 8px 0;
+          }
+          .weight {
+            font-size: 14px;
+            margin: 8px 0;
+            color: #666;
+          }
+          .betting {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+          }
+          .diferencia-section {
+            background: #f0fff0;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+          }
+          .diferencia-header {
+            background: #333;
+            color: white;
+            padding: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+          }
+          .diferencia-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+          }
+          .signature-section {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 40px;
+          }
+          .signature-line {
+            text-align: center;
+            flex: 1;
+          }
+          .sig-line {
+            border-top: 2px solid #333;
+            margin: 40px 20px 0;
+            min-width: 150px;
+          }
+          .sig-label {
+            margin-top: 8px;
+            font-size: 12px;
+          }
+          .parejo-section {
+            background: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            margin-top: 30px;
+            font-weight: bold;
+            font-size: 18px;
+          }
+          .parejo-amount {
+            font-size: 20px;
+            margin-top: 10px;
+            border-top: 2px solid white;
+            border-bottom: 2px solid white;
+            padding: 10px;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            color: #999;
+          }
+          @media print {
+            body {
+              background: white;
+              padding: 0;
+            }
+            .print-container {
+              box-shadow: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-container">
+          <div class="header">
+            <h1>CALINAN COCKPIT ARENA</h1>
+            <h2>Calinan District, Davao City</h2>
+          </div>
+          <div class="event-info">
+            <p><strong>Event:</strong> ${eventName}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+          <div class="fight-title">FIGHT #${pairing.fightNumber}</div>
+          <div class="parada">
+            <div class="parada-section">
+              <div class="parada-header">PARADA (MAYRON)</div>
+              <div class="parada-label">Entry</div>
+              <div class="entry-name">${pairing.mayronEntry}</div>
+              <div class="handler-name"><strong>Handler:</strong> ${pairing.mayronHandler}</div>
+              <div class="weight"><strong>Weight:</strong> ${pairing.mayronWeight} lbs</div>
+              <div class="betting"><strong>₱${pairing.mayronBetting}</strong></div>
+            </div>
+            <div class="parada-section">
+              <div class="parada-header">PARADA (WALA)</div>
+              <div class="parada-label">Entry</div>
+              <div class="entry-name">${pairing.walaEntry}</div>
+              <div class="handler-name"><strong>Handler:</strong> ${pairing.walaHandler}</div>
+              <div class="weight"><strong>Weight:</strong> ${pairing.walaWeight} lbs</div>
+              <div class="betting"><strong>₱${pairing.walaBetting}</strong></div>
+            </div>
+          </div>
+          <div class="diferencia-section">
+            <div class="diferencia-header">DIFERENCIA</div>
+            <div class="diferencia-amount">₱${pairing.diferencia}</div>
+          </div>
+          <div class="signature-section">
+            <div class="signature-line">
+              <div class="sig-line"></div>
+              <div class="sig-label">Mayron Handler</div>
+            </div>
+            <div class="signature-line">
+              <div class="sig-line"></div>
+              <div class="sig-label">Wala Handler</div>
+            </div>
+          </div>
+          <div class="parejo-section">
+            PAREJO
+            <div class="parejo-amount">₱ _____________</div>
+          </div>
+          <div class="footer">
+            <p>Printed on ${new Date().toLocaleString()}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+    setTimeout(() => {
+      printWindow.print()
+    }, 250)
+  }
 
   const handleCreatePairing = () => {
     if (sortedEvents.length > 0) {
@@ -151,7 +391,7 @@ function Pairing() {
       diferencia: calculatedDiferencia
     }
 
-    setPairings([...pairings, newPairing])
+    setPairings([newPairing, ...pairings])
     handleCloseModal()
   }
 
@@ -178,6 +418,7 @@ function Pairing() {
                 <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Wala Weight</th>
                 <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Wala Betting</th>
                 <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Diferencia</th>
+                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Print</th>
               </tr>
             </thead>
             <tbody>
@@ -193,6 +434,23 @@ function Pairing() {
                   <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.walaWeight}</td>
                   <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.walaBetting}</td>
                   <td style={{ padding: '0.6rem', fontSize: '0.75rem', backgroundColor: '#f0fff0', fontWeight: 'bold' }}>₱{pairing.diferencia}</td>
+                  <td style={{ padding: '0.6rem', fontSize: '0.75rem', textAlign: 'center' }}>
+                    <button
+                      onClick={() => handlePrintFight(pairing)}
+                      style={{
+                        padding: '0.4rem 0.6rem',
+                        fontSize: '0.7rem',
+                        backgroundColor: '#e94560',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Print
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -322,7 +580,7 @@ function Pairing() {
                       className="form-input"
                       placeholder="Enter amount"
                       value={mayronBetting}
-                      onChange={(e) => setMayronBetting(e.target.value)}
+                      onChange={(e) => setMayronBetting(formatNumberWithCommas(e.target.value))}
                       style={{ paddingLeft: '1.8rem' }}
                     />
                   </div>
@@ -337,7 +595,7 @@ function Pairing() {
                       className="form-input"
                       placeholder="Enter amount"
                       value={walaBetting}
-                      onChange={(e) => setWalaBetting(e.target.value)}
+                      onChange={(e) => setWalaBetting(formatNumberWithCommas(e.target.value))}
                       style={{ paddingLeft: '1.8rem' }}
                     />
                   </div>
