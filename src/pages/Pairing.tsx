@@ -88,6 +88,8 @@ function Pairing() {
   const [mayronBetting, setMayronBetting] = useState('')
   const [walaBetting, setWalaBetting] = useState('')
   const [pairings, setPairings] = useState<PairingRecord[]>([])
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [pendingPairing, setPendingPairing] = useState<PairingRecord | null>(null)
 
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -391,8 +393,22 @@ function Pairing() {
       diferencia: calculatedDiferencia
     }
 
-    setPairings([newPairing, ...pairings])
+    setPendingPairing(newPairing)
+    setShowConfirmation(true)
+  }
+
+  const handleConfirmPairing = () => {
+    if (pendingPairing) {
+      setPairings([pendingPairing, ...pairings])
+    }
+    setShowConfirmation(false)
+    setPendingPairing(null)
     handleCloseModal()
+  }
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false)
+    setPendingPairing(null)
   }
 
   return (
@@ -623,6 +639,76 @@ function Pairing() {
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleCloseModal}>Cancel</button>
               <button className="btn-add" onClick={handleSavePairing}>Add</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmation && pendingPairing && (
+        <div className="modal-overlay" onClick={handleCancelConfirmation}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Confirm Pairing Details</h2>
+              <button className="modal-close" onClick={handleCancelConfirmation}>×</button>
+            </div>
+            
+            <div className="modal-body" style={{ padding: '2rem', maxHeight: 'calc(100vh - 250px)', overflowY: 'auto' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#333' }}>Event</h3>
+                <p style={{ fontSize: '1rem', fontWeight: '500', color: '#555' }}>{eventName}</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333', textAlign: 'center' }}>MAYRON</h3>
+                  <div style={{ marginBottom: '0.8rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Entry</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayronEntry}</p>
+                  </div>
+                  <div style={{ marginBottom: '0.8rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Handler</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayronHandler}</p>
+                  </div>
+                  <div style={{ marginBottom: '0.8rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Weight</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayronWeight} lbs</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting</p>
+                    <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pendingPairing.mayronBetting}</p>
+                  </div>
+                </div>
+
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333', textAlign: 'center' }}>WALA</h3>
+                  <div style={{ marginBottom: '0.8rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Entry</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.walaEntry}</p>
+                  </div>
+                  <div style={{ marginBottom: '0.8rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Handler</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.walaHandler}</p>
+                  </div>
+                  <div style={{ marginBottom: '0.8rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Weight</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.walaWeight} lbs</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting</p>
+                    <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pendingPairing.walaBetting}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ padding: '1rem', backgroundColor: '#f0fff0', borderRadius: '5px', border: '2px solid #4caf50', textAlign: 'center' }}>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Diferencia</p>
+                <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#4caf50' }}>₱{pendingPairing.diferencia}</p>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={handleCancelConfirmation}>Cancel</button>
+              <button className="btn-add" onClick={handleConfirmPairing}>Okay</button>
             </div>
           </div>
         </div>

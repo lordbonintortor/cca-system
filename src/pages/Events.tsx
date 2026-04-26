@@ -41,6 +41,8 @@ function Events() {
   const [weightRangeMax, setWeightRangeMax] = useState('')
   const [noPerEntry, setNoPerEntry] = useState('')
   const [eventDate, setEventDate] = useState('')
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [pendingEvent, setPendingEvent] = useState<Event | null>(null)
   const itemsPerPage = 10
 
   const formatDate = (dateString: string) => {
@@ -90,17 +92,14 @@ function Events() {
     }
 
     if (isEditMode && editingEventId) {
-      const updatedEvents = events.map((e) =>
-        e.id === editingEventId
-          ? {
-              ...e,
-              name: eventName,
-              derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
-              date: eventDate,
-            }
-          : e
-      )
-      setEvents(updatedEvents)
+      const updatedEvent: Event = {
+        id: editingEventId,
+        name: eventName,
+        type: eventType,
+        derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
+        date: eventDate,
+      }
+      setPendingEvent(updatedEvent)
     } else {
       const newEvent: Event = {
         id: Math.max(...events.map(e => e.id), 0) + 1,
@@ -109,9 +108,30 @@ function Events() {
         derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
         date: eventDate,
       }
-      setEvents([newEvent, ...events])
+      setPendingEvent(newEvent)
     }
+    setShowConfirmation(true)
+  }
+
+  const handleConfirmEvent = () => {
+    if (pendingEvent) {
+      if (isEditMode && editingEventId) {
+        const updatedEvents = events.map((e) =>
+          e.id === editingEventId ? pendingEvent : e
+        )
+        setEvents(updatedEvents)
+      } else {
+        setEvents([pendingEvent, ...events])
+      }
+    }
+    setShowConfirmation(false)
+    setPendingEvent(null)
     handleCloseModal()
+  }
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false)
+    setPendingEvent(null)
   }
 
   const filteredEvents = useMemo(() => {
@@ -302,6 +322,53 @@ function Events() {
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleCloseModal}>Cancel</button>
               <button className="btn-add" onClick={handleSaveEvent}>{isEditMode ? 'Update' : 'Add'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmation && pendingEvent && (
+        <div className="modal-overlay" onClick={handleCancelConfirmation}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Confirm Event Details</h2>
+              <button className="modal-close" onClick={handleCancelConfirmation}>×</button>
+            </div>
+            
+            <div className="modal-body" style={{ padding: '2rem', maxHeight: 'calc(100vh - 250px)', overflowY: 'auto' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>Event Name</h3>
+                <p style={{ fontSize: '1.2rem', fontWeight: '600', color: '#333' }}>{pendingEvent.name}</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Cock Type</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.derbyInfo.split(' - ')[0]}</p>
+                </div>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Per Entry</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.derbyInfo.match(/(\d+) per Entry/)?.[1]} per Entry</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Weight Range (lbs)</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>
+                    {pendingEvent.derbyInfo.match(/\((\d+)-(\d+) lbs\)/)?.[1]}-{pendingEvent.derbyInfo.match(/\((\d+)-(\d+) lbs\)/)?.[2]}
+                  </p>
+                </div>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Date</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{formatDate(pendingEvent.date)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={handleCancelConfirmation}>Cancel</button>
+              <button className="btn-add" onClick={handleConfirmEvent}>Okay</button>
             </div>
           </div>
         </div>

@@ -67,6 +67,8 @@ function Registration() {
   const [cockType, setCockType] = useState('Stag')
   const [numberOfEntries, setNumberOfEntries] = useState('')
   const [registrationDate, setRegistrationDate] = useState('')
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [pendingMembers, setPendingMembers] = useState<Member[]>([])
   const itemsPerPage = 10
 
   // Sort events so newest (most recent dates) are at the top
@@ -86,20 +88,28 @@ function Registration() {
     // Set event name to the newest event
     if (sortedEvents.length > 0) {
       setEventName(sortedEvents[0].name)
-      // Extract cock type from the newest event's derbyInfo
+      // Extract cock type and number of entries from the newest event's derbyInfo
       const cockTypeFromEvent = sortedEvents[0].derbyInfo.split(' - ')[0]
       setCockType(cockTypeFromEvent)
+      const perEntryMatch = sortedEvents[0].derbyInfo.match(/(\d+) per Entry/)
+      if (perEntryMatch) {
+        setNumberOfEntries(perEntryMatch[1])
+      }
     }
     setIsModalOpen(true)
   }
 
   const handleEventChange = (selectedEventName: string) => {
     setEventName(selectedEventName)
-    // Find the event and extract cock type from derbyInfo
+    // Find the event and extract cock type and number of entries from derbyInfo
     const selectedEvent = events.find(e => e.name === selectedEventName)
     if (selectedEvent) {
       const cockTypeFromEvent = selectedEvent.derbyInfo.split(' - ')[0]
       setCockType(cockTypeFromEvent)
+      const perEntryMatch = selectedEvent.derbyInfo.match(/(\d+) per Entry/)
+      if (perEntryMatch) {
+        setNumberOfEntries(perEntryMatch[1])
+      }
     }
   }
 
@@ -109,7 +119,6 @@ function Registration() {
     setEventName('')
     setHandlerName('')
     setCockType('Stag')
-    setNumberOfEntries('')
     setRegistrationDate('')
   }
 
@@ -136,8 +145,20 @@ function Registration() {
       newMembers.push(newMember)
     }
 
-    setMembers([...newMembers, ...members])
+    setPendingMembers(newMembers)
+    setShowConfirmation(true)
+  }
+
+  const handleConfirmMember = () => {
+    setMembers([...pendingMembers, ...members])
+    setShowConfirmation(false)
+    setPendingMembers([])
     handleCloseModal()
+  }
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false)
+    setPendingMembers([])
   }
 
   const filteredMembers = useMemo(() => {
@@ -275,7 +296,7 @@ function Registration() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="cockType">Cock Type <span className="required-asterisk">*</span></label>
+                <label htmlFor="cockType">Cock Type</label>
                 <input
                   id="cockType"
                   type="text"
@@ -286,14 +307,15 @@ function Registration() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="numberOfEntries">No. of Entries <span className="required-asterisk">*</span></label>
+                <label htmlFor="numberOfEntries">No. of Entries</label>
                 <input
                   id="numberOfEntries"
                   type="number"
                   className="form-input"
-                  placeholder="Enter number of entries"
+                  placeholder="—"
                   value={numberOfEntries}
-                  onChange={(e) => setNumberOfEntries(e.target.value)}
+                  disabled
+                  readOnly
                   required
                 />
               </div>
@@ -313,6 +335,66 @@ function Registration() {
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleCloseModal}>Cancel</button>
               <button className="btn-add" onClick={handleSaveMember}>Register</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmation && pendingMembers.length > 0 && (
+        <div className="modal-overlay" onClick={handleCancelConfirmation}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Confirm Member Registration</h2>
+              <button className="modal-close" onClick={handleCancelConfirmation}>×</button>
+            </div>
+            
+            <div className="modal-body" style={{ padding: '2rem', maxHeight: 'calc(100vh - 250px)', overflowY: 'auto' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>Entry Name</h3>
+                <p style={{ fontSize: '1.2rem', fontWeight: '600', color: '#333' }}>{entryName}</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Name</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{eventName}</p>
+                </div>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Handler Name</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{handlerName}</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Cock Type</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{cockType}</p>
+                </div>
+                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Number of Entries</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{numberOfEntries}</p>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Registration Date</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{formatDate(registrationDate)}</p>
+              </div>
+
+              <div style={{ padding: '1rem', backgroundColor: '#f0f8ff', borderRadius: '5px', border: '2px solid #2196F3' }}>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Entries to be created</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2196F3' }}>{pendingMembers.length} {pendingMembers.length === 1 ? 'entry' : 'entries'}</p>
+                <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#555' }}>
+                  {pendingMembers.map((member, idx) => (
+                    <div key={idx} style={{ marginBottom: '0.5rem' }}>• {member.entryName}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={handleCancelConfirmation}>Cancel</button>
+              <button className="btn-add" onClick={handleConfirmMember}>Okay</button>
             </div>
           </div>
         </div>
