@@ -160,16 +160,7 @@ function Pairing() {
       <div className="page-main">
         <h1>Pairing</h1>
         <p>Create fight pairings</p>
-        <div className="search-action-row">
-          <div className="search-container">
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search pairings"
-              disabled
-            />
-            <button className="search-btn" disabled>Search</button>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', width: '100%' }}>
           <button className="btn-add-event" onClick={handleCreatePairing}>+ Add New Pair</button>
         </div>
 
@@ -235,12 +226,12 @@ function Pairing() {
                   ))}
                 </select>
               </div>
-              <div style={{ display: 'flex', gap: '2rem', marginBottom: '0.8rem' }}>
-                <label>Fighter (Standing): <span style={{ fontWeight: 'bold' }}>MAYRON</span> <span className="required-asterisk">*</span></label>
-                <label>Fighter (Standing): <span style={{ fontWeight: 'bold' }}>WALA</span> <span className="required-asterisk">*</span></label>
+              <div style={{ display: 'flex', gap: '2rem', marginBottom: '0.4rem', justifyContent: 'center' }}>
+                <label>Fighter (Standing) <span className="required-asterisk">*</span></label>
               </div>
               <div className="form-row">
                 <div className="form-group">
+                  <label style={{ fontWeight: 'bold', display: 'block', textAlign: 'center', marginBottom: '0.5rem', fontSize: '1.1rem' }}>MAYRON</label>
                   <select
                     className="form-input"
                     value={mayronEntry}
@@ -256,6 +247,7 @@ function Pairing() {
                   </select>
                 </div>
                 <div className="form-group">
+                  <label style={{ fontWeight: 'bold', display: 'block', textAlign: 'center', marginBottom: '0.5rem', fontSize: '1.1rem' }}>WALA</label>
                   <select
                     className="form-input"
                     value={walaEntry}
