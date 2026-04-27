@@ -74,6 +74,35 @@ const INITIAL_MEMBERS: Member[] = [
   { id: 20, entryName: 'Miguel Banaag', eventName: 'Local Tournament', handlerName: 'Vincent Valdez', cockType: 'Cock', numberOfEntries: 2, registrationDate: '2026-04-18' },
 ]
 
+const INITIAL_PAIRINGS: PairingRecord[] = [
+  {
+    id: 1,
+    fightNumber: 2,
+    mayronEntry: 'Victor Martinez',
+    mayronHandler: 'Alex Torres',
+    mayronWeight: '48',
+    mayronBetting: '5,000',
+    walaEntry: 'Sophia Gonzales',
+    walaHandler: 'Mark Fernandez',
+    walaWeight: '47',
+    walaBetting: '4,500',
+    diferencia: '500'
+  },
+  {
+    id: 2,
+    fightNumber: 1,
+    mayronEntry: 'Juan Dela Cruz',
+    mayronHandler: 'Carlos Santos',
+    mayronWeight: '49',
+    mayronBetting: '6,000',
+    walaEntry: 'Victor Martinez',
+    walaHandler: 'Alex Torres',
+    walaWeight: '48',
+    walaBetting: '5,500',
+    diferencia: '500'
+  }
+]
+
 function Pairing() {
   const [events] = useState<Event[]>(INITIAL_EVENTS)
   const [members] = useState<Member[]>(INITIAL_MEMBERS)
@@ -87,7 +116,7 @@ function Pairing() {
   const [walaWeight, setWalaWeight] = useState('')
   const [mayronBetting, setMayronBetting] = useState('')
   const [walaBetting, setWalaBetting] = useState('')
-  const [pairings, setPairings] = useState<PairingRecord[]>([])
+  const [pairings, setPairings] = useState<PairingRecord[]>(INITIAL_PAIRINGS)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [pendingPairing, setPendingPairing] = useState<PairingRecord | null>(null)
 
