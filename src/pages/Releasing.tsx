@@ -83,7 +83,7 @@ function Releasing() {
     return taggedFights.filter(() => {
       const event = events.find(e => e.name === selectedEvent)
       return event !== undefined
-    }).sort((a, b) => a.fightNumber - b.fightNumber)
+    }).sort((a, b) => b.fightNumber - a.fightNumber)
   }, [taggedFights, selectedEvent, events])
 
   const getReleaseStatus = (pairingId: number): 'unreleased' | 'released' | 'special' => {

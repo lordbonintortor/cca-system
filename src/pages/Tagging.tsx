@@ -82,7 +82,7 @@ function Tagging() {
     return pairings.filter(() => {
       const event = events.find(e => e.name === selectedEvent)
       return event !== undefined
-    }).sort((a, b) => a.fightNumber - b.fightNumber)
+    }).sort((a, b) => b.fightNumber - a.fightNumber)
   }, [pairings, selectedEvent, events])
 
   const handleTagFight = (pairingId: number) => {

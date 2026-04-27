@@ -178,6 +178,49 @@ function Registration() {
 
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
 
+  const getPaginationPages = () => {
+    const pages: (number | string)[] = []
+    const showPages = 3
+    const showAround = 1
+
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
+    }
+
+    // Always show first pages
+    for (let i = 1; i <= showPages; i++) {
+      pages.push(i)
+    }
+
+    // Add ellipsis and pages around current
+    if (currentPage > showPages + showAround) {
+      pages.push('...')
+    }
+
+    const start = Math.max(showPages + 1, currentPage - showAround)
+    const end = Math.min(totalPages - showPages, currentPage + showAround)
+
+    for (let i = start; i <= end; i++) {
+      if (!pages.includes(i)) {
+        pages.push(i)
+      }
+    }
+
+    // Add ellipsis before last pages
+    if (currentPage < totalPages - showPages - showAround) {
+      pages.push('...')
+    }
+
+    // Always show last pages
+    for (let i = totalPages - showPages + 1; i <= totalPages; i++) {
+      if (!pages.includes(i)) {
+        pages.push(i)
+      }
+    }
+
+    return pages
+  }
+
   return (
     <div className="page-content">
       <div className="page-main">
@@ -223,14 +266,18 @@ function Registration() {
             >
               Previous
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                className={`page-number-btn ${currentPage === page ? 'active' : ''}`}
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </button>
+            {getPaginationPages().map((page, idx) => (
+              page === '...' ? (
+                <span key={`ellipsis-${idx}`} className="pagination-ellipsis">•••</span>
+              ) : (
+                <button
+                  key={page}
+                  className={`page-number-btn ${currentPage === page ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(page as number)}
+                >
+                  {page}
+                </button>
+              )
             ))}
             <button
               className="pagination-btn"

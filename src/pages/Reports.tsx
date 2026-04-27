@@ -119,7 +119,7 @@ function Reports() {
         }
       })
       .filter(Boolean)
-      .sort((a, b) => a!.fightNumber - b!.fightNumber)
+      .sort((a, b) => b!.fightNumber - a!.fightNumber)
   }, [pairings, selectedEvent, events, taggedFights, releasedFights])
 
   const totals = useMemo(() => {

@@ -141,6 +141,15 @@
   font-weight: 600;
 }
 
+.pagination-ellipsis {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 600;
+  letter-spacing: 0.2rem;
+  cursor: default;
+}
+
 .page-content h1 {
   font-size: 3rem;
   font-weight: 800;
