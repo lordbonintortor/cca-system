@@ -1,5 +1,6 @@
 import './Registration.css'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useContext } from 'react'
+import { TaggingContext } from '../context/tagging'
 
 interface Event {
   id: number
@@ -21,15 +22,6 @@ interface PairingRecord {
   walaWeight: string
   walaBetting: string
   diferencia: string
-}
-
-interface TaggedFight {
-  pairingId: number
-  fightNumber: number
-  status: 'pending' | 'tagged' | 'completed'
-  outcome?: 'winner' | 'loser' | 'draw' | 'cancelled'
-  outcomeWinner?: 'mayron' | 'wala'
-  taggedAt?: string
 }
 
 const INITIAL_EVENTS: Event[] = [
@@ -73,9 +65,14 @@ function Tagging() {
   const [events] = useState<Event[]>(INITIAL_EVENTS)
   const [pairings] = useState<PairingRecord[]>(INITIAL_PAIRINGS)
   const [selectedEvent, setSelectedEvent] = useState('Monday Night Match')
-  const [taggedFights, setTaggedFights] = useState<TaggedFight[]>([])
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false)
+
+  const context = useContext(TaggingContext)
+  if (!context) {
+    throw new Error('Tagging must be used within TaggingProvider')
+  }
+  const { taggedFights, updateTaggedFight, resetFight } = context
 
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -99,22 +96,15 @@ function Tagging() {
       const existingTag = taggedFights.find(t => t.pairingId === selectedFightId)
       
       if (pairing) {
-        if (existingTag) {
-          setTaggedFights(taggedFights.map(t =>
-            t.pairingId === selectedFightId
-              ? { ...t, outcome, outcomeWinner: winner, status: 'tagged' }
-              : t
-          ))
-        } else {
-          setTaggedFights([...taggedFights, {
-            pairingId: selectedFightId,
-            fightNumber: pairing.fightNumber,
-            status: 'tagged',
-            outcome,
-            outcomeWinner: winner,
-            taggedAt: new Date().toISOString()
-          }])
+        const updatedTag = {
+          pairingId: selectedFightId,
+          fightNumber: pairing.fightNumber,
+          status: 'tagged' as const,
+          outcome,
+          outcomeWinner: winner,
+          taggedAt: existingTag?.taggedAt || new Date().toISOString()
         }
+        updateTaggedFight(updatedTag)
       }
       setIsOutcomeModalOpen(false)
       setSelectedFightId(null)
@@ -123,7 +113,7 @@ function Tagging() {
 
   const handleResetFight = () => {
     if (selectedFightId) {
-      setTaggedFights(taggedFights.filter(t => t.pairingId !== selectedFightId))
+      resetFight(selectedFightId)
       setSelectedFightId(null)
     }
   }

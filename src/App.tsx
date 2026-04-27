@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { TaggingProvider } from './context/TaggingContext'
 import { useAuth } from './hooks/useAuth'
 import Sidebar from './components/Sidebar'
 import Login from './pages/Login'
@@ -47,7 +48,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
+        <TaggingProvider>
+          <AppContent />
+        </TaggingProvider>
       </AuthProvider>
     </Router>
   )
