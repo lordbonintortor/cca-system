@@ -6,10 +6,37 @@
   --dark-accent: #000;
 }
 
+.page-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: auto;
+  padding: 40px 30px;
+  background: white;
+  width: 100%;
+}
+
+.page-main {
+  flex: 1;
+}
+
 .page-content h1 {
   color: var(--accent-red);
+  margin-bottom: 20px;
+  font-size: 32px;
+  font-weight: bold;
 }
 
 .page-content p {
   color: #555;
+  font-size: 16px;
+}
+
+.page-copyright {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  margin-top: auto;
 }

@@ -20,11 +20,6 @@ import Settings from './pages/Settings'
 import './styles/theme.css'
 import './App.css'
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn } = useAuth()
-  return isLoggedIn ? children : <Navigate to="/" />
-}
-
 function AppContent() {
   const { isLoggedIn } = useAuth()
 
@@ -33,10 +28,13 @@ function AppContent() {
     seedDatabase()
   }, [])
 
+  if (!isLoggedIn) {
+    return <Login />
+  }
+
   return (
     <Routes>
-      <Route path="/" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login />} />
-      <Route element={<ProtectedRoute><Sidebar /></ProtectedRoute>}>
+      <Route element={<Sidebar />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/events" element={<Events />} />
         <Route path="/registration" element={<Registration />} />
@@ -47,6 +45,7 @@ function AppContent() {
         <Route path="/results" element={<Results />} />
         <Route path="/raffle" element={<Raffle />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
   )

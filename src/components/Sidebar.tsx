@@ -106,7 +106,7 @@ function Sidebar() {
           </button>
         </nav>
         <div className="sidebar-footer">
-          <p className="user-name">Welcome, {user}</p>
+          <p className="user-name">Welcome, {user?.fullName || user?.username}</p>
           <button 
             onClick={handleLogout}
             className="logout-btn"

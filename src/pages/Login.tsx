@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import './Login.css'
@@ -8,14 +8,19 @@ function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  const { login } = useAuth()
+  const { login, isLoggedIn, isLoading, error } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isLoggedIn, navigate])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (username && password) {
-      login(username)
-      navigate('/dashboard')
+      login(username, password)
     }
   }
 
@@ -26,6 +31,7 @@ function Login() {
           <img src="/logo.png" alt="Calinan Cockpit Arena Logo" className="login-logo" />
         </div>
         <h1>MEMBER LOGIN</h1>
+        {error && <div className="error-message">{error}</div>}
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -33,6 +39,7 @@ function Login() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            disabled={isLoading}
           />
           <div className="password-input-container">
             <input
@@ -41,12 +48,14 @@ function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={isLoading}
             />
             <button
               type="button"
               className="password-toggle-btn"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
+              disabled={isLoading}
             >
               <img
                 src={showPassword ? '/hide.png' : '/seen.png'}
@@ -61,10 +70,13 @@ function Login() {
               id="rememberMe"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={isLoading}
             />
             <label htmlFor="rememberMe">Remember me</label>
           </div>
-          <button type="submit">Sign In</button>
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? 'Signing In...' : 'Sign In'}
+          </button>
         </form>
       </div>
       <div className="copyright">
