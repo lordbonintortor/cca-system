@@ -239,7 +239,7 @@
   flex: 0 0 220px !important;
   width: 220px;
   max-width: 220px;
-  text-align: left;
+  text-align: center;
 }
 
 .registration-event-filter label {
@@ -253,6 +253,7 @@
 .registration-event-filter .form-input {
   width: 220px;
   max-width: 220px;
+  text-align: center;
 }
 
 .registration-search {

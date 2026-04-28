@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import {
   getEvents,
@@ -10,6 +10,8 @@ import {
   createMember,
   createMultipleMembers,
   createEvent,
+  updateEvent,
+  updateMembersByEventName,
   createPairing,
   createRaffleWinner,
 } from '../lib/supabaseService'
@@ -85,6 +87,12 @@ interface DataContextType {
   
   // Actions
   addEvent: (event: Omit<Event, 'id'>) => Promise<void>
+  updateEventData: (id: number, event: Omit<Event, 'id'>) => Promise<void>
+  updateEventWithMembers: (
+    id: number,
+    oldEventName: string,
+    event: Omit<Event, 'id'>
+  ) => Promise<void>
   addMember: (member: Omit<Member, 'id'>) => Promise<void>
   addMultipleMembers: (members: Array<Omit<Member, 'id'>>) => Promise<void>
   addPairing: (pairing: Omit<Pairing, 'id'>) => Promise<void>
@@ -148,6 +156,49 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await refreshData()
     } catch (error) {
       console.error('Error adding event:', error)
+      throw error
+    }
+  }
+
+  const updateEventData = async (id: number, event: Omit<Event, 'id'>) => {
+    try {
+      await updateEvent(id, {
+        name: event.name,
+        type: event.type,
+        derby_info: event.derby_info,
+        date: event.date,
+      })
+      await refreshData()
+    } catch (error) {
+      console.error('Error updating event:', error)
+      throw error
+    }
+  }
+
+  const updateEventWithMembers = async (
+    id: number,
+    oldEventName: string,
+    event: Omit<Event, 'id'>
+  ) => {
+    try {
+      await updateEvent(id, {
+        name: event.name,
+        type: event.type,
+        derby_info: event.derby_info,
+        date: event.date,
+      })
+      // If event name changed, update all members with the new event name
+      if (oldEventName !== event.name) {
+        try {
+          await updateMembersByEventName(oldEventName, event.name)
+        } catch (memberError) {
+          console.error('Warning: Could not update members:', memberError)
+          // Don't fail the whole operation if member update fails
+        }
+      }
+      await refreshData()
+    } catch (error) {
+      console.error('Error updating event:', error)
       throw error
     }
   }
@@ -237,6 +288,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     raffleWinners,
     isLoading,
     addEvent,
+    updateEventData,
+    updateEventWithMembers,
     addMember,
     addMultipleMembers,
     addPairing,
@@ -247,10 +300,5 @@ export function DataProvider({ children }: { children: ReactNode }) {
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }
 
-export function useData() {
-  const context = useContext(DataContext)
-  if (!context) {
-    throw new Error('useData must be used within DataProvider')
-  }
-  return context
-}
+export { DataContext }
+export type { DataContextType }

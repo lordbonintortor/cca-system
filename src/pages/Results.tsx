@@ -1,6 +1,6 @@
 import './Registration.css'
-import { useState, useMemo, useContext, useEffect } from 'react'
-import { useData } from '../context/DataContext'
+import { useState, useMemo, useContext } from 'react'
+import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
 
 type ResultRow = {
@@ -16,13 +16,9 @@ type ResultRow = {
 
 function Results() {
   const { events, members, pairings } = useData()
-  const [selectedEvent, setSelectedEvent] = useState('')
-
-  useEffect(() => {
-    if (events.length > 0 && !selectedEvent) {
-      setSelectedEvent(events[0].name)
-    }
-  }, [events, selectedEvent])
+  const [selectedEvent, setSelectedEvent] = useState<string>(() => {
+    return events.length > 0 ? events[0].name : ''
+  })
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -34,21 +30,21 @@ function Results() {
     return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   }, [events])
 
-  const getOutcomeText = (pairingId: number) => {
-    const fight = taggedFights.find((f) => f.pairingId === pairingId)
-    if (!fight) return '-'
+  const eventResults = useMemo<ResultRow[]>(() => {
+    const getOutcomeText = (pairingId: number) => {
+      const fight = taggedFights.find((f) => f.pairingId === pairingId)
+      if (!fight) return '-'
 
-    if (fight.outcome === 'draw') return '0 - 0'
-    if (fight.outcome === 'cancelled') return 'N/A'
-    if (fight.outcome === 'winner' || fight.outcome === 'loser') {
-      if (fight.outcomeWinner === 'mayron') return '1 - 0'
-      if (fight.outcomeWinner === 'wala') return '0 - 1'
+      if (fight.outcome === 'draw') return '0 - 0'
+      if (fight.outcome === 'cancelled') return 'N/A'
+      if (fight.outcome === 'winner' || fight.outcome === 'loser') {
+        if (fight.outcomeWinner === 'mayron') return '1 - 0'
+        if (fight.outcomeWinner === 'wala') return '0 - 1'
+      }
+
+      return '-'
     }
 
-    return '-'
-  }
-
-  const eventResults = useMemo<ResultRow[]>(() => {
     const event = events.find(e => e.name === selectedEvent)
     if (!event) {
       return []
@@ -175,14 +171,14 @@ function Results() {
         <h1>Results</h1>
         <p>View fight results and outcomes</p>
         <div style={{ display: 'flex', gap: '1rem', margin: '0.75rem auto 0', alignItems: 'flex-end', width: '100%', maxWidth: '1000px', justifyContent: 'space-between' }}>
-          <div style={{ flex: '0 0 220px', textAlign: 'left' }}>
+          <div style={{ flex: '0 0 220px', textAlign: 'center' }}>
             <label htmlFor="resultsEventSelect" style={{ display: 'block', marginBottom: '0.45rem', fontSize: '0.8rem', fontWeight: '600', color: '#333' }}>Select Event</label>
             <select
               id="resultsEventSelect"
               className="form-input"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
-              style={{ width: '220px', maxWidth: '220px' }}
+              style={{ width: '220px', maxWidth: '220px', textAlign: 'center' }}
             >
               {sortedEvents.map((event) => (
                 <option key={event.id} value={event.name}>

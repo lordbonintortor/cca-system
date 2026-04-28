@@ -92,7 +92,7 @@ export const seedDatabase = async () => {
     }
 
     console.log('Seeding events...')
-    const createdEvents: any = {}
+    const createdEvents: Record<string, number> = {}
 
     for (const event of INITIAL_EVENTS) {
       const created = await createEvent({

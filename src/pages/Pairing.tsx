@@ -1,6 +1,7 @@
 import './Registration.css'
 import { useState, useMemo, useEffect } from 'react'
-import { useData, type Pairing, type Member } from '../context/DataContext'
+import { useData } from '../context/useDataContext'
+import type { Pairing, Member } from '../context/DataContext'
 
 interface PairingRecord {
   id: number
@@ -451,6 +452,7 @@ function PairingPage() {
               className="form-input"
               value={eventName}
               onChange={(e) => setEventName(e.target.value)}
+              style={{ textAlign: 'center' }}
             >
               {sortedEvents.map((event) => (
                 <option key={event.id} value={event.name}>

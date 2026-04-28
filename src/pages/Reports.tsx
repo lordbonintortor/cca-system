@@ -1,6 +1,6 @@
 import './Registration.css'
 import { useState, useMemo, useContext, useEffect } from 'react'
-import { useData } from '../context/DataContext'
+import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
 
 type ReportRow = {
@@ -196,14 +196,14 @@ function Reports() {
         <h1>Reports Information</h1>
 
         <div style={{ display: 'flex', gap: '1rem', margin: '0.75rem auto 2rem', alignItems: 'flex-end', width: '100%', maxWidth: '1000px', justifyContent: 'space-between' }}>
-          <div style={{ flex: '0 0 220px', textAlign: 'left' }}>
+          <div style={{ flex: '0 0 220px', textAlign: 'center' }}>
             <label htmlFor="eventSelect" style={{ display: 'block', marginBottom: '0.45rem', fontSize: '0.8rem', fontWeight: '600', color: '#333' }}>Select Event</label>
             <select
               id="eventSelect"
               className="form-input"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
-              style={{ width: '220px', maxWidth: '220px' }}
+              style={{ width: '220px', maxWidth: '220px', textAlign: 'center' }}
             >
               {sortedEvents.map((event) => (
                 <option key={event.id} value={event.name}>

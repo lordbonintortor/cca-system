@@ -1,18 +1,19 @@
 import './Events.css'
 import { useState, useMemo, useEffect } from 'react'
-import { useData } from '../context/DataContext'
+import { useData } from '../context/useDataContext'
 import type { Event as ArenaEvent } from '../context/DataContext'
 
 type PendingEvent = Omit<ArenaEvent, 'id'>
 
 function Events() {
-  const { events, addEvent } = useData()
+  const { events, addEvent, updateEventWithMembers } = useData()
   const [displayEvents, setDisplayEvents] = useState(events)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [editingEventId, setEditingEventId] = useState<number | null>(null)
+  const [originalEventName, setOriginalEventName] = useState('')
   const [eventName, setEventName] = useState('')
   const [eventType, setEventType] = useState('Hack Fight')
   const [hackFightType, setHackFightType] = useState('Stag')
@@ -40,6 +41,7 @@ function Events() {
     setIsModalOpen(false)
     setIsEditMode(false)
     setEditingEventId(null)
+    setOriginalEventName('')
     setEventName('')
     setEventType('Hack Fight')
     setHackFightType('Stag')
@@ -57,6 +59,7 @@ function Events() {
       setWeightRangeMin(derbyInfoParts[3])
       setWeightRangeMax(derbyInfoParts[4])
     }
+    setOriginalEventName(event.name)
     setEventName(event.name)
     setEventDate(event.date)
     setEditingEventId(event.id)
@@ -93,7 +96,14 @@ function Events() {
   const handleConfirmEvent = async () => {
     if (pendingEvent) {
       try {
-        if (!isEditMode) {
+        if (isEditMode && editingEventId) {
+          await updateEventWithMembers(editingEventId, originalEventName, {
+            name: pendingEvent.name,
+            type: pendingEvent.type,
+            derby_info: pendingEvent.derby_info,
+            date: pendingEvent.date,
+          })
+        } else {
           await addEvent({
             name: pendingEvent.name,
             type: pendingEvent.type,
@@ -102,6 +112,7 @@ function Events() {
           })
         }
       } catch (error) {
+        console.error('Event save error:', error)
         alert('Error saving event')
       }
     }

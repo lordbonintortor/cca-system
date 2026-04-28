@@ -1,6 +1,7 @@
 import './Registration.css'
 import { useState, useMemo, useEffect } from 'react'
-import { useData, type Member } from '../context/DataContext'
+import { useData } from '../context/useDataContext'
+import type { Member } from '../context/DataContext'
 
 
 
@@ -104,6 +105,8 @@ function Registration() {
       await addMultipleMembers(pendingMembers)
       setShowConfirmation(false)
       setPendingMembers([])
+      setSearchQuery('')
+      setCurrentPage(1)
       handleCloseModal()
     } catch (error) {
       console.error('Error adding members:', error)
@@ -121,12 +124,25 @@ function Registration() {
       ? members.filter((member) => member.event_name === selectedEventName)
       : members
 
-    if (!searchQuery) return eventMembers
-    return eventMembers.filter((member) =>
-      member.entry_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.event_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.handler_name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    let result = eventMembers
+    if (searchQuery) {
+      result = result.filter((member) =>
+        member.entry_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.event_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.handler_name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Get today's date to identify newly added members
+    const today = new Date()
+    const todayDateString = today.toISOString().split('T')[0]
+
+    // Separate newly added members (from today) and older members
+    const newlyAdded = result.filter(m => m.registration_date === todayDateString)
+    const older = result.filter(m => m.registration_date !== todayDateString)
+
+    // Combine: newly added first (no sorting), then older (no sorting)
+    return [...newlyAdded, ...older]
   }, [searchQuery, selectedEventName, members])
 
   const paginatedMembers = useMemo(() => {

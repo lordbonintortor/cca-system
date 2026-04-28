@@ -32,6 +32,28 @@ export const createEvent = async (event: {
   return data[0]
 }
 
+export const updateEvent = async (
+  id: number,
+  event: {
+    name: string
+    type: string
+    derby_info: string
+    date: string
+  }
+) => {
+  const { data, error } = await supabase
+    .from('events')
+    .update(event)
+    .eq('id', id)
+    .select()
+
+  if (error) {
+    console.error('Error updating event:', error)
+    throw error
+  }
+  return data[0]
+}
+
 // ===== MEMBERS =====
 export const getMembers = async () => {
   const { data, error } = await supabase
@@ -98,6 +120,26 @@ export const createMultipleMembers = async (members: Array<{
     throw error
   }
   return data
+}
+
+export const updateMembersByEventName = async (
+  oldEventName: string,
+  newEventName: string
+) => {
+  if (oldEventName === newEventName) {
+    return []
+  }
+  
+  const { data, error } = await supabase
+    .from('members')
+    .update({ event_name: newEventName })
+    .eq('event_name', oldEventName)
+
+  if (error) {
+    console.error('Error updating members event name:', error)
+    throw error
+  }
+  return data || []
 }
 
 // ===== PAIRINGS =====

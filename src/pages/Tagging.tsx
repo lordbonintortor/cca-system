@@ -1,6 +1,6 @@
 import './Registration.css'
 import { useState, useMemo, useContext, useEffect } from 'react'
-import { useData } from '../context/DataContext'
+import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
 
 
@@ -99,7 +99,7 @@ function Tagging() {
             className="form-input"
             value={selectedEvent}
             onChange={(e) => setSelectedEvent(e.target.value)}
-            style={{ maxWidth: '400px' }}
+            style={{ maxWidth: '400px', textAlign: 'center' }}
           >
             {sortedEvents.map((event) => (
               <option key={event.id} value={event.name}>

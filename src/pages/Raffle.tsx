@@ -1,6 +1,7 @@
 import './Registration.css'
 import { useState, useMemo, useEffect } from 'react'
-import { useData, type RaffleWinner } from '../context/DataContext'
+import { useData } from '../context/useDataContext'
+import type { RaffleWinner } from '../context/DataContext'
 
 interface Ticket {
   id: number
