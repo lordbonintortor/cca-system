@@ -20,7 +20,7 @@ function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (username && password) {
-      login(username, password)
+      login(username, password, rememberMe)
     }
   }
 
