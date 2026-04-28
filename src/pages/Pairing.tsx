@@ -19,7 +19,11 @@ interface PairingRecord {
 
 
 
-function Pairing() {
+const getBaseEntryName = (entryName: string) => {
+  return entryName.replace(/\s+-\s+Entry\s+\d+$/i, '')
+}
+
+function PairingPage() {
   const { events, members, pairings, addPairing } = useData()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [eventName, setEventName] = useState('')
@@ -54,6 +58,31 @@ function Pairing() {
     return members.filter((member) => member.event_name === eventName)
   }, [eventName, members])
 
+  const selectableMembers = useMemo(() => {
+    const seenMembers = new Set<string>()
+
+    return filteredMembers.filter((member) => {
+      const baseEntryName = getBaseEntryName(member.entry_name)
+      const memberKey = `${baseEntryName}|${member.handler_name}`
+
+      if (seenMembers.has(memberKey)) {
+        return false
+      }
+
+      seenMembers.add(memberKey)
+      return true
+    })
+  }, [filteredMembers])
+
+  const eventPairings = useMemo(() => {
+    const event = events.find((e) => e.name === eventName)
+    if (!event) return []
+
+    return pairings
+      .filter((pairing) => pairing.event_id === event.id)
+      .sort((a, b) => b.fight_number - a.fight_number)
+  }, [events, eventName, pairings])
+
   const calculatedDiferencia = useMemo(() => {
     if (!mayronBetting || !walaBetting) return ''
     const mayron = parseFloat(mayronBetting.replace(/,/g, ''))
@@ -73,8 +102,8 @@ function Pairing() {
     const printWindow = window.open('', '', 'height=800,width=600')
     if (!printWindow) return
 
-    const mayronEntry = mayronMember?.entry_name || 'N/A'
-    const walaEntry = walaMember?.entry_name || 'N/A'
+    const mayronEntry = mayronMember ? getBaseEntryName(mayronMember.entry_name) : 'N/A'
+    const walaEntry = walaMember ? getBaseEntryName(walaMember.entry_name) : 'N/A'
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -306,7 +335,7 @@ function Pairing() {
   }
 
   const handleCreatePairing = () => {
-    if (sortedEvents.length > 0) {
+    if (sortedEvents.length > 0 && !eventName) {
       setEventName(sortedEvents[0].name)
     }
     setIsModalOpen(true)
@@ -314,7 +343,6 @@ function Pairing() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setEventName('')
     setMayronEntry('')
     setWalaEntry('')
     setMayronHandler('')
@@ -336,9 +364,14 @@ function Pairing() {
       return
     }
 
+    const eventData = events.find((e) => e.name === eventName)
+    const nextFightNumber = eventData
+      ? Math.max(0, ...pairings.filter((p) => p.event_id === eventData.id).map((p) => p.fight_number)) + 1
+      : 1
+
     const newPairing: PairingRecord = {
       id: Date.now(),
-      fight_number: pairings.length + 1,
+      fight_number: nextFightNumber,
       mayron_entry: mayronEntry,
       mayron_handler: mayronHandler,
       mayron_weight: mayronWeight,
@@ -358,8 +391,8 @@ function Pairing() {
     if (pendingPairing) {
       try {
         // Find member IDs for the selected entry names
-        const mayronMember = members.find((m) => m.entry_name === pendingPairing.mayron_entry)
-        const walaMember = members.find((m) => m.entry_name === pendingPairing.wala_entry)
+        const mayronMember = members.find((m) => getBaseEntryName(m.entry_name) === pendingPairing.mayron_entry && m.event_name === eventName)
+        const walaMember = members.find((m) => getBaseEntryName(m.entry_name) === pendingPairing.wala_entry && m.event_name === eventName)
 
         if (!mayronMember || !walaMember) {
           alert('Could not find selected members')
@@ -376,8 +409,8 @@ function Pairing() {
         // Convert to Pairing format with IDs
         const pairingToSave = {
           event_id: eventData.id,
-          fight_number: pairings.length + 1,
-          sultada_number: '',
+          fight_number: pendingPairing.fight_number,
+          sultada_number: String(pendingPairing.fight_number),
           mayron_entry_id: mayronMember.id,
           mayron_handler: pendingPairing.mayron_handler,
           mayron_weight: pendingPairing.mayron_weight,
@@ -410,8 +443,23 @@ function Pairing() {
       <div className="page-main">
         <h1>Pairing</h1>
         <p>Create fight pairings</p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', width: '100%' }}>
-          <button className="btn-add-event" onClick={handleCreatePairing}>+ Add New Pair</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem', width: '100%', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ minWidth: '260px' }}>
+            <label htmlFor="pairingEventSelect" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#333' }}>Select Event</label>
+            <select
+              id="pairingEventSelect"
+              className="form-input"
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
+            >
+              {sortedEvents.map((event) => (
+                <option key={event.id} value={event.name}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button className="btn-add-event" onClick={handleCreatePairing}>+ Add New Pairing</button>
         </div>
 
         <div style={{ width: '100%', maxWidth: '1400px', margin: '2rem auto', overflowX: 'auto' }}>
@@ -432,7 +480,7 @@ function Pairing() {
               </tr>
             </thead>
             <tbody>
-              {pairings.map((pairing) => {
+              {eventPairings.map((pairing) => {
                 // Look up member names from IDs
                 const mayronMember = members.find((m) => m.id === pairing.mayron_entry_id)
                 const walaMember = members.find((m) => m.id === pairing.wala_entry_id)
@@ -440,11 +488,11 @@ function Pairing() {
                 return (
                   <tr key={pairing.id}>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.fight_number}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{mayronMember?.entry_name || 'N/A'}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{mayronMember ? getBaseEntryName(mayronMember.entry_name) : 'N/A'}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayron_handler}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayron_weight}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.mayron_betting}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{walaMember?.entry_name || 'N/A'}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{walaMember ? getBaseEntryName(walaMember.entry_name) : 'N/A'}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.wala_handler}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.wala_weight}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.wala_betting}</td>
@@ -509,13 +557,17 @@ function Pairing() {
                   <select
                     className="form-input"
                     value={mayronEntry}
-                    onChange={(e) => setMayronEntry(e.target.value)}
+                    onChange={(e) => {
+                      setMayronEntry(e.target.value)
+                      const member = selectableMembers.find((m) => getBaseEntryName(m.entry_name) === e.target.value)
+                      setMayronHandler(member?.handler_name || '')
+                    }}
                     required
                   >
                     <option value="">Select member</option>
-                    {filteredMembers.map((member) => (
-                      <option key={member.id} value={member.entry_name}>
-                        {member.entry_name}
+                    {selectableMembers.map((member) => (
+                      <option key={member.id} value={getBaseEntryName(member.entry_name)}>
+                        {getBaseEntryName(member.entry_name)}
                       </option>
                     ))}
                   </select>
@@ -525,13 +577,17 @@ function Pairing() {
                   <select
                     className="form-input"
                     value={walaEntry}
-                    onChange={(e) => setWalaEntry(e.target.value)}
+                    onChange={(e) => {
+                      setWalaEntry(e.target.value)
+                      const member = selectableMembers.find((m) => getBaseEntryName(m.entry_name) === e.target.value)
+                      setWalaHandler(member?.handler_name || '')
+                    }}
                     required
                   >
                     <option value="">Select member</option>
-                    {filteredMembers.map((member) => (
-                      <option key={member.id} value={member.entry_name}>
-                        {member.entry_name}
+                    {selectableMembers.map((member) => (
+                      <option key={member.id} value={getBaseEntryName(member.entry_name)}>
+                        {getBaseEntryName(member.entry_name)}
                       </option>
                     ))}
                   </select>
@@ -721,4 +777,4 @@ function Pairing() {
   )
 }
 
-export default Pairing
+export default PairingPage

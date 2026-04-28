@@ -1,88 +1,42 @@
 import './Registration.css'
-import { useState, useMemo, useContext } from 'react'
+import { useState, useMemo, useContext, useEffect } from 'react'
+import { useData } from '../context/DataContext'
 import { TaggingContext } from '../context/tagging'
 
-interface Event {
-  id: number
-  name: string
-  type: string
-  derbyInfo: string
-  date: string
-}
-
-interface PairingRecord {
+type ResultRow = {
   id: number
   fightNumber: number
   mayronEntry: string
   mayronHandler: string
-  mayronWeight: string
-  mayronBetting: string
   walaEntry: string
   walaHandler: string
-  walaWeight: string
-  walaBetting: string
-  diferencia: string
+  result: string
+  outcome: string
 }
 
-const INITIAL_EVENTS: Event[] = [
-  { id: 1, name: 'Monday Night Match', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (45-50 lbs)', date: '2026-04-20' },
-  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-19' },
-  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-18' },
-  { id: 4, name: 'Spring Classic Derby', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 4 per Entry (50-60 lbs)', date: '2026-04-17' },
-  { id: 5, name: 'Inter-Club Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 2 per Entry (60-75 lbs)', date: '2026-04-16' },
-  { id: 6, name: 'Regional Qualifier', type: 'Hack Fight', derbyInfo: 'Cock - 3 per Entry (75-90 lbs)', date: '2026-04-15' },
-  { id: 7, name: 'Friendly Match Series', type: 'Hack Fight', derbyInfo: 'Stag - 3 per Entry (40-55 lbs)', date: '2026-04-14' },
-  { id: 8, name: 'Championship Round', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 2 per Entry (65-80 lbs)', date: '2026-04-13' },
-  { id: 9, name: 'Rising Stars Tournament', type: 'Hack Fight', derbyInfo: 'Stag - 4 per Entry (35-50 lbs)', date: '2026-04-12' },
-  { id: 10, name: 'Elite Division Match', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (80-95 lbs)', date: '2026-04-11' },
-  { id: 11, name: 'April Opener', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 3 per Entry (48-62 lbs)', date: '2026-04-10' },
-  { id: 12, name: 'Grand Festival Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (58-72 lbs)', date: '2026-04-09' },
-  { id: 13, name: 'Provincial Challenge', type: 'Hack Fight', derbyInfo: 'Cock - 4 per Entry (72-88 lbs)', date: '2026-04-08' },
-  { id: 14, name: 'Spring Warmup Series', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (42-58 lbs)', date: '2026-04-07' },
-  { id: 15, name: 'National Preliminaries', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 3 per Entry (60-78 lbs)', date: '2026-04-06' },
-]
-
-const INITIAL_PAIRINGS: PairingRecord[] = [
-  { id: 1, fightNumber: 1, mayronEntry: 'Juan Dela Cruz', mayronHandler: 'Carlos Santos', mayronWeight: '47 lbs', mayronBetting: '2000', walaEntry: 'Maria Garcia', walaHandler: 'Pedro Ramirez', walaWeight: '46 lbs', walaBetting: '2000', diferencia: '₱0' },
-  { id: 2, fightNumber: 2, mayronEntry: 'Antonio Reyes', mayronHandler: 'Miguel Torres', mayronWeight: '73 lbs', mayronBetting: '3500', walaEntry: 'Rosa Lopez', walaHandler: 'Juan Mendoza', walaWeight: '72 lbs', walaBetting: '3500', diferencia: '₱0' },
-  { id: 3, fightNumber: 3, mayronEntry: 'Francisco Diaz', mayronHandler: 'Luis Fernandez', mayronWeight: '62 lbs', mayronBetting: '2750', walaEntry: 'Angela Morales', walaHandler: 'Ricardo Gutierrez', walaWeight: '61 lbs', walaBetting: '3000', diferencia: '₱250' },
-]
-
 function Results() {
-  const [selectedEvent, setSelectedEvent] = useState(INITIAL_EVENTS[0].name)
-  const { taggedFights } = useContext(TaggingContext)!
+  const { events, members, pairings } = useData()
+  const [selectedEvent, setSelectedEvent] = useState('')
+
+  useEffect(() => {
+    if (events.length > 0 && !selectedEvent) {
+      setSelectedEvent(events[0].name)
+    }
+  }, [events, selectedEvent])
+
+  const context = useContext(TaggingContext)
+  if (!context) {
+    throw new Error('Results must be used within TaggingProvider')
+  }
+  const { taggedFights } = context
 
   const sortedEvents = useMemo(() => {
-    return [...INITIAL_EVENTS].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  }, [])
-
-  const eventResults = useMemo(() => {
-    return INITIAL_PAIRINGS.filter((pairing) => {
-      const event = INITIAL_EVENTS.find(e => e.name === selectedEvent)
-      if (!event) return false
-      const taggedFight = taggedFights.find((f) => f.pairingId === pairing.id)
-      return taggedFight && taggedFight.status === 'tagged'
-    }).sort((a, b) => b.fightNumber - a.fightNumber)
-  }, [taggedFights, selectedEvent])
-
-  const getOutcomeEmoji = (outcome?: string) => {
-    switch (outcome) {
-      case 'mayronWinner':
-        return '✓'
-      case 'walaWinner':
-        return '✓'
-      case 'draw':
-        return '⚔️'
-      case 'cancelled':
-        return '❌'
-      default:
-        return '?'
-    }
-  }
+    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }, [events])
 
   const getOutcomeText = (pairingId: number) => {
     const fight = taggedFights.find((f) => f.pairingId === pairingId)
-    if (!fight) return '—'
+    if (!fight) return '-'
 
     if (fight.outcome === 'draw') return '0 - 0'
     if (fight.outcome === 'cancelled') return 'N/A'
@@ -90,28 +44,49 @@ function Results() {
       if (fight.outcomeWinner === 'mayron') return '1 - 0'
       if (fight.outcomeWinner === 'wala') return '0 - 1'
     }
-    
-    return '—'
+
+    return '-'
   }
 
+  const eventResults = useMemo<ResultRow[]>(() => {
+    const event = events.find(e => e.name === selectedEvent)
+    if (!event) {
+      return []
+    }
+
+    return pairings
+      .filter(pairing => pairing.event_id === event.id)
+      .map(pairing => {
+        const fight = taggedFights.find((f) => f.pairingId === pairing.id)
+        if (!fight || fight.status !== 'tagged') {
+          return null
+        }
+
+        const mayronMember = members.find(m => m.id === pairing.mayron_entry_id)
+        const walaMember = members.find(m => m.id === pairing.wala_entry_id)
+
+        return {
+          id: pairing.id,
+          fightNumber: pairing.fight_number,
+          mayronEntry: mayronMember?.entry_name || 'N/A',
+          mayronHandler: pairing.mayron_handler,
+          walaEntry: walaMember?.entry_name || 'N/A',
+          walaHandler: pairing.wala_handler,
+          result: getOutcomeText(pairing.id),
+          outcome: fight.outcome || ''
+        }
+      })
+      .filter((row): row is ResultRow => row !== null)
+      .sort((a, b) => b.fightNumber - a.fightNumber)
+  }, [events, members, pairings, selectedEvent, taggedFights])
+
   const summary = useMemo(() => {
-    const wins = eventResults.filter((p) => {
-      const fight = taggedFights.find((f) => f.pairingId === p.id)
-      return fight?.outcome === 'winner' || fight?.outcome === 'loser'
-    }).length
-
-    const draws = eventResults.filter((p) => {
-      const fight = taggedFights.find((f) => f.pairingId === p.id)
-      return fight?.outcome === 'draw'
-    }).length
-
-    const cancelled = eventResults.filter((p) => {
-      const fight = taggedFights.find((f) => f.pairingId === p.id)
-      return fight?.outcome === 'cancelled'
-    }).length
+    const wins = eventResults.filter(row => row.outcome === 'winner' || row.outcome === 'loser').length
+    const draws = eventResults.filter(row => row.outcome === 'draw').length
+    const cancelled = eventResults.filter(row => row.outcome === 'cancelled').length
 
     return { wins, draws, cancelled, total: eventResults.length }
-  }, [eventResults, taggedFights])
+  }, [eventResults])
 
   const handlePrint = () => {
     const printContent = `
@@ -133,10 +108,6 @@ function Results() {
           .summary-item { text-align: center; }
           .summary-label { font-size: 0.9rem; color: #666; margin-bottom: 8px; }
           .summary-value { font-size: 1.3rem; font-weight: bold; color: #333; }
-          .outcome-badge { padding: 4px 8px; border-radius: 3px; font-size: 0.9rem; }
-          .winner { background: #e8f5e9; color: #2e7d32; }
-          .draw { background: #fff3e0; color: #e65100; }
-          .cancelled { background: #ffebee; color: #c62828; }
         </style>
       </head>
       <body>
@@ -154,20 +125,16 @@ function Results() {
             </tr>
           </thead>
           <tbody>
-            ${eventResults.map((pairing) => {
-              const fight = taggedFights.find((f) => f.pairingId === pairing.id)
-              const outcomeText = getOutcomeText(pairing.id)
-              return `
-                <tr>
-                  <td>${pairing.fightNumber}</td>
-                  <td>${pairing.mayronEntry}</td>
-                  <td>${pairing.mayronHandler}</td>
-                  <td>${pairing.walaEntry}</td>
-                  <td>${pairing.walaHandler}</td>
-                  <td class="result-cell">${outcomeText}</td>
-                </tr>
-              `
-            }).join('')}
+            ${eventResults.map((row) => `
+              <tr>
+                <td>${row.fightNumber}</td>
+                <td>${row.mayronEntry}</td>
+                <td>${row.mayronHandler}</td>
+                <td>${row.walaEntry}</td>
+                <td>${row.walaHandler}</td>
+                <td class="result-cell">${row.result}</td>
+              </tr>
+            `).join('')}
           </tbody>
         </table>
         <div class="summary">
@@ -207,12 +174,15 @@ function Results() {
       <div className="page-main">
         <h1>Results</h1>
         <p>View fight results and outcomes</p>
-        <div className="search-action-row">
-          <div className="search-container">
+        <div style={{ display: 'flex', gap: '1rem', margin: '0.75rem auto 0', alignItems: 'flex-end', width: '100%', maxWidth: '1000px', justifyContent: 'space-between' }}>
+          <div style={{ flex: '0 0 220px', textAlign: 'left' }}>
+            <label htmlFor="resultsEventSelect" style={{ display: 'block', marginBottom: '0.45rem', fontSize: '0.8rem', fontWeight: '600', color: '#333' }}>Select Event</label>
             <select
-              className="search-input"
+              id="resultsEventSelect"
+              className="form-input"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
+              style={{ width: '220px', maxWidth: '220px' }}
             >
               {sortedEvents.map((event) => (
                 <option key={event.id} value={event.name}>
@@ -221,8 +191,17 @@ function Results() {
               ))}
             </select>
           </div>
-          <button className="btn-add-event" onClick={handlePrint}>
-            🖨️ Print Results
+          <button
+            className="btn-add-event"
+            onClick={handlePrint}
+            style={{
+              backgroundColor: '#2e7d32',
+              height: 'fit-content'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#256b2b'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2e7d32'}
+          >
+            Print Results
           </button>
         </div>
 
@@ -265,20 +244,16 @@ function Results() {
                   </tr>
                 </thead>
                 <tbody>
-                  {eventResults.map((pairing) => {
-                    const fight = taggedFights.find((f) => f.pairingId === pairing.id)
-                    const outcomeText = getOutcomeText(pairing.id)
-                    return (
-                      <tr key={pairing.id}>
-                        <td>{pairing.fightNumber}</td>
-                        <td>{pairing.mayronEntry}</td>
-                        <td>{pairing.mayronHandler}</td>
-                        <td>{pairing.walaEntry}</td>
-                        <td>{pairing.walaHandler}</td>
-                        <td style={{ fontWeight: 'bold', textAlign: 'center' }}>{outcomeText}</td>
-                      </tr>
-                    )
-                  })}
+                  {eventResults.map((row) => (
+                    <tr key={row.id}>
+                      <td>{row.fightNumber}</td>
+                      <td>{row.mayronEntry}</td>
+                      <td>{row.mayronHandler}</td>
+                      <td>{row.walaEntry}</td>
+                      <td>{row.walaHandler}</td>
+                      <td style={{ fontWeight: 'bold', textAlign: 'center' }}>{row.result}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

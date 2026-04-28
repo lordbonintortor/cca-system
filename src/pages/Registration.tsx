@@ -1,5 +1,5 @@
 import './Registration.css'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useData, type Member } from '../context/DataContext'
 
 
@@ -10,6 +10,7 @@ function Registration() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [entryName, setEntryName] = useState('')
+  const [selectedEventName, setSelectedEventName] = useState('')
   const [eventName, setEventName] = useState('')
   const [handlerName, setHandlerName] = useState('')
   const [cockType, setCockType] = useState('Stag')
@@ -24,6 +25,22 @@ function Registration() {
     return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   }, [events])
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedEventName((currentEventName) => {
+      if (currentEventName || sortedEvents.length === 0) {
+        return currentEventName
+      }
+
+      return sortedEvents[0].name
+    })
+  }, [sortedEvents])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1)
+  }, [searchQuery, selectedEventName])
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -33,25 +50,9 @@ function Registration() {
     const today = new Date()
     const formattedDate = today.toISOString().split('T')[0]
     setRegistrationDate(formattedDate)
-    // Set event name to the newest event
-    if (sortedEvents.length > 0) {
-      setEventName(sortedEvents[0].name)
-      // Extract cock type and number of entries from the newest event's derby_info
-      const cockTypeFromEvent = sortedEvents[0].derby_info.split(' - ')[0]
-      setCockType(cockTypeFromEvent)
-      const perEntryMatch = sortedEvents[0].derby_info.match(/(\d+) per Entry/)
-      if (perEntryMatch) {
-        setNumberOfEntries(perEntryMatch[1])
-      }
-    }
-    setIsModalOpen(true)
-  }
-
-  const handleEventChange = (selectedEventName: string) => {
-    setEventName(selectedEventName)
-    // Find the event and extract cock type and number of entries from derby_info
-    const selectedEvent = events.find(e => e.name === selectedEventName)
+    const selectedEvent = events.find(e => e.name === selectedEventName) || sortedEvents[0]
     if (selectedEvent) {
+      setEventName(selectedEvent.name)
       const cockTypeFromEvent = selectedEvent.derby_info.split(' - ')[0]
       setCockType(cockTypeFromEvent)
       const perEntryMatch = selectedEvent.derby_info.match(/(\d+) per Entry/)
@@ -59,6 +60,7 @@ function Registration() {
         setNumberOfEntries(perEntryMatch[1])
       }
     }
+    setIsModalOpen(true)
   }
 
   const handleCloseModal = () => {
@@ -115,13 +117,17 @@ function Registration() {
   }
 
   const filteredMembers = useMemo(() => {
-    if (!searchQuery) return members
-    return members.filter((member) =>
+    const eventMembers = selectedEventName
+      ? members.filter((member) => member.event_name === selectedEventName)
+      : members
+
+    if (!searchQuery) return eventMembers
+    return eventMembers.filter((member) =>
       member.entry_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       member.event_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       member.handler_name.toLowerCase().includes(searchQuery.toLowerCase())
     )
-  }, [searchQuery, members])
+  }, [searchQuery, selectedEventName, members])
 
   const paginatedMembers = useMemo(() => {
     const startIdx = (currentPage - 1) * itemsPerPage
@@ -179,8 +185,23 @@ function Registration() {
       <div className="page-main">
         <h1>Registration</h1>
         <p>Manage member registrations</p>
-        <div className="search-action-row">
-          <div className="search-container">
+        <div className="search-action-row registration-controls">
+          <div className="registration-event-filter">
+            <label htmlFor="registrationEventSelect">Select Event</label>
+            <select
+              id="registrationEventSelect"
+              className="form-input"
+              value={selectedEventName}
+              onChange={(e) => setSelectedEventName(e.target.value)}
+            >
+              {sortedEvents.map((event) => (
+                <option key={event.id} value={event.name}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="search-container registration-search">
             <input
               type="text"
               className="search-input"
@@ -266,21 +287,16 @@ function Registration() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="eventName">Event Name <span className="required-asterisk">*</span></label>
-                  <select
+                  <label htmlFor="eventName">Event Name</label>
+                  <input
                     id="eventName"
+                    type="text"
                     className="form-input"
                     value={eventName}
-                    onChange={(e) => handleEventChange(e.target.value)}
+                    readOnly
+                    disabled
                     required
-                  >
-                    <option value="">Select an event</option>
-                    {sortedEvents.map((event) => (
-                      <option key={event.id} value={event.name}>
-                        {event.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
               <div className="form-group">
@@ -408,4 +424,3 @@ function Registration() {
 }
 
 export default Registration
-

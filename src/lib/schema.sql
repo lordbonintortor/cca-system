@@ -30,8 +30,13 @@ CREATE TABLE pairings (
   sultada_number TEXT NOT NULL,
   mayron_entry_id BIGINT REFERENCES members(id),
   mayron_handler TEXT NOT NULL,
+  mayron_weight TEXT NOT NULL,
+  mayron_betting TEXT NOT NULL,
   wala_entry_id BIGINT REFERENCES members(id),
   wala_handler TEXT NOT NULL,
+  wala_weight TEXT NOT NULL,
+  wala_betting TEXT NOT NULL,
+  diferencia TEXT NOT NULL,
   parada_amount DECIMAL(10, 2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

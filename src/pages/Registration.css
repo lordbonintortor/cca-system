@@ -225,6 +225,78 @@
   transform: translateY(0);
 }
 
+.registration-controls {
+  display: grid;
+  grid-template-columns: 220px 1fr 180px;
+  width: 100%;
+  max-width: 1000px;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 0.75rem auto 0;
+}
+
+.registration-event-filter {
+  flex: 0 0 220px !important;
+  width: 220px;
+  max-width: 220px;
+  text-align: left;
+}
+
+.registration-event-filter label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.registration-event-filter .form-input {
+  width: 220px;
+  max-width: 220px;
+}
+
+.registration-search {
+  display: grid;
+  grid-template-columns: 210px 88px;
+  gap: 0.75rem;
+  flex: 0 0 298px !important;
+  width: 298px;
+  max-width: 298px;
+  justify-self: center;
+  left: 0 !important;
+  position: static;
+}
+
+.registration-search .search-input {
+  width: 210px;
+  min-width: 0;
+}
+
+.registration-search .search-btn {
+  width: 88px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.registration-controls .btn-add-event {
+  flex: 0 0 auto !important;
+  width: auto;
+  min-width: 160px;
+  justify-self: end;
+  margin-left: 0;
+  transform: translateX(60px);
+  height: 42px;
+  padding-left: 0.9rem;
+  padding-right: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.registration-controls .btn-add-event:hover {
+  transform: translateX(60px) translateY(-2px);
+}
+
 .btn-register {
   padding: 0.5rem 1.2rem;
   font-size: 0.85rem;
@@ -540,6 +612,28 @@
 
   .modal-content {
     max-width: 90%;
+  }
+
+  .registration-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .registration-event-filter,
+  .registration-search {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .registration-search {
+    flex-direction: column;
+  }
+
+  .registration-search .search-input,
+  .registration-search .search-btn,
+  .registration-controls .btn-add-event {
+    width: 100%;
   }
 }
 

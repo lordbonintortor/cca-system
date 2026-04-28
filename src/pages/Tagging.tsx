@@ -1,72 +1,26 @@
 import './Registration.css'
-import { useState, useMemo, useContext } from 'react'
+import { useState, useMemo, useContext, useEffect } from 'react'
+import { useData } from '../context/DataContext'
 import { TaggingContext } from '../context/tagging'
 
-interface Event {
-  id: number
-  name: string
-  type: string
-  derbyInfo: string
-  date: string
-}
 
-interface PairingRecord {
-  id: number
-  fightNumber: number
-  mayronEntry: string
-  mayronHandler: string
-  mayronWeight: string
-  mayronBetting: string
-  walaEntry: string
-  walaHandler: string
-  walaWeight: string
-  walaBetting: string
-  diferencia: string
-}
-
-const INITIAL_EVENTS: Event[] = [
-  { id: 1, name: 'Monday Night Match', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (45-50 lbs)', date: '2026-04-20' },
-  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-19' },
-  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-18' },
-  { id: 4, name: 'Spring Classic Derby', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 4 per Entry (50-60 lbs)', date: '2026-04-17' },
-  { id: 5, name: 'Inter-Club Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 2 per Entry (60-75 lbs)', date: '2026-04-16' },
-]
-
-const INITIAL_PAIRINGS: PairingRecord[] = [
-  {
-    id: 1,
-    fightNumber: 2,
-    mayronEntry: 'Victor Martinez',
-    mayronHandler: 'Alex Torres',
-    mayronWeight: '48',
-    mayronBetting: '5,000',
-    walaEntry: 'Sophia Gonzales',
-    walaHandler: 'Mark Fernandez',
-    walaWeight: '47',
-    walaBetting: '4,500',
-    diferencia: '500'
-  },
-  {
-    id: 2,
-    fightNumber: 1,
-    mayronEntry: 'Juan Dela Cruz',
-    mayronHandler: 'Carlos Santos',
-    mayronWeight: '49',
-    mayronBetting: '6,000',
-    walaEntry: 'Victor Martinez',
-    walaHandler: 'Alex Torres',
-    walaWeight: '48',
-    walaBetting: '5,500',
-    diferencia: '500'
-  }
-]
 
 function Tagging() {
-  const [events] = useState<Event[]>(INITIAL_EVENTS)
-  const [pairings] = useState<PairingRecord[]>(INITIAL_PAIRINGS)
-  const [selectedEvent, setSelectedEvent] = useState('Monday Night Match')
+  const { events, members, pairings } = useData()
+  const [selectedEvent, setSelectedEvent] = useState('')
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false)
+
+  // Set initial event on mount
+  useEffect(() => {
+    if (events.length > 0 && !selectedEvent) {
+      const firstEvent = events[0].name
+      if (firstEvent !== selectedEvent) {
+        setSelectedEvent(firstEvent)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events])
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -79,10 +33,12 @@ function Tagging() {
   }, [events])
 
   const eventPairings = useMemo(() => {
-    return pairings.filter(() => {
-      const event = events.find(e => e.name === selectedEvent)
-      return event !== undefined
-    }).sort((a, b) => b.fightNumber - a.fightNumber)
+    return pairings
+      .filter((p) => {
+        const event = events.find(e => e.name === selectedEvent)
+        return p.event_id === event?.id
+      })
+      .sort((a, b) => b.fight_number - a.fight_number)
   }, [pairings, selectedEvent, events])
 
   const handleTagFight = (pairingId: number) => {
@@ -90,7 +46,7 @@ function Tagging() {
     setIsOutcomeModalOpen(true)
   }
 
-  const handleOutcomeSelect = (outcome: 'winner' | 'loser' | 'draw' | 'cancelled', winner?: 'mayron' | 'wala') => {
+  const handleOutcomeSelect = async (outcome: 'winner' | 'loser' | 'draw' | 'cancelled', winner?: 'mayron' | 'wala') => {
     if (selectedFightId) {
       const pairing = pairings.find(p => p.id === selectedFightId)
       const existingTag = taggedFights.find(t => t.pairingId === selectedFightId)
@@ -98,13 +54,13 @@ function Tagging() {
       if (pairing) {
         const updatedTag = {
           pairingId: selectedFightId,
-          fightNumber: pairing.fightNumber,
+          fightNumber: pairing.fight_number,
           status: 'tagged' as const,
           outcome,
           outcomeWinner: winner,
           taggedAt: existingTag?.taggedAt || new Date().toISOString()
         }
-        updateTaggedFight(updatedTag)
+        await updateTaggedFight(updatedTag)
       }
       setIsOutcomeModalOpen(false)
       setSelectedFightId(null)
@@ -184,7 +140,7 @@ function Tagging() {
                 >
                   <div style={{ marginBottom: '1rem' }}>
                     <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2196F3', margin: '0' }}>
-                      #{pairing.fightNumber}
+                      #{pairing.fight_number}
                     </p>
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
@@ -230,11 +186,14 @@ function Tagging() {
               {(() => {
                 const pairing = pairings.find(p => p.id === selectedFightId)
                 const tag = taggedFights.find(t => t.pairingId === selectedFightId)
-                
+                const mayronMember = pairing ? members.find(m => m.id === pairing.mayron_entry_id) : undefined
+                const walaMember = pairing ? members.find(m => m.id === pairing.wala_entry_id) : undefined
+                const mayronEntry = mayronMember?.entry_name || 'N/A'
+                const walaEntry = walaMember?.entry_name || 'N/A'
                 return pairing ? (
                   <>
                     <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                      <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#2196F3', fontWeight: 'bold' }}>Fight #{pairing.fightNumber}</h3>
+                      <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#2196F3', fontWeight: 'bold' }}>Fight #{pairing.fight_number}</h3>
                       <div style={{
                         display: 'inline-block',
                         padding: '0.5rem 1rem',
@@ -254,15 +213,15 @@ function Tagging() {
                         <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1.2rem', color: '#333', textAlign: 'center' }}>MAYRON</h4>
                         <div style={{ marginBottom: '1rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.mayronEntry}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{mayronEntry}</p>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Handler</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.mayronHandler}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.mayron_handler}</p>
                         </div>
                         <div>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
-                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.mayronBetting}</p>
+                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.mayron_betting}</p>
                         </div>
                       </div>
 
@@ -270,22 +229,22 @@ function Tagging() {
                         <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1.2rem', color: '#333', textAlign: 'center' }}>WALA</h4>
                         <div style={{ marginBottom: '1rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.walaEntry}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{walaEntry}</p>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Handler</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.walaHandler}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.wala_handler}</p>
                         </div>
                         <div>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
-                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.walaBetting}</p>
+                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.wala_betting}</p>
                         </div>
                       </div>
                     </div>
 
                     <div style={{ padding: '1.5rem', backgroundColor: '#f0fff0', borderRadius: '8px', border: '2px solid #4caf50', textAlign: 'center', marginBottom: '2rem' }}>
                       <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Diferencia</p>
-                      <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#4caf50' }}>₱{pairing.diferencia}</p>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4caf50' }}>₱{pairing.diferencia}</p>
                     </div>
 
                     {!tag || tag.status !== 'tagged' ? (
@@ -312,7 +271,7 @@ function Tagging() {
                               onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#2196F3'; e.currentTarget.style.color = '#fff'}}
                               onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#e3f2fd'; e.currentTarget.style.color = '#2196F3'}}
                             >
-                              {pairing.mayronEntry} Wins
+                              {mayronEntry} Wins
                             </button>
                             <button
                               onClick={() => handleOutcomeSelect('winner', 'wala')}
@@ -330,7 +289,7 @@ function Tagging() {
                               onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#2196F3'; e.currentTarget.style.color = '#fff'}}
                               onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#e3f2fd'; e.currentTarget.style.color = '#2196F3'}}
                             >
-                              {pairing.walaEntry} Wins
+                              {walaEntry} Wins
                             </button>
                           </div>
                         </div>
@@ -380,7 +339,7 @@ function Tagging() {
                     ) : (
                       <div style={{ padding: '1.5rem', backgroundColor: '#e8f5e9', borderRadius: '8px', textAlign: 'center' }}>
                         <p style={{ fontSize: '1rem', fontWeight: '600', color: '#2e7d32' }}>✓ Fight Tagged</p>
-                        <p style={{ fontSize: '0.9rem', color: '#558b2f', marginTop: '0.5rem' }}>Outcome: {tag.outcome === 'draw' ? 'DRAW' : tag.outcome === 'cancelled' ? 'CANCELLED' : `${tag.outcomeWinner === 'mayron' ? pairing.mayronEntry : pairing.walaEntry} Wins`}</p>
+                        <p style={{ fontSize: '0.9rem', color: '#558b2f', marginTop: '0.5rem' }}>Outcome: {tag.outcome === 'draw' ? 'DRAW' : tag.outcome === 'cancelled' ? 'CANCELLED' : `${tag.outcomeWinner === 'mayron' ? mayronEntry : walaEntry} Wins`}</p>
                       </div>
                     )}
                   </>

@@ -1,11 +1,7 @@
 import {
   createEvent,
   createMember,
-  createPairing,
-  createTaggedFight,
-  createReleasedFight,
   getEvents,
-  getMembers,
 } from './supabaseService'
 
 // Sample data (from your INITIAL constants)

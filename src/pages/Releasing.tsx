@@ -1,73 +1,27 @@
 import './Registration.css'
-import { useState, useMemo, useContext } from 'react'
+import { useState, useMemo, useContext, useEffect } from 'react'
+import { useData } from '../context/DataContext'
 import { TaggingContext } from '../context/tagging'
 
-interface Event {
-  id: number
-  name: string
-  type: string
-  derbyInfo: string
-  date: string
-}
 
-interface PairingRecord {
-  id: number
-  fightNumber: number
-  mayronEntry: string
-  mayronHandler: string
-  mayronWeight: string
-  mayronBetting: string
-  walaEntry: string
-  walaHandler: string
-  walaWeight: string
-  walaBetting: string
-  diferencia: string
-}
-
-const INITIAL_EVENTS: Event[] = [
-  { id: 1, name: 'Monday Night Match', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (45-50 lbs)', date: '2026-04-20' },
-  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-19' },
-  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-18' },
-  { id: 4, name: 'Spring Classic Derby', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 4 per Entry (50-60 lbs)', date: '2026-04-17' },
-  { id: 5, name: 'Inter-Club Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 2 per Entry (60-75 lbs)', date: '2026-04-16' },
-]
-
-const INITIAL_PAIRINGS: PairingRecord[] = [
-  {
-    id: 1,
-    fightNumber: 2,
-    mayronEntry: 'Victor Martinez',
-    mayronHandler: 'Alex Torres',
-    mayronWeight: '48',
-    mayronBetting: '5,000',
-    walaEntry: 'Sophia Gonzales',
-    walaHandler: 'Mark Fernandez',
-    walaWeight: '47',
-    walaBetting: '4,500',
-    diferencia: '500'
-  },
-  {
-    id: 2,
-    fightNumber: 1,
-    mayronEntry: 'Juan Dela Cruz',
-    mayronHandler: 'Carlos Santos',
-    mayronWeight: '49',
-    mayronBetting: '6,000',
-    walaEntry: 'Victor Martinez',
-    walaHandler: 'Alex Torres',
-    walaWeight: '48',
-    walaBetting: '5,500',
-    diferencia: '500'
-  }
-]
 
 function Releasing() {
-  const [events] = useState<Event[]>(INITIAL_EVENTS)
-  const [pairings] = useState<PairingRecord[]>(INITIAL_PAIRINGS)
-  const [selectedEvent, setSelectedEvent] = useState('Monday Night Match')
+  const { events, members, pairings } = useData()
+  const [selectedEvent, setSelectedEvent] = useState('')
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false)
+
+  // Set initial event on mount
+  useEffect(() => {
+    if (events.length > 0 && !selectedEvent) {
+      const firstEvent = events[0].name
+      if (firstEvent !== selectedEvent) {
+        setSelectedEvent(firstEvent)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events])
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -80,11 +34,14 @@ function Releasing() {
   }, [events])
 
   const eventTaggedFights = useMemo(() => {
-    return taggedFights.filter(() => {
-      const event = events.find(e => e.name === selectedEvent)
-      return event !== undefined
-    }).sort((a, b) => b.fightNumber - a.fightNumber)
-  }, [taggedFights, selectedEvent, events])
+    return taggedFights
+      .filter((t) => {
+        const pairing = pairings.find(p => p.id === t.pairingId)
+        const event = events.find(e => e.name === selectedEvent)
+        return pairing?.event_id === event?.id
+      })
+      .sort((a, b) => b.fightNumber - a.fightNumber)
+  }, [taggedFights, pairings, selectedEvent, events])
 
   const getReleaseStatus = (pairingId: number): 'unreleased' | 'released' | 'special' => {
     const tagged = taggedFights.find(t => t.pairingId === pairingId)
@@ -109,15 +66,11 @@ function Releasing() {
     setIsReleaseModalOpen(true)
   }
 
-  const handleConfirmRelease = () => {
+  const handleConfirmRelease = async () => {
     if (selectedFightId) {
-      updateReleasedFight(selectedFightId, 'released')
+      await updateReleasedFight(selectedFightId, 'released')
       setIsReleaseModalOpen(false)
       setIsConfirmationModalOpen(true)
-      setTimeout(() => {
-        setIsConfirmationModalOpen(false)
-        setSelectedFightId(null)
-      }, 2000)
     }
   }
 
@@ -126,14 +79,14 @@ function Releasing() {
     const tagged = taggedFights.find(t => t.pairingId === pairingId)
 
     if (pairing && tagged) {
-      const winnerBetting = tagged.outcomeWinner === 'mayron' 
-        ? pairing.mayronBetting 
-        : pairing.walaBetting
-      const winnerHandler = tagged.outcomeWinner === 'mayron' 
-        ? pairing.mayronHandler 
-        : pairing.walaHandler
+      const winnerBetting = tagged.outcomeWinner === 'mayron'
+        ? pairing.mayron_betting
+        : pairing.wala_betting
+      const winnerHandler = tagged.outcomeWinner === 'mayron'
+        ? pairing.mayron_handler
+        : pairing.wala_handler
 
-      const paradasNum = parseFloat(winnerBetting.replace(/,/g, ''))
+      const paradasNum = parseFloat(String(winnerBetting).replace(/,/g, ''))
       const plasadaNum = paradasNum * 0.11
       const largadaNum = 500
       const netNum = paradasNum - plasadaNum - largadaNum
@@ -144,7 +97,7 @@ function Releasing() {
           <!DOCTYPE html>
           <html>
           <head>
-            <title>Release Print - Fight #${pairing.fightNumber}</title>
+            <title>Release Print - Fight #${pairing.fight_number}</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 2rem; background: #f5f5f5; }
               .container { background: white; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 0 auto; }
@@ -158,7 +111,7 @@ function Releasing() {
           </head>
           <body>
             <div class="container">
-              <div class="title">Sultada: ${pairing.fightNumber}</div>
+              <div class="title">Sultada: ${pairing.fight_number}</div>
               
               <div class="section">
                 <div class="label">Handler Name:</div>
@@ -294,11 +247,15 @@ function Releasing() {
               {(() => {
                 const pairing = pairings.find(p => p.id === selectedFightId)
                 const tagged = taggedFights.find(t => t.pairingId === selectedFightId)
-                
+                const mayronMember = pairing ? members.find(m => m.id === pairing.mayron_entry_id) : undefined
+                const walaMember = pairing ? members.find(m => m.id === pairing.wala_entry_id) : undefined
+                const mayronEntry = mayronMember?.entry_name || 'N/A'
+                const walaEntry = walaMember?.entry_name || 'N/A'
+
                 return pairing ? (
                   <>
                     <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                      <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#2196F3', fontWeight: 'bold' }}>Fight #{pairing.fightNumber}</h3>
+                      <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#2196F3', fontWeight: 'bold' }}>Fight #{pairing.fight_number}</h3>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
@@ -306,15 +263,15 @@ function Releasing() {
                         <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1.2rem', color: '#333', textAlign: 'center' }}>MAYRON</h4>
                         <div style={{ marginBottom: '1rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.mayronEntry}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{mayronEntry}</p>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Handler</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.mayronHandler}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.mayron_handler}</p>
                         </div>
                         <div>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
-                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.mayronBetting}</p>
+                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.mayron_betting}</p>
                         </div>
                       </div>
 
@@ -322,15 +279,15 @@ function Releasing() {
                         <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1.2rem', color: '#333', textAlign: 'center' }}>WALA</h4>
                         <div style={{ marginBottom: '1rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.walaEntry}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{walaEntry}</p>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Handler</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.walaHandler}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.wala_handler}</p>
                         </div>
                         <div>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
-                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.walaBetting}</p>
+                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.wala_betting}</p>
                         </div>
                       </div>
                     </div>
@@ -343,7 +300,7 @@ function Releasing() {
                     {tagged && (
                       <div style={{ padding: '1rem', backgroundColor: '#e3f2fd', borderRadius: '8px', marginBottom: '2rem', textAlign: 'center' }}>
                         <p style={{ fontSize: '0.9rem', color: '#1565c0', fontWeight: '600' }}>
-                          Outcome: {tagged.outcome === 'draw' ? '⚔️ DRAW' : tagged.outcome === 'cancelled' ? '❌ CANCELLED' : `${tagged.outcomeWinner === 'mayron' ? pairing.mayronEntry : pairing.walaEntry} Wins`}
+                          Outcome: {tagged.outcome === 'draw' ? '⚔️ DRAW' : tagged.outcome === 'cancelled' ? '❌ CANCELLED' : `${tagged.outcomeWinner === 'mayron' ? mayronEntry : walaEntry} Wins`}
                         </p>
                       </div>
                     )}
@@ -374,10 +331,17 @@ function Releasing() {
       {isConfirmationModalOpen && (
         <div className="modal-overlay" onClick={() => setIsConfirmationModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Release Complete</h2>
+              <button className="modal-close" onClick={() => setIsConfirmationModalOpen(false)}>×</button>
+            </div>
             <div className="modal-body" style={{ padding: '2rem', textAlign: 'center' }}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✓</div>
               <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2e7d32', marginBottom: '0.5rem' }}>Fight Released Successfully!</h3>
               <p style={{ fontSize: '0.95rem', color: '#666' }}>The fight has been marked as released.</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-add" onClick={() => setIsConfirmationModalOpen(false)}>Exit</button>
             </div>
           </div>
         </div>

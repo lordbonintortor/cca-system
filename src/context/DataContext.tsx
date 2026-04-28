@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import {
   getEvents,
   getMembers,
@@ -195,8 +196,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         sultada_number: pairing.sultada_number,
         mayron_entry_id: pairing.mayron_entry_id,
         mayron_handler: pairing.mayron_handler,
+        mayron_weight: pairing.mayron_weight,
+        mayron_betting: pairing.mayron_betting,
         wala_entry_id: pairing.wala_entry_id,
         wala_handler: pairing.wala_handler,
+        wala_weight: pairing.wala_weight,
+        wala_betting: pairing.wala_betting,
+        diferencia: pairing.diferencia,
         parada_amount: pairing.parada_amount,
       })
       await refreshData()
