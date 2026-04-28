@@ -137,7 +137,7 @@ export const updateMembersByEventName = async (
 
   if (error) {
     console.error('Error updating members event name:', error)
-    throw error
+    // Don't throw - allow event update to succeed
   }
   return data || []
 }
@@ -330,4 +330,24 @@ export const createRaffleWinner = async (winner: {
     throw error
   }
   return data[0]
+}
+
+export const updateRaffleWinnersByEventName = async (
+  oldEventName: string,
+  newEventName: string
+) => {
+  if (oldEventName === newEventName) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from('raffle_winners')
+    .update({ event_name: newEventName })
+    .eq('event_name', oldEventName)
+
+  if (error) {
+    console.error('Error updating raffle winners event name:', error)
+    // Don't throw - allow event update to succeed
+  }
+  return data || []
 }

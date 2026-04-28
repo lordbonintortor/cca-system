@@ -12,6 +12,7 @@ import {
   createEvent,
   updateEvent,
   updateMembersByEventName,
+  updateRaffleWinnersByEventName,
   createPairing,
   createRaffleWinner,
 } from '../lib/supabaseService'
@@ -181,21 +182,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     event: Omit<Event, 'id'>
   ) => {
     try {
+      // Update the event first
       await updateEvent(id, {
         name: event.name,
         type: event.type,
         derby_info: event.derby_info,
         date: event.date,
       })
-      // If event name changed, update all members with the new event name
+      
+      // If event name changed, update all related records
       if (oldEventName !== event.name) {
-        try {
-          await updateMembersByEventName(oldEventName, event.name)
-        } catch (memberError) {
-          console.error('Warning: Could not update members:', memberError)
-          // Don't fail the whole operation if member update fails
-        }
+        await updateMembersByEventName(oldEventName, event.name)
+        await updateRaffleWinnersByEventName(oldEventName, event.name)
       }
+      
       await refreshData()
     } catch (error) {
       console.error('Error updating event:', error)
