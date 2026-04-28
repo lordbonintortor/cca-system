@@ -1,111 +1,26 @@
 import './Registration.css'
-import { useState, useMemo } from 'react'
-
-interface Event {
-  id: number
-  name: string
-  type: string
-  derbyInfo: string
-  date: string
-}
-
-interface Member {
-  id: number
-  entryName: string
-  eventName: string
-  handlerName: string
-  cockType: string
-  numberOfEntries: number
-  registrationDate: string
-}
+import { useState, useMemo, useEffect } from 'react'
+import { useData, type Pairing, type Member } from '../context/DataContext'
 
 interface PairingRecord {
   id: number
-  fightNumber: number
-  mayronEntry: string
-  mayronHandler: string
-  mayronWeight: string
-  mayronBetting: string
-  walaEntry: string
-  walaHandler: string
-  walaWeight: string
-  walaBetting: string
+  fight_number: number
+  mayron_entry: string
+  mayron_handler: string
+  mayron_weight: string
+  mayron_betting: string
+  wala_entry: string
+  wala_handler: string
+  wala_weight: string
+  wala_betting: string
   diferencia: string
 }
 
-const INITIAL_EVENTS: Event[] = [
-  { id: 1, name: 'Monday Night Match', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (45-50 lbs)', date: '2026-04-20' },
-  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-19' },
-  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-18' },
-  { id: 4, name: 'Spring Classic Derby', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 4 per Entry (50-60 lbs)', date: '2026-04-17' },
-  { id: 5, name: 'Inter-Club Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 2 per Entry (60-75 lbs)', date: '2026-04-16' },
-  { id: 6, name: 'Regional Qualifier', type: 'Hack Fight', derbyInfo: 'Cock - 3 per Entry (75-90 lbs)', date: '2026-04-15' },
-  { id: 7, name: 'Friendly Match Series', type: 'Hack Fight', derbyInfo: 'Stag - 3 per Entry (40-55 lbs)', date: '2026-04-14' },
-  { id: 8, name: 'Championship Round', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 2 per Entry (65-80 lbs)', date: '2026-04-13' },
-  { id: 9, name: 'Rising Stars Tournament', type: 'Hack Fight', derbyInfo: 'Stag - 4 per Entry (35-50 lbs)', date: '2026-04-12' },
-  { id: 10, name: 'Elite Division Match', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (80-95 lbs)', date: '2026-04-11' },
-  { id: 11, name: 'April Opener', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 3 per Entry (48-62 lbs)', date: '2026-04-10' },
-  { id: 12, name: 'Grand Festival Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (58-72 lbs)', date: '2026-04-09' },
-  { id: 13, name: 'Provincial Challenge', type: 'Hack Fight', derbyInfo: 'Cock - 4 per Entry (72-88 lbs)', date: '2026-04-08' },
-  { id: 14, name: 'Spring Warmup Series', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (42-58 lbs)', date: '2026-04-07' },
-  { id: 15, name: 'National Preliminaries', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 3 per Entry (60-78 lbs)', date: '2026-04-06' },
-]
 
-const INITIAL_MEMBERS: Member[] = [
-  { id: 1, entryName: 'Juan Dela Cruz', eventName: 'Monday Night Match', handlerName: 'Carlos Santos', cockType: 'Stag', numberOfEntries: 2, registrationDate: '2026-04-20' },
-  { id: 2, entryName: 'Maria Garcia', eventName: 'Weekend Championship', handlerName: 'Pedro Ramirez', cockType: 'Bullstag', numberOfEntries: 3, registrationDate: '2026-04-19' },
-  { id: 3, entryName: 'Antonio Reyes', eventName: 'Local Tournament', handlerName: 'Miguel Torres', cockType: 'Cock', numberOfEntries: 2, registrationDate: '2026-04-18' },
-  { id: 4, entryName: 'Rosa Lopez', eventName: 'Spring Classic Derby', handlerName: 'Juan Mendoza', cockType: 'Stag', numberOfEntries: 4, registrationDate: '2026-04-17' },
-  { id: 5, entryName: 'Francisco Diaz', eventName: 'Inter-Club Battle', handlerName: 'Luis Fernandez', cockType: 'Bullstag', numberOfEntries: 2, registrationDate: '2026-04-16' },
-  { id: 6, entryName: 'Angela Morales', eventName: 'Regional Qualifier', handlerName: 'Ricardo Gutierrez', cockType: 'Cock', numberOfEntries: 3, registrationDate: '2026-04-15' },
-  { id: 7, entryName: 'Roberto Flores', eventName: 'Friendly Match Series', handlerName: 'Daniel Navarro', cockType: 'Stag', numberOfEntries: 3, registrationDate: '2026-04-14' },
-  { id: 8, entryName: 'Elena Castillo', eventName: 'Championship Round', handlerName: 'Eduardo Vargas', cockType: 'Bullstag', numberOfEntries: 2, registrationDate: '2026-04-13' },
-  { id: 9, entryName: 'Javier Romero', eventName: 'Rising Stars Tournament', handlerName: 'Fernando Ortiz', cockType: 'Stag', numberOfEntries: 4, registrationDate: '2026-04-12' },
-  { id: 10, entryName: 'Carmen Rodriguez', eventName: 'Elite Division Match', handlerName: 'Guillermo Castro', cockType: 'Cock', numberOfEntries: 2, registrationDate: '2026-04-11' },
-  { id: 11, entryName: 'Manuel Santos', eventName: 'April Opener', handlerName: 'Hector Moreno', cockType: 'Stag', numberOfEntries: 3, registrationDate: '2026-04-10' },
-  { id: 12, entryName: 'Lucia Hernandez', eventName: 'Grand Festival Battle', handlerName: 'Ignacio Ruiz', cockType: 'Bullstag', numberOfEntries: 3, registrationDate: '2026-04-09' },
-  { id: 13, entryName: 'Raúl Perez', eventName: 'Provincial Challenge', handlerName: 'Javier Molina', cockType: 'Cock', numberOfEntries: 4, registrationDate: '2026-04-08' },
-  { id: 14, entryName: 'Isabel Martinez', eventName: 'Spring Warmup Series', handlerName: 'Karlo Fontanar', cockType: 'Stag', numberOfEntries: 2, registrationDate: '2026-04-07' },
-  { id: 15, entryName: 'Diego Sanchez', eventName: 'National Preliminaries', handlerName: 'Luis Pacabay', cockType: 'Bullstag', numberOfEntries: 3, registrationDate: '2026-04-06' },
-  { id: 16, entryName: 'Victor Martinez', eventName: 'Monday Night Match', handlerName: 'Alex Torres', cockType: 'Stag', numberOfEntries: 2, registrationDate: '2026-04-20' },
-  { id: 17, entryName: 'Sophia Gonzales', eventName: 'Monday Night Match', handlerName: 'Mark Fernandez', cockType: 'Stag', numberOfEntries: 2, registrationDate: '2026-04-20' },
-  { id: 18, entryName: 'Carlos Olivares', eventName: 'Weekend Championship', handlerName: 'Ron Santos', cockType: 'Bullstag', numberOfEntries: 3, registrationDate: '2026-04-19' },
-  { id: 19, entryName: 'Patricia Alonzo', eventName: 'Weekend Championship', handlerName: 'Tom Garcia', cockType: 'Bullstag', numberOfEntries: 3, registrationDate: '2026-04-19' },
-  { id: 20, entryName: 'Miguel Banaag', eventName: 'Local Tournament', handlerName: 'Vincent Valdez', cockType: 'Cock', numberOfEntries: 2, registrationDate: '2026-04-18' },
-]
 
-const INITIAL_PAIRINGS: PairingRecord[] = [
-  {
-    id: 1,
-    fightNumber: 2,
-    mayronEntry: 'Victor Martinez',
-    mayronHandler: 'Alex Torres',
-    mayronWeight: '48',
-    mayronBetting: '5,000',
-    walaEntry: 'Sophia Gonzales',
-    walaHandler: 'Mark Fernandez',
-    walaWeight: '47',
-    walaBetting: '4,500',
-    diferencia: '500'
-  },
-  {
-    id: 2,
-    fightNumber: 1,
-    mayronEntry: 'Juan Dela Cruz',
-    mayronHandler: 'Carlos Santos',
-    mayronWeight: '49',
-    mayronBetting: '6,000',
-    walaEntry: 'Victor Martinez',
-    walaHandler: 'Alex Torres',
-    walaWeight: '48',
-    walaBetting: '5,500',
-    diferencia: '500'
-  }
-]
 
 function Pairing() {
-  const [events] = useState<Event[]>(INITIAL_EVENTS)
-  const [members] = useState<Member[]>(INITIAL_MEMBERS)
+  const { events, members, pairings, addPairing } = useData()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [eventName, setEventName] = useState('')
   const [mayronEntry, setMayronEntry] = useState('')
@@ -116,9 +31,19 @@ function Pairing() {
   const [walaWeight, setWalaWeight] = useState('')
   const [mayronBetting, setMayronBetting] = useState('')
   const [walaBetting, setWalaBetting] = useState('')
-  const [pairings, setPairings] = useState<PairingRecord[]>(INITIAL_PAIRINGS)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [pendingPairing, setPendingPairing] = useState<PairingRecord | null>(null)
+
+  // Set initial event on mount
+  useEffect(() => {
+    if (events.length > 0 && !eventName) {
+      const firstEvent = events[0].name
+      if (firstEvent !== eventName) {
+        setEventName(firstEvent)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events])
 
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -126,7 +51,7 @@ function Pairing() {
 
   const filteredMembers = useMemo(() => {
     if (!eventName) return members
-    return members.filter((member) => member.eventName === eventName)
+    return members.filter((member) => member.event_name === eventName)
   }, [eventName, members])
 
   const calculatedDiferencia = useMemo(() => {
@@ -144,15 +69,18 @@ function Pairing() {
     return numberOnly.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
-  const handlePrintFight = (pairing: PairingRecord) => {
+  const handlePrintFight = (pairing: Pairing, mayronMember: Member | undefined, walaMember: Member | undefined) => {
     const printWindow = window.open('', '', 'height=800,width=600')
     if (!printWindow) return
+
+    const mayronEntry = mayronMember?.entry_name || 'N/A'
+    const walaEntry = walaMember?.entry_name || 'N/A'
 
     const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Fight ${pairing.fightNumber}</title>
+        <title>Fight ${pairing.fight_number}</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -326,23 +254,23 @@ function Pairing() {
             <p><strong>Event:</strong> ${eventName}</p>
             <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
           </div>
-          <div class="fight-title">FIGHT #${pairing.fightNumber}</div>
+          <div class="fight-title">FIGHT #${pairing.fight_number}</div>
           <div class="parada">
             <div class="parada-section">
               <div class="parada-header">PARADA (MAYRON)</div>
               <div class="parada-label">Entry</div>
-              <div class="entry-name">${pairing.mayronEntry}</div>
-              <div class="handler-name"><strong>Handler:</strong> ${pairing.mayronHandler}</div>
-              <div class="weight"><strong>Weight:</strong> ${pairing.mayronWeight} lbs</div>
-              <div class="betting"><strong>₱${pairing.mayronBetting}</strong></div>
+              <div class="entry-name">${mayronEntry}</div>
+              <div class="handler-name"><strong>Handler:</strong> ${pairing.mayron_handler}</div>
+              <div class="weight"><strong>Weight:</strong> ${pairing.mayron_weight} lbs</div>
+              <div class="betting"><strong>₱${pairing.mayron_betting}</strong></div>
             </div>
             <div class="parada-section">
               <div class="parada-header">PARADA (WALA)</div>
               <div class="parada-label">Entry</div>
-              <div class="entry-name">${pairing.walaEntry}</div>
-              <div class="handler-name"><strong>Handler:</strong> ${pairing.walaHandler}</div>
-              <div class="weight"><strong>Weight:</strong> ${pairing.walaWeight} lbs</div>
-              <div class="betting"><strong>₱${pairing.walaBetting}</strong></div>
+              <div class="entry-name">${walaEntry}</div>
+              <div class="handler-name"><strong>Handler:</strong> ${pairing.wala_handler}</div>
+              <div class="weight"><strong>Weight:</strong> ${pairing.wala_weight} lbs</div>
+              <div class="betting"><strong>₱${pairing.wala_betting}</strong></div>
             </div>
           </div>
           <div class="diferencia-section">
@@ -410,15 +338,15 @@ function Pairing() {
 
     const newPairing: PairingRecord = {
       id: Date.now(),
-      fightNumber: pairings.length + 1,
-      mayronEntry,
-      mayronHandler,
-      mayronWeight,
-      mayronBetting,
-      walaEntry,
-      walaHandler,
-      walaWeight,
-      walaBetting,
+      fight_number: pairings.length + 1,
+      mayron_entry: mayronEntry,
+      mayron_handler: mayronHandler,
+      mayron_weight: mayronWeight,
+      mayron_betting: mayronBetting,
+      wala_entry: walaEntry,
+      wala_handler: walaHandler,
+      wala_weight: walaWeight,
+      wala_betting: walaBetting,
       diferencia: calculatedDiferencia
     }
 
@@ -426,9 +354,46 @@ function Pairing() {
     setShowConfirmation(true)
   }
 
-  const handleConfirmPairing = () => {
+  const handleConfirmPairing = async () => {
     if (pendingPairing) {
-      setPairings([pendingPairing, ...pairings])
+      try {
+        // Find member IDs for the selected entry names
+        const mayronMember = members.find((m) => m.entry_name === pendingPairing.mayron_entry)
+        const walaMember = members.find((m) => m.entry_name === pendingPairing.wala_entry)
+
+        if (!mayronMember || !walaMember) {
+          alert('Could not find selected members')
+          return
+        }
+
+        // Get event ID
+        const eventData = events.find((e) => e.name === eventName)
+        if (!eventData) {
+          alert('Could not find selected event')
+          return
+        }
+
+        // Convert to Pairing format with IDs
+        const pairingToSave = {
+          event_id: eventData.id,
+          fight_number: pairings.length + 1,
+          sultada_number: '',
+          mayron_entry_id: mayronMember.id,
+          mayron_handler: pendingPairing.mayron_handler,
+          mayron_weight: pendingPairing.mayron_weight,
+          mayron_betting: pendingPairing.mayron_betting,
+          wala_entry_id: walaMember.id,
+          wala_handler: pendingPairing.wala_handler,
+          wala_weight: pendingPairing.wala_weight,
+          wala_betting: pendingPairing.wala_betting,
+          diferencia: pendingPairing.diferencia
+        }
+
+        await addPairing(pairingToSave)
+      } catch (error) {
+        console.error('Error adding pairing:', error)
+        alert('Failed to save pairing')
+      }
     }
     setShowConfirmation(false)
     setPendingPairing(null)
@@ -467,37 +432,43 @@ function Pairing() {
               </tr>
             </thead>
             <tbody>
-              {pairings.map((pairing) => (
-                <tr key={pairing.id}>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.fightNumber}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayronEntry}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayronHandler}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayronWeight}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.mayronBetting}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.walaEntry}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.walaHandler}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.walaWeight}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.walaBetting}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem', backgroundColor: '#f0fff0', fontWeight: 'bold' }}>₱{pairing.diferencia}</td>
-                  <td style={{ padding: '0.6rem', fontSize: '0.75rem', textAlign: 'center' }}>
-                    <button
-                      onClick={() => handlePrintFight(pairing)}
-                      style={{
-                        padding: '0.4rem 0.6rem',
-                        fontSize: '0.7rem',
-                        backgroundColor: '#e94560',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        fontWeight: '600'
-                      }}
-                    >
-                      Print
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {pairings.map((pairing) => {
+                // Look up member names from IDs
+                const mayronMember = members.find((m) => m.id === pairing.mayron_entry_id)
+                const walaMember = members.find((m) => m.id === pairing.wala_entry_id)
+
+                return (
+                  <tr key={pairing.id}>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.fight_number}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{mayronMember?.entry_name || 'N/A'}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayron_handler}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayron_weight}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.mayron_betting}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{walaMember?.entry_name || 'N/A'}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.wala_handler}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.wala_weight}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.wala_betting}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem', backgroundColor: '#f0fff0', fontWeight: 'bold' }}>₱{pairing.diferencia}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem', textAlign: 'center' }}>
+                      <button
+                        onClick={() => handlePrintFight(pairing, mayronMember, walaMember)}
+                        style={{
+                          padding: '0.4rem 0.6rem',
+                          fontSize: '0.7rem',
+                          backgroundColor: '#e94560',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          fontWeight: '600'
+                        }}
+                      >
+                        Print
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -543,8 +514,8 @@ function Pairing() {
                   >
                     <option value="">Select member</option>
                     {filteredMembers.map((member) => (
-                      <option key={member.id} value={member.entryName}>
-                        {member.entryName}
+                      <option key={member.id} value={member.entry_name}>
+                        {member.entry_name}
                       </option>
                     ))}
                   </select>
@@ -559,8 +530,8 @@ function Pairing() {
                   >
                     <option value="">Select member</option>
                     {filteredMembers.map((member) => (
-                      <option key={member.id} value={member.entryName}>
-                        {member.entryName}
+                      <option key={member.id} value={member.entry_name}>
+                        {member.entry_name}
                       </option>
                     ))}
                   </select>
@@ -692,19 +663,19 @@ function Pairing() {
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333', textAlign: 'center' }}>MAYRON</h3>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Entry</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayronEntry}</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayron_entry}</p>
                   </div>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Handler</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayronHandler}</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayron_handler}</p>
                   </div>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Weight</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayronWeight} lbs</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayron_weight} lbs</p>
                   </div>
                   <div>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting</p>
-                    <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pendingPairing.mayronBetting}</p>
+                    <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pendingPairing.mayron_betting}</p>
                   </div>
                 </div>
 
@@ -712,19 +683,19 @@ function Pairing() {
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333', textAlign: 'center' }}>WALA</h3>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Entry</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.walaEntry}</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.wala_entry}</p>
                   </div>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Handler</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.walaHandler}</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.wala_handler}</p>
                   </div>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Weight</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.walaWeight} lbs</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.wala_weight} lbs</p>
                   </div>
                   <div>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting</p>
-                    <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pendingPairing.walaBetting}</p>
+                    <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pendingPairing.wala_betting}</p>
                   </div>
                 </div>
               </div>

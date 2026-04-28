@@ -38,8 +38,13 @@ export interface Pairing {
   sultada_number: string
   mayron_entry_id: number
   mayron_handler: string
+  mayron_weight: string
+  mayron_betting: string
   wala_entry_id: number
   wala_handler: string
+  wala_weight: string
+  wala_betting: string
+  diferencia: string
   parada_amount?: number
 }
 
