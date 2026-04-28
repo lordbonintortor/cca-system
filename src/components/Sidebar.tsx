@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Sidebar.css'
 
 function Sidebar() {
@@ -8,6 +8,16 @@ function Sidebar() {
   const location = useLocation()
   const { user, logout } = useAuth()
   const [isEventsExpanded, setIsEventsExpanded] = useState(false)
+
+  useEffect(() => {
+    // keep submenu expanded when the current route is any events-related page
+    const eventPaths = ['/events', '/registration', '/pairing', '/tagging', '/releasing', '/reports', '/results', '/raffle']
+    if (eventPaths.some((p) => location.pathname.startsWith(p))) {
+      setIsEventsExpanded(true)
+    } else {
+      setIsEventsExpanded(false)
+    }
+  }, [location.pathname])
 
   const handleRegistrationClick = () => {
     navigate('/registration')
