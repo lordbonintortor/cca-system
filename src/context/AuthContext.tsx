@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { AuthContext, type User } from './auth'
 import { validateCredentials } from '../lib/credentials'
@@ -6,19 +6,13 @@ import { validateCredentials } from '../lib/credentials'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const rememberedRaw = typeof window !== 'undefined' ? localStorage.getItem('rememberedUser') : null
   let initialUser: User | null = null
-  let initialExpires = 0
   if (rememberedRaw) {
     try {
       const parsed = JSON.parse(rememberedRaw)
-      if (parsed && parsed.user && parsed.expiresAt) {
-        const expiresAt = Number(parsed.expiresAt) || 0
-        if (expiresAt > Date.now()) {
-          initialUser = parsed.user as User
-          initialExpires = expiresAt
-        } else {
-          localStorage.removeItem('rememberedUser')
-        }
-      }
+      // support both { user } shape and legacy direct user object
+      if (parsed && parsed.user) initialUser = parsed.user as User
+      else if (parsed && parsed.username) initialUser = parsed as User
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       localStorage.removeItem('rememberedUser')
     }
@@ -26,10 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [user, setUser] = useState<User | null>(initialUser)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!initialUser)
-  const logoutTimer = useRef<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const login = (username: string, password: string, remember = false) => {
+  const login = (username: string, password: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -52,15 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null)
     setIsLoading(false)
 
-    if (remember) {
-      const expiresAt = Date.now() + 30 * 60 * 1000 // 30 minutes
-      localStorage.setItem('rememberedUser', JSON.stringify({ user: loggedInUser, expiresAt }))
-      // set auto-logout timer
-      if (logoutTimer.current) window.clearTimeout(logoutTimer.current)
-      const ms = expiresAt - Date.now()
-      logoutTimer.current = window.setTimeout(() => {
-        logout()
-      }, ms) as unknown as number
+    // persist until explicit logout
+    try {
+      localStorage.setItem('rememberedUser', JSON.stringify({ user: loggedInUser }))
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      // ignore storage errors
     }
   }
 
@@ -69,32 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setError(null)
     localStorage.removeItem('rememberedUser')
-    if (logoutTimer.current) {
-      window.clearTimeout(logoutTimer.current)
-      logoutTimer.current = null
-    }
   }
-
-  // if initialized from storage, start timer for remaining time
-  useEffect(() => {
-    if (initialUser && initialExpires) {
-      const ms = initialExpires - Date.now()
-      if (ms > 0) {
-        logoutTimer.current = window.setTimeout(() => {
-          logout()
-        }, ms) as unknown as number
-      } else {
-        // expired
-        localStorage.removeItem('rememberedUser')
-        setUser(null)
-        setIsLoggedIn(false)
-      }
-    }
-    // cleanup on unmount
-    return () => {
-      if (logoutTimer.current) window.clearTimeout(logoutTimer.current)
-    }
-  }, [])
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, user, login, logout, isLoading, error }}>

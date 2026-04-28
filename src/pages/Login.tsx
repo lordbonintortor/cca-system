@@ -7,7 +7,6 @@ function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
   const { login, isLoggedIn, isLoading, error } = useAuth()
   const navigate = useNavigate()
 
@@ -20,7 +19,7 @@ function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (username && password) {
-      login(username, password, rememberMe)
+      login(username, password)
     }
   }
 
@@ -64,16 +63,7 @@ function Login() {
               />
             </button>
           </div>
-          <div className="remember-me-container">
-            <input
-              type="checkbox"
-              id="rememberMe"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              disabled={isLoading}
-            />
-            <label htmlFor="rememberMe">Remember me</label>
-          </div>
+          {/* Remember-me removed: sessions persist until explicit logout */}
           <button type="submit" disabled={isLoading}>
             {isLoading ? 'Signing In...' : 'Sign In'}
           </button>

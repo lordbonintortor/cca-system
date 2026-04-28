@@ -9,7 +9,7 @@ export interface User {
 export interface AuthContextType {
   isLoggedIn: boolean
   user: User | null
-  login: (username: string, password: string, remember?: boolean) => void
+  login: (username: string, password: string) => void
   logout: () => void
   isLoading?: boolean
   error?: string | null
