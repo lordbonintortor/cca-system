@@ -97,13 +97,15 @@ function Sidebar() {
               </div>
             )}
           </div>
-          <button 
-            onClick={() => navigate('/settings')}
-            className={`nav-item ${isActive('/settings') ? 'nav-item-active' : ''}`}
-          >
-            <img src="/setting.png" alt="Settings" className="nav-icon" />
-            Settings
-          </button>
+          {user?.role === 'programmer' && (
+            <button 
+              onClick={() => navigate('/settings')}
+              className={`nav-item ${isActive('/settings') ? 'nav-item-active' : ''}`}
+            >
+              <img src="/setting.png" alt="Programmer Settings" className="nav-icon" />
+              Dev Settings
+            </button>
+          )}
         </nav>
         <div className="sidebar-footer">
           <p className="user-name">Welcome, {user?.fullName || user?.username}</p>

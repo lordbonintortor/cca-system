@@ -16,7 +16,7 @@ import Releasing from './pages/Releasing'
 import Reports from './pages/Reports'
 import Results from './pages/Results'
 import Raffle from './pages/Raffle'
-import Settings from './pages/Settings'
+import ProgrammerSettings from './pages/ProgrammerSettings'
 import './styles/theme.css'
 import './App.css'
 
@@ -44,7 +44,7 @@ function AppContent() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/results" element={<Results />} />
         <Route path="/raffle" element={<Raffle />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<ProgrammerSettings />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
