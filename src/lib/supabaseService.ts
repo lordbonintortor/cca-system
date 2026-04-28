@@ -1,0 +1,266 @@
+import { supabase } from './supabaseClient'
+
+// ===== EVENTS =====
+export const getEvents = async () => {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .order('date', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching events:', error)
+    return []
+  }
+  return data
+}
+
+export const createEvent = async (event: {
+  name: string
+  type: string
+  derby_info: string
+  date: string
+}) => {
+  const { data, error } = await supabase
+    .from('events')
+    .insert([event])
+    .select()
+
+  if (error) {
+    console.error('Error creating event:', error)
+    throw error
+  }
+  return data[0]
+}
+
+// ===== MEMBERS =====
+export const getMembers = async () => {
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .order('registration_date', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching members:', error)
+    return []
+  }
+  return data
+}
+
+export const getMembersByEvent = async (eventName: string) => {
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('event_name', eventName)
+    .order('registration_date', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching members:', error)
+    return []
+  }
+  return data
+}
+
+export const createMember = async (member: {
+  entry_name: string
+  event_name: string
+  handler_name: string
+  cock_type: string
+  number_of_entries: number
+  registration_date: string
+}) => {
+  const { data, error } = await supabase
+    .from('members')
+    .insert([member])
+    .select()
+
+  if (error) {
+    console.error('Error creating member:', error)
+    throw error
+  }
+  return data[0]
+}
+
+// ===== PAIRINGS =====
+export const getPairings = async () => {
+  const { data, error } = await supabase
+    .from('pairings')
+    .select('*')
+    .order('fight_number', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching pairings:', error)
+    return []
+  }
+  return data
+}
+
+export const getPairingsByEvent = async (eventId: number) => {
+  const { data, error } = await supabase
+    .from('pairings')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('fight_number', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching pairings:', error)
+    return []
+  }
+  return data
+}
+
+export const createPairing = async (pairing: {
+  event_id: number
+  fight_number: number
+  sultada_number: string
+  mayron_entry_id: number
+  mayron_handler: string
+  wala_entry_id: number
+  wala_handler: string
+  parada_amount?: number
+}) => {
+  const { data, error } = await supabase
+    .from('pairings')
+    .insert([pairing])
+    .select()
+
+  if (error) {
+    console.error('Error creating pairing:', error)
+    throw error
+  }
+  return data[0]
+}
+
+// ===== TAGGED FIGHTS =====
+export const getTaggedFights = async () => {
+  const { data, error } = await supabase
+    .from('tagged_fights')
+    .select('*')
+
+  if (error) {
+    console.error('Error fetching tagged fights:', error)
+    return []
+  }
+  return data
+}
+
+export const updateTaggedFight = async (
+  pairingId: number,
+  updates: {
+    status?: string
+    outcome?: string
+    outcome_winner?: string
+  }
+) => {
+  const { data, error } = await supabase
+    .from('tagged_fights')
+    .update(updates)
+    .eq('pairing_id', pairingId)
+    .select()
+
+  if (error) {
+    console.error('Error updating tagged fight:', error)
+    throw error
+  }
+  return data
+}
+
+export const createTaggedFight = async (fight: {
+  pairing_id: number
+  fight_number: number
+  status: string
+  outcome?: string
+  outcome_winner?: string
+}) => {
+  const { data, error } = await supabase
+    .from('tagged_fights')
+    .insert([fight])
+    .select()
+
+  if (error) {
+    console.error('Error creating tagged fight:', error)
+    throw error
+  }
+  return data[0]
+}
+
+// ===== RELEASED FIGHTS =====
+export const getReleasedFights = async () => {
+  const { data, error } = await supabase
+    .from('released_fights')
+    .select('*')
+
+  if (error) {
+    console.error('Error fetching released fights:', error)
+    return []
+  }
+  return data
+}
+
+export const updateReleasedFight = async (
+  pairingId: number,
+  releaseStatus: string
+) => {
+  const { data, error } = await supabase
+    .from('released_fights')
+    .update({
+      release_status: releaseStatus,
+      released_at: releaseStatus === 'released' ? new Date().toISOString() : null,
+    })
+    .eq('pairing_id', pairingId)
+    .select()
+
+  if (error) {
+    console.error('Error updating released fight:', error)
+    throw error
+  }
+  return data
+}
+
+export const createReleasedFight = async (fight: {
+  pairing_id: number
+  release_status: string
+}) => {
+  const { data, error } = await supabase
+    .from('released_fights')
+    .insert([fight])
+    .select()
+
+  if (error) {
+    console.error('Error creating released fight:', error)
+    throw error
+  }
+  return data[0]
+}
+
+// ===== RAFFLE WINNERS =====
+export const getRaffleWinners = async () => {
+  const { data, error } = await supabase
+    .from('raffle_winners')
+    .select('*')
+    .order('drawn_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching raffle winners:', error)
+    return []
+  }
+  return data
+}
+
+export const createRaffleWinner = async (winner: {
+  ticket_number: string
+  participant_name: string
+  entry_name: string
+  event_name: string
+  drawn_at: string
+}) => {
+  const { data, error } = await supabase
+    .from('raffle_winners')
+    .insert([winner])
+    .select()
+
+  if (error) {
+    console.error('Error creating raffle winner:', error)
+    throw error
+  }
+  return data[0]
+}

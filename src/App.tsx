@@ -1,7 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AuthProvider } from './context/AuthContext'
+import { DataProvider } from './context/DataContext'
 import { TaggingProvider } from './context/TaggingContext'
 import { useAuth } from './hooks/useAuth'
+import { seedDatabase } from './lib/seedDatabase'
 import Sidebar from './components/Sidebar'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -24,6 +27,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { isLoggedIn } = useAuth()
+
+  useEffect(() => {
+    // Seed database on first load
+    seedDatabase()
+  }, [])
 
   return (
     <Routes>
@@ -48,9 +56,11 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <TaggingProvider>
-          <AppContent />
-        </TaggingProvider>
+        <DataProvider>
+          <TaggingProvider>
+            <AppContent />
+          </TaggingProvider>
+        </DataProvider>
       </AuthProvider>
     </Router>
   )

@@ -1,34 +1,10 @@
 import './Events.css'
-import { useState, useMemo } from 'react'
-
-interface Event {
-  id: number
-  name: string
-  type: string
-  derbyInfo: string
-  date: string
-}
-
-const INITIAL_EVENTS: Event[] = [
-  { id: 1, name: 'Monday Night Match', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (45-50 lbs)', date: '2026-04-20' },
-  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-19' },
-  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-18' },
-  { id: 4, name: 'Spring Classic Derby', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 4 per Entry (50-60 lbs)', date: '2026-04-17' },
-  { id: 5, name: 'Inter-Club Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 2 per Entry (60-75 lbs)', date: '2026-04-16' },
-  { id: 6, name: 'Regional Qualifier', type: 'Hack Fight', derbyInfo: 'Cock - 3 per Entry (75-90 lbs)', date: '2026-04-15' },
-  { id: 7, name: 'Friendly Match Series', type: 'Hack Fight', derbyInfo: 'Stag - 3 per Entry (40-55 lbs)', date: '2026-04-14' },
-  { id: 8, name: 'Championship Round', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 2 per Entry (65-80 lbs)', date: '2026-04-13' },
-  { id: 9, name: 'Rising Stars Tournament', type: 'Hack Fight', derbyInfo: 'Stag - 4 per Entry (35-50 lbs)', date: '2026-04-12' },
-  { id: 10, name: 'Elite Division Match', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (80-95 lbs)', date: '2026-04-11' },
-  { id: 11, name: 'April Opener', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 3 per Entry (48-62 lbs)', date: '2026-04-10' },
-  { id: 12, name: 'Grand Festival Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (58-72 lbs)', date: '2026-04-09' },
-  { id: 13, name: 'Provincial Challenge', type: 'Hack Fight', derbyInfo: 'Cock - 4 per Entry (72-88 lbs)', date: '2026-04-08' },
-  { id: 14, name: 'Spring Warmup Series', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (42-58 lbs)', date: '2026-04-07' },
-  { id: 15, name: 'National Preliminaries', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 3 per Entry (60-78 lbs)', date: '2026-04-06' },
-]
+import { useState, useMemo, useEffect } from 'react'
+import { useData } from '../context/DataContext'
 
 function Events() {
-  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS)
+  const { events, addEvent } = useData()
+  const [displayEvents, setDisplayEvents] = useState(events)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -71,7 +47,7 @@ function Events() {
   }
 
   const handleEditEvent = (event: Event) => {
-    const derbyInfoParts = event.derbyInfo.match(/(.*?) - (\d+) per Entry \((\d+)-(\d+) lbs\)/)
+    const derbyInfoParts = event.derby_info.match(/(.*?) - (\d+) per Entry \((\d+)-(\d+) lbs\)/)
     if (derbyInfoParts) {
       setHackFightType(derbyInfoParts[1])
       setNoPerEntry(derbyInfoParts[2])
@@ -92,20 +68,20 @@ function Events() {
     }
 
     if (isEditMode && editingEventId) {
-      const updatedEvent: Event = {
+      const updatedEvent: any = {
         id: editingEventId,
         name: eventName,
         type: eventType,
-        derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
+        derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
         date: eventDate,
       }
       setPendingEvent(updatedEvent)
     } else {
-      const newEvent: Event = {
-        id: Math.max(...events.map(e => e.id), 0) + 1,
+      const newEvent: any = {
+        id: Math.max(...displayEvents.map(e => e.id), 0) + 1,
         name: eventName,
         type: eventType,
-        derbyInfo: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
+        derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
         date: eventDate,
       }
       setPendingEvent(newEvent)
@@ -113,15 +89,20 @@ function Events() {
     setShowConfirmation(true)
   }
 
-  const handleConfirmEvent = () => {
+  const handleConfirmEvent = async () => {
     if (pendingEvent) {
-      if (isEditMode && editingEventId) {
-        const updatedEvents = events.map((e) =>
-          e.id === editingEventId ? pendingEvent : e
-        )
-        setEvents(updatedEvents)
-      } else {
-        setEvents([pendingEvent, ...events])
+      try {
+        if (!isEditMode) {
+          await addEvent({
+            id: pendingEvent.id,
+            name: pendingEvent.name,
+            type: pendingEvent.type,
+            derby_info: pendingEvent.derbyInfo,
+            date: pendingEvent.date,
+          })
+        }
+      } catch (error) {
+        alert('Error saving event')
       }
     }
     setShowConfirmation(false)
@@ -134,14 +115,18 @@ function Events() {
     setPendingEvent(null)
   }
 
+  useEffect(() => {
+    setDisplayEvents(events)
+  }, [events])
+
   const filteredEvents = useMemo(() => {
-    if (!searchQuery) return events
-    return events.filter((event) =>
+    if (!searchQuery) return displayEvents
+    return displayEvents.filter((event) =>
       event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.derbyInfo.toLowerCase().includes(searchQuery.toLowerCase())
+      event.derby_info.toLowerCase().includes(searchQuery.toLowerCase())
     )
-  }, [searchQuery, events])
+  }, [searchQuery, displayEvents])
 
   const paginatedEvents = useMemo(() => {
     const startIdx = (currentPage - 1) * itemsPerPage
@@ -234,7 +219,7 @@ function Events() {
                     </span>
                   </td>
                   <td>{event.type}</td>
-                  <td>{event.derbyInfo}</td>
+                  <td>{event.derby_info}</td>
                   <td>{formatDate(event.date)}</td>
                 </tr>
               ))}
