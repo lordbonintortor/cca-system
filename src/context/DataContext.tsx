@@ -7,6 +7,7 @@ import {
   getReleasedFights,
   getRaffleWinners,
   createMember,
+  createMultipleMembers,
   createEvent,
   createPairing,
   createRaffleWinner,
@@ -79,6 +80,7 @@ interface DataContextType {
   // Actions
   addEvent: (event: Omit<Event, 'id'>) => Promise<void>
   addMember: (member: Omit<Member, 'id'>) => Promise<void>
+  addMultipleMembers: (members: Array<Omit<Member, 'id'>>) => Promise<void>
   addPairing: (pairing: Omit<Pairing, 'id'>) => Promise<void>
   addRaffleWinner: (winner: Omit<RaffleWinner, 'id'>) => Promise<void>
   
@@ -161,6 +163,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const addMultipleMembers = async (members: Array<Omit<Member, 'id'>>) => {
+    try {
+      await createMultipleMembers(
+        members.map(member => ({
+          entry_name: member.entry_name,
+          event_name: member.event_name,
+          handler_name: member.handler_name,
+          cock_type: member.cock_type,
+          number_of_entries: member.number_of_entries,
+          registration_date: member.registration_date,
+        }))
+      )
+      await refreshData()
+    } catch (error) {
+      console.error('Error adding multiple members:', error)
+      throw error
+    }
+  }
+
   const addPairing = async (pairing: Omit<Pairing, 'id'>) => {
     try {
       await createPairing({
@@ -206,6 +227,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     isLoading,
     addEvent,
     addMember,
+    addMultipleMembers,
     addPairing,
     addRaffleWinner,
     refreshData,

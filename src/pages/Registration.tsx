@@ -1,63 +1,11 @@
 import './Registration.css'
 import { useState, useMemo } from 'react'
+import { useData, type Member } from '../context/DataContext'
 
-interface Event {
-  id: number
-  name: string
-  type: string
-  derbyInfo: string
-  date: string
-}
 
-interface Member {
-  id: number
-  entryName: string
-  eventName: string
-  handlerName: string
-  cockType: string
-  numberOfEntries: number
-  registrationDate: string
-}
-
-const INITIAL_EVENTS: Event[] = [
-  { id: 1, name: 'Monday Night Match', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (45-50 lbs)', date: '2026-04-20' },
-  { id: 2, name: 'Weekend Championship', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (55-65 lbs)', date: '2026-04-19' },
-  { id: 3, name: 'Local Tournament', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (70-80 lbs)', date: '2026-04-18' },
-  { id: 4, name: 'Spring Classic Derby', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 4 per Entry (50-60 lbs)', date: '2026-04-17' },
-  { id: 5, name: 'Inter-Club Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 2 per Entry (60-75 lbs)', date: '2026-04-16' },
-  { id: 6, name: 'Regional Qualifier', type: 'Hack Fight', derbyInfo: 'Cock - 3 per Entry (75-90 lbs)', date: '2026-04-15' },
-  { id: 7, name: 'Friendly Match Series', type: 'Hack Fight', derbyInfo: 'Stag - 3 per Entry (40-55 lbs)', date: '2026-04-14' },
-  { id: 8, name: 'Championship Round', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 2 per Entry (65-80 lbs)', date: '2026-04-13' },
-  { id: 9, name: 'Rising Stars Tournament', type: 'Hack Fight', derbyInfo: 'Stag - 4 per Entry (35-50 lbs)', date: '2026-04-12' },
-  { id: 10, name: 'Elite Division Match', type: 'Hack Fight', derbyInfo: 'Cock - 2 per Entry (80-95 lbs)', date: '2026-04-11' },
-  { id: 11, name: 'April Opener', type: 'Hack Fight', derbyInfo: 'Stag / Bullstag - 3 per Entry (48-62 lbs)', date: '2026-04-10' },
-  { id: 12, name: 'Grand Festival Battle', type: 'Hack Fight', derbyInfo: 'Bullstag - 3 per Entry (58-72 lbs)', date: '2026-04-09' },
-  { id: 13, name: 'Provincial Challenge', type: 'Hack Fight', derbyInfo: 'Cock - 4 per Entry (72-88 lbs)', date: '2026-04-08' },
-  { id: 14, name: 'Spring Warmup Series', type: 'Hack Fight', derbyInfo: 'Stag - 2 per Entry (42-58 lbs)', date: '2026-04-07' },
-  { id: 15, name: 'National Preliminaries', type: 'Hack Fight', derbyInfo: 'Bullstag / Cock - 3 per Entry (60-78 lbs)', date: '2026-04-06' },
-]
-
-const INITIAL_MEMBERS: Member[] = [
-  { id: 1, entryName: 'Juan Dela Cruz', eventName: 'Monday Night Match', handlerName: 'Carlos Santos', cockType: 'Stag', numberOfEntries: 2, registrationDate: '2026-04-20' },
-  { id: 2, entryName: 'Maria Garcia', eventName: 'Weekend Championship', handlerName: 'Pedro Ramirez', cockType: 'Bullstag', numberOfEntries: 3, registrationDate: '2026-04-19' },
-  { id: 3, entryName: 'Antonio Reyes', eventName: 'Local Tournament', handlerName: 'Miguel Torres', cockType: 'Cock', numberOfEntries: 2, registrationDate: '2026-04-18' },
-  { id: 4, entryName: 'Rosa Lopez', eventName: 'Spring Classic Derby', handlerName: 'Juan Mendoza', cockType: 'Stag', numberOfEntries: 4, registrationDate: '2026-04-17' },
-  { id: 5, entryName: 'Francisco Diaz', eventName: 'Inter-Club Battle', handlerName: 'Luis Fernandez', cockType: 'Bullstag', numberOfEntries: 2, registrationDate: '2026-04-16' },
-  { id: 6, entryName: 'Angela Morales', eventName: 'Regional Qualifier', handlerName: 'Ricardo Gutierrez', cockType: 'Cock', numberOfEntries: 3, registrationDate: '2026-04-15' },
-  { id: 7, entryName: 'Roberto Flores', eventName: 'Friendly Match Series', handlerName: 'Daniel Navarro', cockType: 'Stag', numberOfEntries: 3, registrationDate: '2026-04-14' },
-  { id: 8, entryName: 'Elena Castillo', eventName: 'Championship Round', handlerName: 'Eduardo Vargas', cockType: 'Bullstag', numberOfEntries: 2, registrationDate: '2026-04-13' },
-  { id: 9, entryName: 'Javier Romero', eventName: 'Rising Stars Tournament', handlerName: 'Fernando Ortiz', cockType: 'Stag', numberOfEntries: 4, registrationDate: '2026-04-12' },
-  { id: 10, entryName: 'Carmen Rodriguez', eventName: 'Elite Division Match', handlerName: 'Guillermo Castro', cockType: 'Cock', numberOfEntries: 2, registrationDate: '2026-04-11' },
-  { id: 11, entryName: 'Manuel Santos', eventName: 'April Opener', handlerName: 'Hector Moreno', cockType: 'Stag', numberOfEntries: 3, registrationDate: '2026-04-10' },
-  { id: 12, entryName: 'Lucia Hernandez', eventName: 'Grand Festival Battle', handlerName: 'Ignacio Ruiz', cockType: 'Bullstag', numberOfEntries: 3, registrationDate: '2026-04-09' },
-  { id: 13, entryName: 'Raúl Perez', eventName: 'Provincial Challenge', handlerName: 'Javier Molina', cockType: 'Cock', numberOfEntries: 4, registrationDate: '2026-04-08' },
-  { id: 14, entryName: 'Isabel Martinez', eventName: 'Spring Warmup Series', handlerName: 'Karlo Fontanar', cockType: 'Stag', numberOfEntries: 2, registrationDate: '2026-04-07' },
-  { id: 15, entryName: 'Diego Sanchez', eventName: 'National Preliminaries', handlerName: 'Luis Pacabay', cockType: 'Bullstag', numberOfEntries: 3, registrationDate: '2026-04-06' },
-]
 
 function Registration() {
-  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS)
-  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS)
+  const { events, members, addMultipleMembers } = useData()
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -88,10 +36,10 @@ function Registration() {
     // Set event name to the newest event
     if (sortedEvents.length > 0) {
       setEventName(sortedEvents[0].name)
-      // Extract cock type and number of entries from the newest event's derbyInfo
-      const cockTypeFromEvent = sortedEvents[0].derbyInfo.split(' - ')[0]
+      // Extract cock type and number of entries from the newest event's derby_info
+      const cockTypeFromEvent = sortedEvents[0].derby_info.split(' - ')[0]
       setCockType(cockTypeFromEvent)
-      const perEntryMatch = sortedEvents[0].derbyInfo.match(/(\d+) per Entry/)
+      const perEntryMatch = sortedEvents[0].derby_info.match(/(\d+) per Entry/)
       if (perEntryMatch) {
         setNumberOfEntries(perEntryMatch[1])
       }
@@ -101,12 +49,12 @@ function Registration() {
 
   const handleEventChange = (selectedEventName: string) => {
     setEventName(selectedEventName)
-    // Find the event and extract cock type and number of entries from derbyInfo
+    // Find the event and extract cock type and number of entries from derby_info
     const selectedEvent = events.find(e => e.name === selectedEventName)
     if (selectedEvent) {
-      const cockTypeFromEvent = selectedEvent.derbyInfo.split(' - ')[0]
+      const cockTypeFromEvent = selectedEvent.derby_info.split(' - ')[0]
       setCockType(cockTypeFromEvent)
-      const perEntryMatch = selectedEvent.derbyInfo.match(/(\d+) per Entry/)
+      const perEntryMatch = selectedEvent.derby_info.match(/(\d+) per Entry/)
       if (perEntryMatch) {
         setNumberOfEntries(perEntryMatch[1])
       }
@@ -135,12 +83,12 @@ function Registration() {
     for (let i = 1; i <= numEntries; i++) {
       const newMember: Member = {
         id: Math.max(...members.map(m => m.id), 0) + i,
-        entryName: `${entryName} - Entry ${i}`,
-        eventName,
-        handlerName,
-        cockType,
-        numberOfEntries: 1,
-        registrationDate,
+        entry_name: `${entryName} - Entry ${i}`,
+        event_name: eventName,
+        handler_name: handlerName,
+        cock_type: cockType,
+        number_of_entries: 1,
+        registration_date: registrationDate,
       }
       newMembers.push(newMember)
     }
@@ -149,11 +97,16 @@ function Registration() {
     setShowConfirmation(true)
   }
 
-  const handleConfirmMember = () => {
-    setMembers([...pendingMembers, ...members])
-    setShowConfirmation(false)
-    setPendingMembers([])
-    handleCloseModal()
+  const handleConfirmMember = async () => {
+    try {
+      await addMultipleMembers(pendingMembers)
+      setShowConfirmation(false)
+      setPendingMembers([])
+      handleCloseModal()
+    } catch (error) {
+      console.error('Error adding members:', error)
+      alert('Error adding members to database')
+    }
   }
 
   const handleCancelConfirmation = () => {
@@ -164,9 +117,9 @@ function Registration() {
   const filteredMembers = useMemo(() => {
     if (!searchQuery) return members
     return members.filter((member) =>
-      member.entryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.eventName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.handlerName.toLowerCase().includes(searchQuery.toLowerCase())
+      member.entry_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.event_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.handler_name.toLowerCase().includes(searchQuery.toLowerCase())
     )
   }, [searchQuery, members])
 
@@ -251,9 +204,9 @@ function Registration() {
             <tbody>
               {paginatedMembers.map((member) => (
                 <tr key={member.id}>
-                  <td>{member.entryName}</td>
-                  <td>{member.eventName}</td>
-                  <td>{member.handlerName}</td>
+                  <td>{member.entry_name}</td>
+                  <td>{member.event_name}</td>
+                  <td>{member.handler_name}</td>
                 </tr>
               ))}
             </tbody>
@@ -433,7 +386,7 @@ function Registration() {
                 <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2196F3' }}>{pendingMembers.length} {pendingMembers.length === 1 ? 'entry' : 'entries'}</p>
                 <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#555' }}>
                   {pendingMembers.map((member, idx) => (
-                    <div key={idx} style={{ marginBottom: '0.5rem' }}>• {member.entryName}</div>
+                    <div key={idx} style={{ marginBottom: '0.5rem' }}>• {member.entry_name}</div>
                   ))}
                 </div>
               </div>

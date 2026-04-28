@@ -80,6 +80,26 @@ export const createMember = async (member: {
   return data[0]
 }
 
+export const createMultipleMembers = async (members: Array<{
+  entry_name: string
+  event_name: string
+  handler_name: string
+  cock_type: string
+  number_of_entries: number
+  registration_date: string
+}>) => {
+  const { data, error } = await supabase
+    .from('members')
+    .insert(members)
+    .select()
+
+  if (error) {
+    console.error('Error creating multiple members:', error)
+    throw error
+  }
+  return data
+}
+
 // ===== PAIRINGS =====
 export const getPairings = async () => {
   const { data, error } = await supabase
