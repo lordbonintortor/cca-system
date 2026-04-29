@@ -223,7 +223,7 @@ function Raffle() {
         <div className="search-action-row">
           <div className="search-container">
             <select
-              className="search-input"
+              className="search-input raffle-event-select"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
             >

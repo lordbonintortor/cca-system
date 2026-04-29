@@ -195,6 +195,10 @@
   color: #333;
 }
 
+.raffle-event-select {
+  font-size: 0.75rem;
+}
+
 .search-input:focus {
   border-color: var(--accent-red);
   box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
