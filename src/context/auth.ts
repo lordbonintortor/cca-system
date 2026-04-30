@@ -13,6 +13,7 @@ export interface AuthContextType {
   logout: () => void
   isLoading?: boolean
   error?: string | null
+  loginStatus?: 'idle' | 'loading' | 'success'
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)
