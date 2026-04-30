@@ -12,15 +12,19 @@ function Releasing() {
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false)
 
-  // Set initial event on mount
   useEffect(() => {
-    if (events.length > 0 && !selectedEvent) {
-      const firstEvent = events[0].name
-      if (firstEvent !== selectedEvent) {
-        setSelectedEvent(firstEvent)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedEvent((currentEvent) => {
+      if (events.length === 0) {
+        return ''
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+      if (currentEvent && events.some((event) => event.name === currentEvent)) {
+        return currentEvent
+      }
+
+      return events[0].name
+    })
   }, [events])
 
   const context = useContext(TaggingContext)

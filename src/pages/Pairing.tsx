@@ -39,15 +39,19 @@ function PairingPage() {
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [pendingPairing, setPendingPairing] = useState<PairingRecord | null>(null)
 
-  // Set initial event on mount
   useEffect(() => {
-    if (events.length > 0 && !eventName) {
-      const firstEvent = events[0].name
-      if (firstEvent !== eventName) {
-        setEventName(firstEvent)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEventName((currentEventName) => {
+      if (events.length === 0) {
+        return ''
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+      if (currentEventName && events.some((event) => event.name === currentEventName)) {
+        return currentEventName
+      }
+
+      return events[0].name
+    })
   }, [events])
 
   const sortedEvents = useMemo(() => {
@@ -291,7 +295,7 @@ function PairingPage() {
               <div class="parada-label">Entry</div>
               <div class="entry-name">${mayronEntry}</div>
               <div class="handler-name"><strong>Handler:</strong> ${pairing.mayron_handler}</div>
-              <div class="weight"><strong>Weight:</strong> ${pairing.mayron_weight} lbs</div>
+              <div class="weight"><strong>Weight:</strong> ${pairing.mayron_weight} kilos</div>
               <div class="betting"><strong>₱${pairing.mayron_betting}</strong></div>
             </div>
             <div class="parada-section">
@@ -299,7 +303,7 @@ function PairingPage() {
               <div class="parada-label">Entry</div>
               <div class="entry-name">${walaEntry}</div>
               <div class="handler-name"><strong>Handler:</strong> ${pairing.wala_handler}</div>
-              <div class="weight"><strong>Weight:</strong> ${pairing.wala_weight} lbs</div>
+              <div class="weight"><strong>Weight:</strong> ${pairing.wala_weight} kilos</div>
               <div class="betting"><strong>₱${pairing.wala_betting}</strong></div>
             </div>
           </div>
@@ -729,7 +733,7 @@ function PairingPage() {
                   </div>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Weight</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayron_weight} lbs</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayron_weight} kilos</p>
                   </div>
                   <div>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting</p>
@@ -749,7 +753,7 @@ function PairingPage() {
                   </div>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Weight</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.wala_weight} lbs</p>
+                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.wala_weight} kilos</p>
                   </div>
                   <div>
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting</p>

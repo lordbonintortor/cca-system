@@ -11,7 +11,10 @@ import {
   createMultipleMembers,
   createEvent,
   updateEvent,
+  deleteEvent,
+  isForeignKeyUpdateError,
   updateMembersByEventName,
+  updatePairingsByEventId,
   updateRaffleWinnersByEventName,
   createPairing,
   createRaffleWinner,
@@ -182,20 +185,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
     event: Omit<Event, 'id'>
   ) => {
     try {
-      // Update the event first
-      await updateEvent(id, {
+      const eventPayload = {
         name: event.name,
         type: event.type,
         derby_info: event.derby_info,
         date: event.date,
-      })
-      
-      // If event name changed, update all related records
-      if (oldEventName !== event.name) {
+      }
+
+      if (oldEventName === event.name) {
+        await updateEvent(id, eventPayload)
+        await refreshData()
+        return
+      }
+
+      try {
+        await updateEvent(id, eventPayload)
         await updateMembersByEventName(oldEventName, event.name)
         await updateRaffleWinnersByEventName(oldEventName, event.name)
+      } catch (error) {
+        if (!isForeignKeyUpdateError(error)) {
+          throw error
+        }
+
+        const renamedEvent = await createEvent(eventPayload)
+        await updateMembersByEventName(oldEventName, event.name)
+        await updateRaffleWinnersByEventName(oldEventName, event.name)
+        await updatePairingsByEventId(id, renamedEvent.id)
+        await deleteEvent(id)
       }
-      
+
       await refreshData()
     } catch (error) {
       console.error('Error updating event:', error)

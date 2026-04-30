@@ -22,15 +22,19 @@ function Raffle() {
   const [showWheel, setShowWheel] = useState(false)
   const [wheelRotation, setWheelRotation] = useState(0)
 
-  // Set initial event on mount
   useEffect(() => {
-    if (events.length > 0 && !selectedEvent) {
-      const firstEvent = events[0].name
-      if (firstEvent !== selectedEvent) {
-        setSelectedEvent(firstEvent)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedEvent((currentEvent) => {
+      if (events.length === 0) {
+        return ''
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+      if (currentEvent && events.some((event) => event.name === currentEvent)) {
+        return currentEvent
+      }
+
+      return events[0].name
+    })
   }, [events])
 
   const sortedEvents = useMemo(() => {
@@ -220,8 +224,16 @@ function Raffle() {
         <h1>Raffle</h1>
         <p>Manage raffle drawings and track winners</p>
 
-        <div className="search-action-row">
-          <div className="search-container">
+        <div
+          className="search-action-row"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(220px, 1fr) auto auto',
+            alignItems: 'center',
+            gap: '1rem',
+          }}
+        >
+          <div className="search-container" style={{ width: '100%' }}>
             <select
               className="search-input raffle-event-select"
               value={selectedEvent}
@@ -246,7 +258,7 @@ function Raffle() {
           >
             🎲 Draw Winner
           </button>
-          <button className="btn-add-event" onClick={handlePrint} style={{ backgroundColor: '#2196F3', marginLeft: '0.5rem' }}>
+          <button className="btn-add-event" onClick={handlePrint} style={{ backgroundColor: '#4caf50' }}>
             🖨️ Print Results
           </button>
         </div>

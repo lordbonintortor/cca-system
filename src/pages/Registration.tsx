@@ -29,7 +29,11 @@ function Registration() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedEventName((currentEventName) => {
-      if (currentEventName || sortedEvents.length === 0) {
+      if (sortedEvents.length === 0) {
+        return ''
+      }
+
+      if (currentEventName && sortedEvents.some((event) => event.name === currentEventName)) {
         return currentEventName
       }
 

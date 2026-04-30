@@ -54,6 +54,30 @@ export const updateEvent = async (
   return data[0]
 }
 
+export const deleteEvent = async (id: number) => {
+  const { error } = await supabase
+    .from('events')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting event:', error)
+    throw error
+  }
+}
+
+export const isForeignKeyUpdateError = (error: unknown) => {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+
+  const maybeError = error as { code?: string; message?: string }
+  return (
+    maybeError.code === '23503' ||
+    maybeError.message?.toLowerCase().includes('foreign key constraint') === true
+  )
+}
+
 // ===== MEMBERS =====
 export const getMembers = async () => {
   const { data, error } = await supabase
@@ -210,6 +234,28 @@ export const createPairing = async (pairing: {
     throw error
   }
   return data[0]
+}
+
+export const updatePairingsByEventId = async (
+  oldEventId: number,
+  newEventId: number
+) => {
+  if (oldEventId === newEventId) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from('pairings')
+    .update({ event_id: newEventId })
+    .eq('event_id', oldEventId)
+    .select('id')
+
+  if (error) {
+    console.error('Error updating pairings event id:', error)
+    throw error
+  }
+
+  return data || []
 }
 
 // ===== TAGGED FIGHTS =====

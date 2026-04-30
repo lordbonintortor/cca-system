@@ -67,7 +67,7 @@ function Events() {
   }
 
   const handleEditEvent = (event: ArenaEvent) => {
-    const derbyInfoParts = event.derby_info.match(/(.*?)\s*-\s*(\d+)\s*per\s*Entry\s*\((\d+)\s*-\s*(\d+)\s*lbs\)/i)
+    const derbyInfoParts = event.derby_info.match(/(.*?)\s*-\s*(\d+)\s*per\s*Entry\s*\((\d+)\s*-\s*(\d+)\s*(?:kilos|kg)\)/i)
     if (derbyInfoParts) {
       setHackFightType(derbyInfoParts[1].trim())
       setNoPerEntry(derbyInfoParts[2])
@@ -105,7 +105,7 @@ function Events() {
       const updatedEvent: PendingEvent = {
         name: normalizedEventName,
         type: eventType,
-        derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
+        derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} kilos)`,
         date: eventDate,
       }
       setPendingEvent(updatedEvent)
@@ -113,7 +113,7 @@ function Events() {
       const newEvent: PendingEvent = {
         name: normalizedEventName,
         type: eventType,
-        derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
+        derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} kilos)`,
         date: eventDate,
       }
       setPendingEvent(newEvent)
@@ -425,9 +425,9 @@ function Events() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Weight Range (lbs)</p>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Weight Range (kilos)</p>
                   <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>
-                    {pendingEvent.derby_info.match(/\((\d+)-(\d+) lbs\)/)?.[1]}-{pendingEvent.derby_info.match(/\((\d+)-(\d+) lbs\)/)?.[2]}
+                    {pendingEvent.derby_info.match(/\((\d+)-(\d+) (?:kilos|kg)\)/)?.[1]}-{pendingEvent.derby_info.match(/\((\d+)-(\d+) (?:kilos|kg)\)/)?.[2]}
                   </p>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>

@@ -13,6 +13,7 @@ function Sidebar() {
     // keep submenu expanded when the current route is any events-related page
     const eventPaths = ['/events', '/registration', '/pairing', '/tagging', '/releasing', '/reports', '/results', '/raffle']
     if (eventPaths.some((p) => location.pathname.startsWith(p))) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsEventsExpanded(true)
     } else {
       setIsEventsExpanded(false)

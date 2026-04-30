@@ -1,5 +1,5 @@
 import './Registration.css'
-import { useState, useMemo, useContext } from 'react'
+import { useState, useMemo, useContext, useEffect } from 'react'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
 
@@ -19,6 +19,21 @@ function Results() {
   const [selectedEvent, setSelectedEvent] = useState<string>(() => {
     return events.length > 0 ? events[0].name : ''
   })
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedEvent((currentEvent) => {
+      if (events.length === 0) {
+        return ''
+      }
+
+      if (currentEvent && events.some((event) => event.name === currentEvent)) {
+        return currentEvent
+      }
+
+      return events[0].name
+    })
+  }, [events])
 
   const context = useContext(TaggingContext)
   if (!context) {

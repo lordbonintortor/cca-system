@@ -13,7 +13,7 @@ CREATE TABLE events (
 CREATE TABLE members (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   entry_name TEXT NOT NULL,
-  event_name TEXT NOT NULL REFERENCES events(name),
+  event_name TEXT NOT NULL REFERENCES events(name) ON UPDATE CASCADE,
   handler_name TEXT NOT NULL,
   cock_type TEXT NOT NULL,
   number_of_entries INTEGER NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE raffle_winners (
   ticket_number TEXT NOT NULL,
   participant_name TEXT NOT NULL,
   entry_name TEXT NOT NULL,
-  event_name TEXT NOT NULL REFERENCES events(name),
+  event_name TEXT NOT NULL REFERENCES events(name) ON UPDATE CASCADE,
   drawn_at TIMESTAMP WITH TIME ZONE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -82,3 +82,15 @@ CREATE INDEX idx_pairings_fight_number ON pairings(fight_number);
 CREATE INDEX idx_tagged_fights_pairing_id ON tagged_fights(pairing_id);
 CREATE INDEX idx_released_fights_pairing_id ON released_fights(pairing_id);
 CREATE INDEX idx_raffle_winners_event_name ON raffle_winners(event_name);
+
+-- Run these on existing databases that were created before ON UPDATE CASCADE was added.
+-- They let event name edits automatically cascade to registrations and raffle winners.
+ALTER TABLE members
+  DROP CONSTRAINT IF EXISTS members_event_name_fkey,
+  ADD CONSTRAINT members_event_name_fkey
+    FOREIGN KEY (event_name) REFERENCES events(name) ON UPDATE CASCADE;
+
+ALTER TABLE raffle_winners
+  DROP CONSTRAINT IF EXISTS raffle_winners_event_name_fkey,
+  ADD CONSTRAINT raffle_winners_event_name_fkey
+    FOREIGN KEY (event_name) REFERENCES events(name) ON UPDATE CASCADE;
