@@ -59,7 +59,7 @@ export const getMembers = async () => {
   const { data, error } = await supabase
     .from('members')
     .select('*')
-    .order('registration_date', { ascending: false })
+    .order('id', { ascending: false })
 
   if (error) {
     console.error('Error fetching members:', error)
@@ -73,7 +73,7 @@ export const getMembersByEvent = async (eventName: string) => {
     .from('members')
     .select('*')
     .eq('event_name', eventName)
-    .order('registration_date', { ascending: false })
+    .order('id', { ascending: false })
 
   if (error) {
     console.error('Error fetching members:', error)
@@ -129,17 +129,32 @@ export const updateMembersByEventName = async (
   if (oldEventName === newEventName) {
     return []
   }
-  
-  const { data, error } = await supabase
-    .from('members')
-    .update({ event_name: newEventName })
-    .eq('event_name', oldEventName)
 
-  if (error) {
-    console.error('Error updating members event name:', error)
-    // Don't throw - allow event update to succeed
+  const candidateOldNames = Array.from(new Set([oldEventName, oldEventName.trim()]))
+  const updatedRows: Array<{ id: number }> = []
+
+  for (const candidateOldName of candidateOldNames) {
+    if (!candidateOldName) {
+      continue
+    }
+
+    const { data, error } = await supabase
+      .from('members')
+      .update({ event_name: newEventName })
+      .eq('event_name', candidateOldName)
+      .select('id')
+
+    if (error) {
+      console.error('Error updating members event name:', error)
+      throw error
+    }
+
+    if (data) {
+      updatedRows.push(...data)
+    }
   }
-  return data || []
+
+  return updatedRows
 }
 
 // ===== PAIRINGS =====
@@ -340,14 +355,29 @@ export const updateRaffleWinnersByEventName = async (
     return []
   }
 
-  const { data, error } = await supabase
-    .from('raffle_winners')
-    .update({ event_name: newEventName })
-    .eq('event_name', oldEventName)
+  const candidateOldNames = Array.from(new Set([oldEventName, oldEventName.trim()]))
+  const updatedRows: Array<{ id: number }> = []
 
-  if (error) {
-    console.error('Error updating raffle winners event name:', error)
-    // Don't throw - allow event update to succeed
+  for (const candidateOldName of candidateOldNames) {
+    if (!candidateOldName) {
+      continue
+    }
+
+    const { data, error } = await supabase
+      .from('raffle_winners')
+      .update({ event_name: newEventName })
+      .eq('event_name', candidateOldName)
+      .select('id')
+
+    if (error) {
+      console.error('Error updating raffle winners event name:', error)
+      throw error
+    }
+
+    if (data) {
+      updatedRows.push(...data)
+    }
   }
-  return data || []
+
+  return updatedRows
 }

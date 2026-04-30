@@ -133,16 +133,7 @@ function Registration() {
       )
     }
 
-    // Get today's date to identify newly added members
-    const today = new Date()
-    const todayDateString = today.toISOString().split('T')[0]
-
-    // Separate newly added members (from today) and older members
-    const newlyAdded = result.filter(m => m.registration_date === todayDateString)
-    const older = result.filter(m => m.registration_date !== todayDateString)
-
-    // Combine: newly added first (no sorting), then older (no sorting)
-    return [...newlyAdded, ...older]
+    return [...result].sort((a, b) => b.id - a.id)
   }, [searchQuery, selectedEventName, members])
 
   const paginatedMembers = useMemo(() => {

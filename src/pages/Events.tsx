@@ -30,6 +30,21 @@ function Events() {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
   }
 
+  const normalizeDateForInput = (dateString: string) => {
+    if (!dateString) return ''
+
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+      return dateString.slice(0, 10)
+    }
+
+    const parsed = new Date(dateString)
+    if (Number.isNaN(parsed.getTime())) {
+      return ''
+    }
+
+    return parsed.toISOString().split('T')[0]
+  }
+
   const handleAddEvent = () => {
     const today = new Date()
     const formattedDate = today.toISOString().split('T')[0]
@@ -52,30 +67,43 @@ function Events() {
   }
 
   const handleEditEvent = (event: ArenaEvent) => {
-    const derbyInfoParts = event.derby_info.match(/(.*?) - (\d+) per Entry \((\d+)-(\d+) lbs\)/)
+    const derbyInfoParts = event.derby_info.match(/(.*?)\s*-\s*(\d+)\s*per\s*Entry\s*\((\d+)\s*-\s*(\d+)\s*lbs\)/i)
     if (derbyInfoParts) {
-      setHackFightType(derbyInfoParts[1])
+      setHackFightType(derbyInfoParts[1].trim())
       setNoPerEntry(derbyInfoParts[2])
       setWeightRangeMin(derbyInfoParts[3])
       setWeightRangeMax(derbyInfoParts[4])
+    } else {
+      const fallbackHackFightType = event.derby_info.split(' - ')[0]?.trim() || 'Stag'
+      const fallbackPerEntry = event.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1] || ''
+      const fallbackWeightRange = event.derby_info.match(/(\d+)\s*-\s*(\d+)/)
+
+      setHackFightType(fallbackHackFightType)
+      setNoPerEntry(fallbackPerEntry)
+      setWeightRangeMin(fallbackWeightRange?.[1] || '')
+      setWeightRangeMax(fallbackWeightRange?.[2] || '')
     }
+
+    setEventType(event.type || 'Hack Fight')
     setOriginalEventName(event.name)
     setEventName(event.name)
-    setEventDate(event.date)
+    setEventDate(normalizeDateForInput(event.date))
     setEditingEventId(event.id)
     setIsEditMode(true)
     setIsModalOpen(true)
   }
 
   const handleSaveEvent = () => {
-    if (!eventName.trim() || !weightRangeMin || !weightRangeMax || !noPerEntry || !eventDate) {
+    const normalizedEventName = eventName.trim()
+
+    if (!normalizedEventName || !weightRangeMin || !weightRangeMax || !noPerEntry || !eventDate) {
       alert('Please fill in all required fields')
       return
     }
 
     if (isEditMode && editingEventId) {
       const updatedEvent: PendingEvent = {
-        name: eventName,
+        name: normalizedEventName,
         type: eventType,
         derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
         date: eventDate,
@@ -83,7 +111,7 @@ function Events() {
       setPendingEvent(updatedEvent)
     } else {
       const newEvent: PendingEvent = {
-        name: eventName,
+        name: normalizedEventName,
         type: eventType,
         derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} lbs)`,
         date: eventDate,
