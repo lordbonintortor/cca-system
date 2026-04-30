@@ -40,9 +40,14 @@ function Sidebar() {
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <div className="logo-container">
+          <button
+            type="button"
+            className="logo-container logo-button"
+            onClick={() => navigate('/dashboard')}
+            aria-label="Go to dashboard"
+          >
             <img src="/logo.png" alt="Calinan Cockpit Arena Logo" className="logo" />
-          </div>
+          </button>
           <h2>Calinan Cockpit Arena</h2>
         </div>
         <nav className="sidebar-nav">

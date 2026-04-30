@@ -36,8 +36,7 @@ function Login() {
             <div className="login-success-progress" aria-hidden="true">
               <div className="login-success-progress-bar" />
             </div>
-            <p>Login successful</p>
-            <span>Opening your dashboard...</span>
+            <p>Logging you into the system...</p>
           </div>
         )}
         <div className="login-logo-container">

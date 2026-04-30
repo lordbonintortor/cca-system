@@ -1,4 +1,5 @@
 import './Registration.css'
+import './Raffle.css'
 import { useState, useMemo, useEffect } from 'react'
 import { useData } from '../context/useDataContext'
 import type { RaffleWinner } from '../context/DataContext'
@@ -21,6 +22,7 @@ function Raffle() {
   const [isSpinning, setIsSpinning] = useState(false)
   const [showWheel, setShowWheel] = useState(false)
   const [wheelRotation, setWheelRotation] = useState(0)
+  const [raffleSearch, setRaffleSearch] = useState('')
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -62,8 +64,47 @@ function Raffle() {
       .sort((a, b) => new Date(b.drawn_at).getTime() - new Date(a.drawn_at).getTime())
   }, [raffleWinners, selectedEvent])
 
+  const selectedEventDetails = useMemo(() => {
+    return events.find((event) => event.name === selectedEvent)
+  }, [events, selectedEvent])
+
+  const winnerTicketNumbers = useMemo(() => {
+    return new Set(eventWinners.map((winner) => winner.ticket_number))
+  }, [eventWinners])
+
+  const eligibleTickets = useMemo(() => {
+    return eventTickets.filter((ticket) => !winnerTicketNumbers.has(ticket.ticket_number))
+  }, [eventTickets, winnerTicketNumbers])
+
+  const filteredTickets = useMemo(() => {
+    if (!raffleSearch.trim()) return eventTickets
+
+    const search = raffleSearch.toLowerCase()
+    return eventTickets.filter((ticket) =>
+      ticket.ticket_number.toLowerCase().includes(search) ||
+      ticket.participant_name.toLowerCase().includes(search) ||
+      ticket.entry_name.toLowerCase().includes(search)
+    )
+  }, [eventTickets, raffleSearch])
+
+  const filteredWinners = useMemo(() => {
+    if (!raffleSearch.trim()) return eventWinners
+
+    const search = raffleSearch.toLowerCase()
+    return eventWinners.filter((winner) =>
+      winner.ticket_number.toLowerCase().includes(search) ||
+      winner.participant_name.toLowerCase().includes(search) ||
+      winner.entry_name.toLowerCase().includes(search)
+    )
+  }, [eventWinners, raffleSearch])
+
   const handleDraw = () => {
-    if (eventTickets.length === 0) {
+    if (eligibleTickets.length === 0) {
+      if (eventTickets.length > 0) {
+        alert('All raffle tickets for this event already have winners')
+        return
+      }
+
       alert('No raffle tickets available for this event')
       return
     }
@@ -92,11 +133,11 @@ function Raffle() {
         clearInterval(spinInterval)
 
         // Select random winner
-        const randomIndex = Math.floor(Math.random() * eventTickets.length)
-        const winner = eventTickets[randomIndex]
+        const randomIndex = Math.floor(Math.random() * eligibleTickets.length)
+        const winner = eligibleTickets[randomIndex]
 
         // Calculate final rotation to land on winner
-        const degreesPerTicket = 360 / eventTickets.length
+        const degreesPerTicket = 360 / eligibleTickets.length
         const finalRotation = totalRotation + (360 - degreesPerTicket * randomIndex - degreesPerTicket / 2)
 
         setWheelRotation(finalRotation)
@@ -224,17 +265,11 @@ function Raffle() {
         <h1>Raffle</h1>
         <p>Manage raffle drawings and track winners</p>
 
-        <div
-          className="search-action-row"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(220px, 1fr) auto auto',
-            alignItems: 'center',
-            gap: '1rem',
-          }}
-        >
-          <div className="search-container" style={{ width: '100%' }}>
+        <div className="raffle-toolbar">
+          <div className="raffle-event-control">
+            <label htmlFor="raffleEventSelect">Event</label>
             <select
+              id="raffleEventSelect"
               className="search-input raffle-event-select"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
@@ -247,60 +282,70 @@ function Raffle() {
             </select>
           </div>
           <button 
-            className="btn-add-event" 
+            className="btn-add-event raffle-draw-button" 
             onClick={handleDraw}
-            disabled={isSpinning}
-            style={{ 
-              backgroundColor: '#ff9800',
-              opacity: isSpinning ? 0.5 : 1,
-              cursor: isSpinning ? 'not-allowed' : 'pointer'
-            }}
+            disabled={isSpinning || eligibleTickets.length === 0}
           >
             🎲 Draw Winner
           </button>
-          <button className="btn-add-event" onClick={handlePrint} style={{ backgroundColor: '#4caf50' }}>
+          <button className="btn-add-event raffle-print-button" onClick={handlePrint}>
             🖨️ Print Results
           </button>
         </div>
 
-        <div style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-          {showWheel && eventTickets.length > 0 && (
-            <div style={{
-              gridColumn: '1 / -1',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '3rem',
-              backgroundColor: '#f5f5f5',
-              borderRadius: '8px',
-              marginBottom: '2rem'
-            }}>
-              <div style={{
-                position: 'relative',
-                width: '350px',
-                height: '350px',
-                marginBottom: '2rem'
-              }}>
+        <div className="raffle-summary-grid">
+          <div className="raffle-summary-card">
+            <span>Participants</span>
+            <strong>{eventTickets.length}</strong>
+            <small>{selectedEventDetails ? new Date(selectedEventDetails.date).toLocaleDateString() : 'No event selected'}</small>
+          </div>
+          <div className="raffle-summary-card">
+            <span>Eligible Tickets</span>
+            <strong>{eligibleTickets.length}</strong>
+            <small>{eventWinners.length} winner{eventWinners.length === 1 ? '' : 's'} already drawn</small>
+          </div>
+          <div className="raffle-summary-card">
+            <span>Last Winner</span>
+            <strong>{eventWinners[0]?.participant_name || 'None'}</strong>
+            <small>{eventWinners[0] ? `${eventWinners[0].ticket_number} · ${new Date(eventWinners[0].drawn_at).toLocaleTimeString()}` : 'Draw a winner to start'}</small>
+          </div>
+          <div className="raffle-summary-card raffle-search-card">
+            <label htmlFor="raffleSearch">Find Ticket</label>
+            <input
+              id="raffleSearch"
+              className="search-input"
+              type="text"
+              placeholder="Search ticket, participant, entry"
+              value={raffleSearch}
+              onChange={(e) => setRaffleSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {eligibleTickets.length === 0 && eventTickets.length > 0 && (
+          <div className="raffle-notice">
+            All registered raffle tickets for this event have already been drawn.
+          </div>
+        )}
+
+        <div className="raffle-content-grid">
+          {showWheel && eligibleTickets.length > 0 && (
+            <div className="raffle-wheel-panel">
+              <div className="raffle-wheel">
                 {/* Spinning wheel */}
                 <svg
                   width="350"
                   height="350"
                   viewBox="0 0 350 350"
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    transform: `rotate(${wheelRotation}deg)`,
-                    transition: isSpinning ? 'none' : 'transform 0.3s ease-out',
-                  }}
+                  className="raffle-wheel-svg"
+                  style={{ transform: `rotate(${wheelRotation}deg)`, transition: isSpinning ? 'none' : 'transform 0.3s ease-out' }}
                 >
                   {/* Circle background */}
                   <circle cx="175" cy="175" r="165" fill="#fff" stroke="#333" strokeWidth="3" />
                   
                   {/* Draw segments for each ticket */}
-                  {eventTickets.map((ticket, index) => {
-                    const total = eventTickets.length
+                  {eligibleTickets.map((ticket, index) => {
+                    const total = eligibleTickets.length
                     const angle = (360 / total) * index
                     const startAngle = angle * (Math.PI / 180)
                     const endAngle = ((angle + 360 / total) * Math.PI) / 180
@@ -348,48 +393,25 @@ function Raffle() {
                 </svg>
 
                 {/* Center circle */}
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '80px',
-                  height: '80px',
-                  backgroundColor: '#fff',
-                  border: '3px solid #333',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2.5rem',
-                  zIndex: 10
-                }}>
+                <div className="raffle-wheel-center">
                   🎲
                 </div>
 
                 {/* Pointer */}
-                <div style={{
-                  position: 'absolute',
-                  top: '-10px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 0,
-                  height: 0,
-                  borderLeft: '15px solid transparent',
-                  borderRight: '15px solid transparent',
-                  borderTop: '20px solid #FF6B6B',
-                  zIndex: 11
-                }}/>
+                <div className="raffle-wheel-pointer" />
               </div>
 
-              <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#333' }}>
-                🎯 Spinning... {Math.floor((4500 - (isSpinning ? 0 : 4500)) / 1000) + 1}s
+              <p className="raffle-wheel-caption">
+                {isSpinning ? 'Drawing a winner...' : 'Winner selected'}
               </p>
             </div>
           )}
 
-          <div className="events-table-wrapper">
-            <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Raffle Participants ({eventTickets.length})</h3>
+          <div className="events-table-wrapper raffle-table-panel">
+            <div className="raffle-table-heading">
+              <h3>Raffle Participants ({filteredTickets.length})</h3>
+              <span>{eligibleTickets.length} eligible</span>
+            </div>
             <table className="events-table">
               <thead>
                 <tr>
@@ -399,13 +421,13 @@ function Raffle() {
                 </tr>
               </thead>
               <tbody>
-                {eventTickets.length === 0 ? (
+                {filteredTickets.length === 0 ? (
                   <tr>
-                    <td colSpan={3} style={{ textAlign: 'center', color: '#999' }}>No registered members for this event</td>
+                    <td colSpan={3} style={{ textAlign: 'center', color: '#999' }}>No raffle tickets found</td>
                   </tr>
                 ) : (
-                  eventTickets.map((ticket) => (
-                    <tr key={ticket.id}>
+                  filteredTickets.map((ticket) => (
+                    <tr key={ticket.id} className={winnerTicketNumbers.has(ticket.ticket_number) ? 'raffle-ticket-drawn' : ''}>
                       <td style={{ fontWeight: 'bold' }}>{ticket.ticket_number}</td>
                       <td>{ticket.participant_name}</td>
                       <td>{ticket.entry_name}</td>
@@ -416,8 +438,11 @@ function Raffle() {
             </table>
           </div>
 
-          <div className="events-table-wrapper">
-            <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Draw Winners ({eventWinners.length})</h3>
+          <div className="events-table-wrapper raffle-table-panel">
+            <div className="raffle-table-heading">
+              <h3>Draw Winners ({filteredWinners.length})</h3>
+              <span>{eventWinners.length} total</span>
+            </div>
             <table className="events-table">
               <thead>
                 <tr>
@@ -427,13 +452,13 @@ function Raffle() {
                 </tr>
               </thead>
               <tbody>
-                {eventWinners.length === 0 ? (
+                {filteredWinners.length === 0 ? (
                   <tr>
                     <td colSpan={3} style={{ textAlign: 'center', color: '#999' }}>No winners yet</td>
                   </tr>
                 ) : (
-                  eventWinners.map((winner) => (
-                    <tr key={winner.id} style={{ backgroundColor: '#e8f5e9' }}>
+                  filteredWinners.map((winner) => (
+                    <tr key={winner.id} className="raffle-winner-row">
                       <td style={{ fontWeight: 'bold', color: '#2e7d32' }}>{winner.ticket_number}</td>
                       <td style={{ fontWeight: 'bold', color: '#2e7d32' }}>{winner.participant_name}</td>
                       <td style={{ fontSize: '0.85rem', color: '#666' }}>{new Date(winner.drawn_at).toLocaleDateString()}</td>
@@ -448,18 +473,19 @@ function Raffle() {
 
       {showWinnerModal && drawnWinner && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ textAlign: 'center', backgroundColor: '#e8f5e9' }} onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header" style={{ backgroundColor: '#2e7d32', color: 'white' }}>
-              <h2 style={{ margin: 0, color: 'white' }}>🎉 WINNER! 🎉</h2>
+          <div className="modal-content raffle-winner-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header raffle-winner-modal-header">
+              <h2>🎉 WINNER! 🎉</h2>
             </div>
             <div className="modal-body">
-              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2e7d32', margin: '1rem 0' }}>
+              <p className="raffle-winner-name">
                 {drawnWinner.participant_name}
               </p>
-              <p style={{ fontSize: '1.1rem', color: '#666', margin: '0.5rem 0' }}>
+              <p className="raffle-winner-ticket">
                 Ticket #: <strong>{drawnWinner.ticket_number}</strong>
               </p>
-              <p style={{ fontSize: '0.9rem', color: '#999' }}>
+              <p className="raffle-winner-entry">{drawnWinner.entry_name}</p>
+              <p className="raffle-winner-time">
                 {new Date(drawnWinner.drawn_at).toLocaleTimeString()}
               </p>
               {isAddingWinner && <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>Saving winner...</p>}
