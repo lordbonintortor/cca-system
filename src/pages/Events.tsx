@@ -63,32 +63,27 @@ function Events() {
   }
 
   const handleEditEvent = (event: ArenaEvent) => {
-    // Try to parse new format: "Stag - 2 per Entry"
-    const newFormatMatch = event.derby_info.match(/(.*?)\s*-\s*(\d+)\s*per\s*Entry/i)
-    if (newFormatMatch) {
-      setHackFightType(newFormatMatch[1].trim())
-      setNoPerEntry(parseInt(newFormatMatch[2]))
+    // Parse per-entry count from both current and legacy formats.
+    const parsedNoPerEntry = parseInt(event.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1] || '1')
+
+    const categoryFromDerbyInfo = event.derby_info.split(' - ')[0]?.trim()
+    if (categoryFromDerbyInfo && !/^\d+\s*per\s*Entry/i.test(categoryFromDerbyInfo)) {
+      setHackFightType(categoryFromDerbyInfo)
     } else {
-      // Fallback for legacy format with weight range
-      const legacyMatch = event.derby_info.match(/(.*?)\s*-\s*(\d+)\s*per\s*Entry\s*\((\d+)\s*-\s*(\d+)\s*(?:kilos|kg)\)/i)
-      if (legacyMatch) {
-        setHackFightType(legacyMatch[1].trim())
-        setNoPerEntry(parseInt(legacyMatch[2]))
-      } else {
-        const fallbackHackFightType = event.derby_info.split(' - ')[0]?.trim() || 'Stag'
-        const fallbackPerEntry = event.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1] || '1'
-        setHackFightType(fallbackHackFightType)
-        setNoPerEntry(parseInt(fallbackPerEntry))
-      }
+      setHackFightType('Stag')
     }
 
-    // Determine event type based on noPerEntry
-    if (parseInt(String(noPerEntry)) === 1) {
+    setNoPerEntry(parsedNoPerEntry)
+
+    // Determine event type based on per-entry count.
+    if (parsedNoPerEntry === 1) {
       setEventType('Hack Fight')
-    } else if (parseInt(String(noPerEntry)) === 2) {
+    } else if (parsedNoPerEntry === 2) {
       setEventType('2 Wins')
-    } else if (parseInt(String(noPerEntry)) === 3) {
+    } else if (parsedNoPerEntry === 3) {
       setEventType('3 Wins')
+    } else {
+      setEventType(event.type || 'Hack Fight')
     }
 
     setOriginalEventName(event.name)
@@ -248,7 +243,7 @@ function Events() {
               <tr>
                 <th>Event Name</th>
                 <th>Event Type</th>
-                <th>Hack Fight Info</th>
+                <th>Entry Info</th>
                 <th>Event Date</th>
               </tr>
             </thead>
@@ -264,7 +259,7 @@ function Events() {
                     </span>
                   </td>
                   <td>{event.type}</td>
-                  <td>{event.derby_info}</td>
+                  <td>{event.derby_info.match(/(\d+) per Entry/)?.[1]} per Entry</td>
                   <td>{formatDate(event.date)}</td>
                 </tr>
               ))}
@@ -401,20 +396,14 @@ function Events() {
                   <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.type}</p>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Cock Type</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.derby_info.split(' - ')[0]}</p>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
-                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
                   <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Per Entry</p>
                   <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.derby_info.match(/(\d+) per Entry/)?.[1]} per Entry</p>
                 </div>
-                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Date</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{formatDate(pendingEvent.date)}</p>
-                </div>
+              </div>
+
+              <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0', marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Date</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{formatDate(pendingEvent.date)}</p>
               </div>
             </div>
 

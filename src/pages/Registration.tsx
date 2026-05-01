@@ -323,7 +323,7 @@ function Registration() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="cockType">Cock Type</label>
+                <label htmlFor="cockType">Entry Category</label>
                 <input
                   id="cockType"
                   type="text"
@@ -394,7 +394,7 @@ function Registration() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Cock Type</p>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Entry Category</p>
                   <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{cockType}</p>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>

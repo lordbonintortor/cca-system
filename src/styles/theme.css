@@ -23,13 +23,13 @@
 .page-content h1 {
   color: var(--accent-red);
   margin-bottom: 20px;
-  font-size: 32px;
+  font-size: 48px;
   font-weight: bold;
 }
 
 .page-content p {
   color: #555;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .page-copyright {
