@@ -349,21 +349,6 @@ function Events() {
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="hackFightType">Type of Hack Fight <span className="required-asterisk">*</span></label>
-                <select
-                  id="hackFightType"
-                  className="form-input"
-                  value={hackFightType}
-                  onChange={(e) => setHackFightType(e.target.value)}
-                >
-                  <option value="Stag">Stag</option>
-                  <option value="Bullstag">Bullstag</option>
-                  <option value="Cock">Cock</option>
-                  <option value="Stag / Bullstag">Stag / Bullstag</option>
-                  <option value="Bullstag / Cock">Bullstag / Cock</option>
-                </select>
-              </div>
-              <div className="form-group">
                 <label htmlFor="noPerEntry">No. of Entry <span className="required-asterisk">*</span></label>
                 <input
                   id="noPerEntry"
