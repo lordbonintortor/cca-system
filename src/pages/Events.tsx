@@ -23,6 +23,21 @@ function Events() {
   const [pendingEvent, setPendingEvent] = useState<PendingEvent | null>(null)
   const itemsPerPage = 10
 
+  const getTodayInPhilippines = () => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date())
+
+    const year = parts.find((part) => part.type === 'year')?.value ?? ''
+    const month = parts.find((part) => part.type === 'month')?.value ?? ''
+    const day = parts.find((part) => part.type === 'day')?.value ?? ''
+
+    return `${year}-${month}-${day}`
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -44,9 +59,7 @@ function Events() {
   }
 
   const handleAddEvent = () => {
-    const today = new Date()
-    const formattedDate = today.toISOString().split('T')[0]
-    setEventDate(formattedDate)
+    setEventDate(getTodayInPhilippines())
     setIsModalOpen(true)
   }
 

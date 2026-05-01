@@ -13,13 +13,27 @@ function Registration() {
   const [entryName, setEntryName] = useState('')
   const [selectedEventName, setSelectedEventName] = useState('')
   const [eventName, setEventName] = useState('')
-  const [handlerName, setHandlerName] = useState('')
   const [cockType, setCockType] = useState('Stag')
   const [numberOfEntries, setNumberOfEntries] = useState('')
   const [registrationDate, setRegistrationDate] = useState('')
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [pendingMembers, setPendingMembers] = useState<Member[]>([])
   const itemsPerPage = 10
+
+  const getTodayInPhilippines = () => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date())
+
+    const year = parts.find((part) => part.type === 'year')?.value ?? ''
+    const month = parts.find((part) => part.type === 'month')?.value ?? ''
+    const day = parts.find((part) => part.type === 'day')?.value ?? ''
+
+    return `${year}-${month}-${day}`
+  }
 
   // Sort events so newest (most recent dates) are at the top
   const sortedEvents = useMemo(() => {
@@ -52,9 +66,7 @@ function Registration() {
   }
 
   const handleRegisterMember = () => {
-    const today = new Date()
-    const formattedDate = today.toISOString().split('T')[0]
-    setRegistrationDate(formattedDate)
+    setRegistrationDate(getTodayInPhilippines())
     const selectedEvent = events.find(e => e.name === selectedEventName) || sortedEvents[0]
     if (selectedEvent) {
       setEventName(selectedEvent.name)
@@ -72,13 +84,12 @@ function Registration() {
     setIsModalOpen(false)
     setEntryName('')
     setEventName('')
-    setHandlerName('')
     setCockType('Stag')
     setRegistrationDate('')
   }
 
   const handleSaveMember = () => {
-    if (!entryName.trim() || !eventName.trim() || !handlerName.trim() || !numberOfEntries || !registrationDate) {
+    if (!entryName.trim() || !eventName.trim() || !numberOfEntries || !registrationDate) {
       alert('Please fill in all required fields')
       return
     }
@@ -92,7 +103,7 @@ function Registration() {
         id: Math.max(...members.map(m => m.id), 0) + i,
         entry_name: `${entryName} - Entry ${i}`,
         event_name: eventName,
-        handler_name: handlerName,
+        handler_name: '',
         cock_type: cockType,
         number_of_entries: 1,
         registration_date: registrationDate,
@@ -230,7 +241,7 @@ function Registration() {
               <tr>
                 <th>Entry Name</th>
                 <th>Event Name</th>
-                <th>Handler Name</th>
+                <th>Registration Date</th>
               </tr>
             </thead>
             <tbody>
@@ -238,7 +249,7 @@ function Registration() {
                 <tr key={member.id}>
                   <td>{member.entry_name}</td>
                   <td>{member.event_name}</td>
-                  <td>{member.handler_name}</td>
+                  <td>{formatDate(member.registration_date)}</td>
                 </tr>
               ))}
             </tbody>
@@ -311,29 +322,6 @@ function Registration() {
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="handlerName">Handler Name <span className="required-asterisk">*</span></label>
-                <input
-                  id="handlerName"
-                  type="text"
-                  className="form-input"
-                  placeholder="Enter handler name"
-                  value={handlerName}
-                  onChange={(e) => setHandlerName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="cockType">Entry Category</label>
-                <input
-                  id="cockType"
-                  type="text"
-                  className="form-input"
-                  value={cockType}
-                  disabled
-                  readOnly
-                />
-              </div>
-              <div className="form-group">
                 <label htmlFor="numberOfEntries">No. of Entries</label>
                 <input
                   id="numberOfEntries"
@@ -385,17 +373,6 @@ function Registration() {
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
                   <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Name</p>
                   <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{eventName}</p>
-                </div>
-                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Handler Name</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{handlerName}</p>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
-                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Entry Category</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{cockType}</p>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
                   <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Number of Entries</p>

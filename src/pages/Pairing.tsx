@@ -7,12 +7,10 @@ interface PairingRecord {
   id: number
   fight_number: number
   mayron_entry: string
-  mayron_handler: string
-  mayron_weight: string
+  mayron_entry_id?: number
   mayron_betting: string
   wala_entry: string
-  wala_handler: string
-  wala_weight: string
+  wala_entry_id?: number
   wala_betting: string
   diferencia: string
 }
@@ -30,10 +28,6 @@ function PairingPage() {
   const [eventName, setEventName] = useState('')
   const [mayronEntry, setMayronEntry] = useState('')
   const [walaEntry, setWalaEntry] = useState('')
-  const [mayronHandler, setMayronHandler] = useState('')
-  const [walaHandler, setWalaHandler] = useState('')
-  const [mayronWeight, setMayronWeight] = useState('')
-  const [walaWeight, setWalaWeight] = useState('')
   const [mayronBetting, setMayronBetting] = useState('')
   const [walaBetting, setWalaBetting] = useState('')
   const [showConfirmation, setShowConfirmation] = useState(false)
@@ -63,21 +57,8 @@ function PairingPage() {
     return members.filter((member) => member.event_name === eventName)
   }, [eventName, members])
 
-  const selectableMembers = useMemo(() => {
-    const seenMembers = new Set<string>()
-
-    return filteredMembers.filter((member) => {
-      const baseEntryName = getBaseEntryName(member.entry_name)
-      const memberKey = `${baseEntryName}|${member.handler_name}`
-
-      if (seenMembers.has(memberKey)) {
-        return false
-      }
-
-      seenMembers.add(memberKey)
-      return true
-    })
-  }, [filteredMembers])
+  // Show all entries (including Entry #) and do not dedupe
+  const selectableMembers = useMemo(() => filteredMembers, [filteredMembers])
 
   const eventPairings = useMemo(() => {
     const event = events.find((e) => e.name === eventName)
@@ -87,6 +68,15 @@ function PairingPage() {
       .filter((pairing) => pairing.event_id === event.id)
       .sort((a, b) => b.fight_number - a.fight_number)
   }, [events, eventName, pairings])
+
+  const usedMemberIds = useMemo(() => {
+    const set = new Set<number>()
+    eventPairings.forEach((p) => {
+      if (p.mayron_entry_id) set.add(p.mayron_entry_id)
+      if (p.wala_entry_id) set.add(p.wala_entry_id)
+    })
+    return set
+  }, [eventPairings])
 
   const calculatedDiferencia = useMemo(() => {
     if (!mayronBetting || !walaBetting) return ''
@@ -294,16 +284,12 @@ function PairingPage() {
               <div class="parada-header">PARADA (MAYRON)</div>
               <div class="parada-label">Entry</div>
               <div class="entry-name">${mayronEntry}</div>
-              <div class="handler-name"><strong>Handler:</strong> ${pairing.mayron_handler}</div>
-              <div class="weight"><strong>Weight:</strong> ${pairing.mayron_weight} kilos</div>
               <div class="betting"><strong>₱${pairing.mayron_betting}</strong></div>
             </div>
             <div class="parada-section">
               <div class="parada-header">PARADA (WALA)</div>
               <div class="parada-label">Entry</div>
               <div class="entry-name">${walaEntry}</div>
-              <div class="handler-name"><strong>Handler:</strong> ${pairing.wala_handler}</div>
-              <div class="weight"><strong>Weight:</strong> ${pairing.wala_weight} kilos</div>
               <div class="betting"><strong>₱${pairing.wala_betting}</strong></div>
             </div>
           </div>
@@ -350,16 +336,12 @@ function PairingPage() {
     setIsModalOpen(false)
     setMayronEntry('')
     setWalaEntry('')
-    setMayronHandler('')
-    setWalaHandler('')
-    setMayronWeight('')
-    setWalaWeight('')
     setMayronBetting('')
     setWalaBetting('')
   }
 
   const handleSavePairing = () => {
-    if (!eventName.trim() || !mayronEntry.trim() || !walaEntry.trim() || !mayronHandler.trim() || !walaHandler.trim() || !mayronWeight.trim() || !walaWeight.trim() || !mayronBetting.trim() || !walaBetting.trim()) {
+    if (!eventName.trim() || !mayronEntry.trim() || !walaEntry.trim() || !mayronBetting.trim() || !walaBetting.trim()) {
       alert('Please fill in all required fields')
       return
     }
@@ -374,16 +356,17 @@ function PairingPage() {
       ? Math.max(0, ...pairings.filter((p) => p.event_id === eventData.id).map((p) => p.fight_number)) + 1
       : 1
 
+    const mayronMember = members.find((m) => String(m.id) === mayronEntry)
+    const walaMember = members.find((m) => String(m.id) === walaEntry)
+
     const newPairing: PairingRecord = {
       id: Date.now(),
       fight_number: nextFightNumber,
-      mayron_entry: mayronEntry,
-      mayron_handler: mayronHandler,
-      mayron_weight: mayronWeight,
+      mayron_entry: mayronMember ? mayronMember.entry_name : '',
+      mayron_entry_id: mayronMember ? mayronMember.id : undefined,
       mayron_betting: mayronBetting,
-      wala_entry: walaEntry,
-      wala_handler: walaHandler,
-      wala_weight: walaWeight,
+      wala_entry: walaMember ? walaMember.entry_name : '',
+      wala_entry_id: walaMember ? walaMember.id : undefined,
       wala_betting: walaBetting,
       diferencia: calculatedDiferencia
     }
@@ -395,9 +378,9 @@ function PairingPage() {
   const handleConfirmPairing = async () => {
     if (pendingPairing) {
       try {
-        // Find member IDs for the selected entry names
-        const mayronMember = members.find((m) => getBaseEntryName(m.entry_name) === pendingPairing.mayron_entry && m.event_name === eventName)
-        const walaMember = members.find((m) => getBaseEntryName(m.entry_name) === pendingPairing.wala_entry && m.event_name === eventName)
+        // Find member IDs from the stored pending pairing ids
+        const mayronMember = members.find((m) => m.id === pendingPairing.mayron_entry_id && m.event_name === eventName)
+        const walaMember = members.find((m) => m.id === pendingPairing.wala_entry_id && m.event_name === eventName)
 
         if (!mayronMember || !walaMember) {
           alert('Could not find selected members')
@@ -417,12 +400,12 @@ function PairingPage() {
           fight_number: pendingPairing.fight_number,
           sultada_number: String(pendingPairing.fight_number),
           mayron_entry_id: mayronMember.id,
-          mayron_handler: pendingPairing.mayron_handler,
-          mayron_weight: pendingPairing.mayron_weight,
+          mayron_handler: mayronMember.handler_name,
+          mayron_weight: '',
           mayron_betting: pendingPairing.mayron_betting,
           wala_entry_id: walaMember.id,
-          wala_handler: pendingPairing.wala_handler,
-          wala_weight: pendingPairing.wala_weight,
+          wala_handler: walaMember.handler_name,
+          wala_weight: '',
           wala_betting: pendingPairing.wala_betting,
           diferencia: pendingPairing.diferencia
         }
@@ -474,13 +457,9 @@ function PairingPage() {
               <tr>
                 <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Fight #</th>
                 <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Mayron (Entry)</th>
-                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Mayron (Handler)</th>
-                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Mayron Weight</th>
-                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Mayron Betting</th>
+                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Betting Amount</th>
                 <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Wala (Entry)</th>
-                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Wala (Handler)</th>
-                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Wala Weight</th>
-                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Wala Betting</th>
+                <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Betting Amount</th>
                 <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Diferencia</th>
                 <th style={{ padding: '0.6rem', fontSize: '0.75rem' }}>Print</th>
               </tr>
@@ -495,12 +474,8 @@ function PairingPage() {
                   <tr key={pairing.id}>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.fight_number}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{mayronMember ? getBaseEntryName(mayronMember.entry_name) : 'N/A'}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayron_handler}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.mayron_weight}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.mayron_betting}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{walaMember ? getBaseEntryName(walaMember.entry_name) : 'N/A'}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.wala_handler}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.wala_weight}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.wala_betting}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem', backgroundColor: '#f0fff0', fontWeight: 'bold' }}>₱{pairing.diferencia}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem', textAlign: 'center' }}>
@@ -563,17 +538,13 @@ function PairingPage() {
                   <select
                     className="form-input"
                     value={mayronEntry}
-                    onChange={(e) => {
-                      setMayronEntry(e.target.value)
-                      const member = selectableMembers.find((m) => getBaseEntryName(m.entry_name) === e.target.value)
-                      setMayronHandler(member?.handler_name || '')
-                    }}
+                    onChange={(e) => setMayronEntry(e.target.value)}
                     required
                   >
                     <option value="">Select member</option>
                     {selectableMembers.map((member) => (
-                      <option key={member.id} value={getBaseEntryName(member.entry_name)}>
-                        {getBaseEntryName(member.entry_name)}
+                      <option key={member.id} value={String(member.id)} disabled={usedMemberIds.has(member.id)}>
+                        {member.entry_name}{usedMemberIds.has(member.id) ? ' (used)' : ''}
                       </option>
                     ))}
                   </select>
@@ -583,17 +554,13 @@ function PairingPage() {
                   <select
                     className="form-input"
                     value={walaEntry}
-                    onChange={(e) => {
-                      setWalaEntry(e.target.value)
-                      const member = selectableMembers.find((m) => getBaseEntryName(m.entry_name) === e.target.value)
-                      setWalaHandler(member?.handler_name || '')
-                    }}
+                    onChange={(e) => setWalaEntry(e.target.value)}
                     required
                   >
                     <option value="">Select member</option>
                     {selectableMembers.map((member) => (
-                      <option key={member.id} value={getBaseEntryName(member.entry_name)}>
-                        {getBaseEntryName(member.entry_name)}
+                      <option key={member.id} value={String(member.id)} disabled={usedMemberIds.has(member.id)}>
+                        {member.entry_name}{usedMemberIds.has(member.id) ? ' (used)' : ''}
                       </option>
                     ))}
                   </select>
@@ -601,55 +568,7 @@ function PairingPage() {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="mayronHandler">Handler Name <span className="required-asterisk">*</span></label>
-                  <input
-                    id="mayronHandler"
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter handler name"
-                    value={mayronHandler}
-                    onChange={(e) => setMayronHandler(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="walaHandler">Handler Name <span className="required-asterisk">*</span></label>
-                  <input
-                    id="walaHandler"
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter handler name"
-                    value={walaHandler}
-                    onChange={(e) => setWalaHandler(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="mayronWeight">Cock Weight <span className="required-asterisk">*</span></label>
-                  <input
-                    id="mayronWeight"
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter cock weight"
-                    value={mayronWeight}
-                    onChange={(e) => setMayronWeight(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="walaWeight">Cock Weight <span className="required-asterisk">*</span></label>
-                  <input
-                    id="walaWeight"
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter cock weight"
-                    value={walaWeight}
-                    onChange={(e) => setWalaWeight(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="mayronBetting">Betting Number <span className="required-asterisk">*</span></label>
+                  <label htmlFor="mayronBetting">Betting Amount <span className="required-asterisk">*</span></label>
                   <div style={{ position: 'relative' }}>
                     <span style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#666', pointerEvents: 'none' }}>₱</span>
                     <input
@@ -664,7 +583,7 @@ function PairingPage() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="walaBetting">Betting Number <span className="required-asterisk">*</span></label>
+                  <label htmlFor="walaBetting">Betting Amount <span className="required-asterisk">*</span></label>
                   <div style={{ position: 'relative' }}>
                     <span style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#666', pointerEvents: 'none' }}>₱</span>
                     <input
@@ -727,16 +646,8 @@ function PairingPage() {
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Entry</p>
                     <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayron_entry}</p>
                   </div>
-                  <div style={{ marginBottom: '0.8rem' }}>
-                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Handler</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayron_handler}</p>
-                  </div>
-                  <div style={{ marginBottom: '0.8rem' }}>
-                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Weight</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.mayron_weight} kilos</p>
-                  </div>
                   <div>
-                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting</p>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting Amount</p>
                     <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pendingPairing.mayron_betting}</p>
                   </div>
                 </div>
@@ -747,16 +658,8 @@ function PairingPage() {
                     <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Entry</p>
                     <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.wala_entry}</p>
                   </div>
-                  <div style={{ marginBottom: '0.8rem' }}>
-                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Handler</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.wala_handler}</p>
-                  </div>
-                  <div style={{ marginBottom: '0.8rem' }}>
-                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Weight</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pendingPairing.wala_weight} kilos</p>
-                  </div>
                   <div>
-                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting</p>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.2rem' }}>Betting Amount</p>
                     <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pendingPairing.wala_betting}</p>
                   </div>
                 </div>
