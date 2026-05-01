@@ -17,9 +17,7 @@ function Events() {
   const [eventName, setEventName] = useState('')
   const [eventType, setEventType] = useState('Hack Fight')
   const [hackFightType, setHackFightType] = useState('Stag')
-  const [weightRangeMin, setWeightRangeMin] = useState('')
-  const [weightRangeMax, setWeightRangeMax] = useState('')
-  const [noPerEntry, setNoPerEntry] = useState('')
+  const [noPerEntry, setNoPerEntry] = useState(1)
   const [eventDate, setEventDate] = useState('')
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [pendingEvent, setPendingEvent] = useState<PendingEvent | null>(null)
@@ -60,31 +58,39 @@ function Events() {
     setEventName('')
     setEventType('Hack Fight')
     setHackFightType('Stag')
-    setWeightRangeMin('')
-    setWeightRangeMax('')
-    setNoPerEntry('')
+    setNoPerEntry(1)
     setEventDate('')
   }
 
   const handleEditEvent = (event: ArenaEvent) => {
-    const derbyInfoParts = event.derby_info.match(/(.*?)\s*-\s*(\d+)\s*per\s*Entry\s*\((\d+)\s*-\s*(\d+)\s*(?:kilos|kg)\)/i)
-    if (derbyInfoParts) {
-      setHackFightType(derbyInfoParts[1].trim())
-      setNoPerEntry(derbyInfoParts[2])
-      setWeightRangeMin(derbyInfoParts[3])
-      setWeightRangeMax(derbyInfoParts[4])
+    // Try to parse new format: "Stag - 2 per Entry"
+    const newFormatMatch = event.derby_info.match(/(.*?)\s*-\s*(\d+)\s*per\s*Entry/i)
+    if (newFormatMatch) {
+      setHackFightType(newFormatMatch[1].trim())
+      setNoPerEntry(parseInt(newFormatMatch[2]))
     } else {
-      const fallbackHackFightType = event.derby_info.split(' - ')[0]?.trim() || 'Stag'
-      const fallbackPerEntry = event.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1] || ''
-      const fallbackWeightRange = event.derby_info.match(/(\d+)\s*-\s*(\d+)/)
-
-      setHackFightType(fallbackHackFightType)
-      setNoPerEntry(fallbackPerEntry)
-      setWeightRangeMin(fallbackWeightRange?.[1] || '')
-      setWeightRangeMax(fallbackWeightRange?.[2] || '')
+      // Fallback for legacy format with weight range
+      const legacyMatch = event.derby_info.match(/(.*?)\s*-\s*(\d+)\s*per\s*Entry\s*\((\d+)\s*-\s*(\d+)\s*(?:kilos|kg)\)/i)
+      if (legacyMatch) {
+        setHackFightType(legacyMatch[1].trim())
+        setNoPerEntry(parseInt(legacyMatch[2]))
+      } else {
+        const fallbackHackFightType = event.derby_info.split(' - ')[0]?.trim() || 'Stag'
+        const fallbackPerEntry = event.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1] || '1'
+        setHackFightType(fallbackHackFightType)
+        setNoPerEntry(parseInt(fallbackPerEntry))
+      }
     }
 
-    setEventType(event.type || 'Hack Fight')
+    // Determine event type based on noPerEntry
+    if (parseInt(String(noPerEntry)) === 1) {
+      setEventType('Hack Fight')
+    } else if (parseInt(String(noPerEntry)) === 2) {
+      setEventType('2 Wins')
+    } else if (parseInt(String(noPerEntry)) === 3) {
+      setEventType('3 Wins')
+    }
+
     setOriginalEventName(event.name)
     setEventName(event.name)
     setEventDate(normalizeDateForInput(event.date))
@@ -96,7 +102,7 @@ function Events() {
   const handleSaveEvent = () => {
     const normalizedEventName = eventName.trim()
 
-    if (!normalizedEventName || !weightRangeMin || !weightRangeMax || !noPerEntry || !eventDate) {
+    if (!normalizedEventName || !noPerEntry || !eventDate) {
       alert('Please fill in all required fields')
       return
     }
@@ -105,7 +111,7 @@ function Events() {
       const updatedEvent: PendingEvent = {
         name: normalizedEventName,
         type: eventType,
-        derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} kilos)`,
+        derby_info: `${hackFightType} - ${noPerEntry} per Entry`,
         date: eventDate,
       }
       setPendingEvent(updatedEvent)
@@ -113,7 +119,7 @@ function Events() {
       const newEvent: PendingEvent = {
         name: normalizedEventName,
         type: eventType,
-        derby_info: `${hackFightType} - ${noPerEntry} per Entry (${weightRangeMin}-${weightRangeMax} kilos)`,
+        derby_info: `${hackFightType} - ${noPerEntry} per Entry`,
         date: eventDate,
       }
       setPendingEvent(newEvent)
@@ -319,15 +325,27 @@ function Events() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="eventType">Event Type</label>
-                  <input
+                  <label htmlFor="eventType">Event Type <span className="required-asterisk">*</span></label>
+                  <select
                     id="eventType"
-                    type="text"
                     className="form-input"
                     value={eventType}
-                    disabled
-                    readOnly
-                  />
+                    onChange={(e) => {
+                      const selectedType = e.target.value
+                      setEventType(selectedType)
+                      if (selectedType === 'Hack Fight') {
+                        setNoPerEntry(1)
+                      } else if (selectedType === '2 Wins') {
+                        setNoPerEntry(2)
+                      } else if (selectedType === '3 Wins') {
+                        setNoPerEntry(3)
+                      }
+                    }}
+                  >
+                    <option value="Hack Fight">Hack Fight</option>
+                    <option value="2 Wins">2 Wins</option>
+                    <option value="3 Wins">3 Wins</option>
+                  </select>
                 </div>
               </div>
               <div className="form-group">
@@ -346,35 +364,15 @@ function Events() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Weight Range: <span className="required-asterisk">*</span></label>
-                <div className="weight-range-container">
-                  <input
-                    type="number"
-                    className="form-input form-input-weight"
-                    placeholder=""
-                    value={weightRangeMin}
-                    onChange={(e) => setWeightRangeMin(e.target.value)}
-                  />
-                  <span className="weight-separator">-</span>
-                  <input
-                    type="number"
-                    className="form-input form-input-weight"
-                    placeholder=""
-                    value={weightRangeMax}
-                    onChange={(e) => setWeightRangeMax(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label htmlFor="noPerEntry">No. of (Stag/Bullstag/Cock) per Entry <span className="required-asterisk">*</span></label>
+                <label htmlFor="noPerEntry">No. of Entry <span className="required-asterisk">*</span></label>
                 <input
                   id="noPerEntry"
                   type="number"
                   className="form-input"
-                  placeholder="Enter number"
+                  placeholder="Automatic based on event type"
                   value={noPerEntry}
-                  onChange={(e) => setNoPerEntry(e.target.value)}
-                  required
+                  disabled
+                  readOnly
                 />
               </div>
               <div className="form-group">
@@ -414,21 +412,19 @@ function Events() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Cock Type</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.derby_info.split(' - ')[0]}</p>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Type</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.type}</p>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Per Entry</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.derby_info.match(/(\d+) per Entry/)?.[1]} per Entry</p>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Cock Type</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.derby_info.split(' - ')[0]}</p>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Weight Range (kilos)</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>
-                    {pendingEvent.derby_info.match(/\((\d+)-(\d+) (?:kilos|kg)\)/)?.[1]}-{pendingEvent.derby_info.match(/\((\d+)-(\d+) (?:kilos|kg)\)/)?.[2]}
-                  </p>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Per Entry</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{pendingEvent.derby_info.match(/(\d+) per Entry/)?.[1]} per Entry</p>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
                   <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Date</p>
