@@ -51,7 +51,7 @@ function Raffle() {
     return eventMembers.map((member, index) => ({
       id: member.id,
       ticket_number: `R-${String(index + 1).padStart(3, '0')}`,
-      participant_name: member.handler_name,
+      participant_name: member.entry_name,
       entry_name: member.entry_name,
       event_name: member.event_name,
       created_at: member.registration_date,

@@ -109,8 +109,6 @@ export const getMembersByEvent = async (eventName: string) => {
 export const createMember = async (member: {
   entry_name: string
   event_name: string
-  handler_name: string
-  cock_type: string
   number_of_entries: number
   registration_date: string
 }) => {
@@ -129,8 +127,6 @@ export const createMember = async (member: {
 export const createMultipleMembers = async (members: Array<{
   entry_name: string
   event_name: string
-  handler_name: string
-  cock_type: string
   number_of_entries: number
   registration_date: string
 }>) => {

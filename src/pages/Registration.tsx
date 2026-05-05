@@ -13,7 +13,6 @@ function Registration() {
   const [entryName, setEntryName] = useState('')
   const [selectedEventName, setSelectedEventName] = useState('')
   const [eventName, setEventName] = useState('')
-  const [cockType, setCockType] = useState('Stag')
   const [numberOfEntries, setNumberOfEntries] = useState('')
   const [registrationDate, setRegistrationDate] = useState('')
   const [showConfirmation, setShowConfirmation] = useState(false)
@@ -70,8 +69,6 @@ function Registration() {
     const selectedEvent = events.find(e => e.name === selectedEventName) || sortedEvents[0]
     if (selectedEvent) {
       setEventName(selectedEvent.name)
-      const cockTypeFromEvent = selectedEvent.derby_info.split(' - ')[0]
-      setCockType(cockTypeFromEvent)
       const perEntryMatch = selectedEvent.derby_info.match(/(\d+) per Entry/)
       if (perEntryMatch) {
         setNumberOfEntries(perEntryMatch[1])
@@ -84,7 +81,6 @@ function Registration() {
     setIsModalOpen(false)
     setEntryName('')
     setEventName('')
-    setCockType('Stag')
     setRegistrationDate('')
   }
 
@@ -103,8 +99,6 @@ function Registration() {
         id: Math.max(...members.map(m => m.id), 0) + i,
         entry_name: `${entryName} - Entry ${i}`,
         event_name: eventName,
-        handler_name: '',
-        cock_type: cockType,
         number_of_entries: 1,
         registration_date: registrationDate,
       }
@@ -143,8 +137,7 @@ function Registration() {
     if (searchQuery) {
       result = result.filter((member) =>
         member.entry_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.event_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.handler_name.toLowerCase().includes(searchQuery.toLowerCase())
+        member.event_name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 

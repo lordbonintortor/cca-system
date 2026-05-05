@@ -32,8 +32,6 @@ export interface Member {
   id: number
   entry_name: string
   event_name: string
-  handler_name: string
-  cock_type: string
   number_of_entries: number
   registration_date: string
 }
@@ -226,8 +224,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await createMember({
         entry_name: member.entry_name,
         event_name: member.event_name,
-        handler_name: member.handler_name,
-        cock_type: member.cock_type,
         number_of_entries: member.number_of_entries,
         registration_date: member.registration_date,
       })
@@ -244,8 +240,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         members.map(member => ({
           entry_name: member.entry_name,
           event_name: member.event_name,
-          handler_name: member.handler_name,
-          cock_type: member.cock_type,
           number_of_entries: member.number_of_entries,
           registration_date: member.registration_date,
         }))

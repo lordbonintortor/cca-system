@@ -39,8 +39,6 @@ export const seedDatabase = async () => {
       await createMember({
         entry_name: member.entryName,
         event_name: member.eventName,
-        handler_name: member.handlerName,
-        cock_type: member.cockType,
         number_of_entries: member.numberOfEntries,
         registration_date: member.registrationDate,
       })

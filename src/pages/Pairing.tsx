@@ -284,12 +284,14 @@ function PairingPage() {
               <div class="parada-header">PARADA (MAYRON)</div>
               <div class="parada-label">Entry</div>
               <div class="entry-name">${mayronEntry}</div>
+              <div class="parada-label">Betting Amount</div>
               <div class="betting"><strong>₱${pairing.mayron_betting}</strong></div>
             </div>
             <div class="parada-section">
               <div class="parada-header">PARADA (WALA)</div>
               <div class="parada-label">Entry</div>
               <div class="entry-name">${walaEntry}</div>
+              <div class="parada-label">Betting Amount</div>
               <div class="betting"><strong>₱${pairing.wala_betting}</strong></div>
             </div>
           </div>
@@ -400,11 +402,11 @@ function PairingPage() {
           fight_number: pendingPairing.fight_number,
           sultada_number: String(pendingPairing.fight_number),
           mayron_entry_id: mayronMember.id,
-          mayron_handler: mayronMember.handler_name,
+          mayron_handler: '',
           mayron_weight: '',
           mayron_betting: pendingPairing.mayron_betting,
           wala_entry_id: walaMember.id,
-          wala_handler: walaMember.handler_name,
+          wala_handler: '',
           wala_weight: '',
           wala_betting: pendingPairing.wala_betting,
           diferencia: pendingPairing.diferencia
