@@ -71,9 +71,10 @@ function Tagging() {
     }
   }
 
-  const handleResetFight = () => {
+  const handleResetFight = async () => {
     if (selectedFightId) {
-      resetFight(selectedFightId)
+      await resetFight(selectedFightId)
+      setIsOutcomeModalOpen(false)
       setSelectedFightId(null)
     }
   }
@@ -96,14 +97,14 @@ function Tagging() {
         <h1>Tagging</h1>
         <p>Tag fights from events</p>
 
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '2rem', width: '100%', maxWidth: '200px', margin: '0 auto 2rem' }}>
           <label htmlFor="eventSelect" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#333' }}>Select Event</label>
           <select
             id="eventSelect"
             className="form-input"
             value={selectedEvent}
             onChange={(e) => setSelectedEvent(e.target.value)}
-            style={{ maxWidth: '400px', textAlign: 'center' }}
+            style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}
           >
             {sortedEvents.map((event) => (
               <option key={event.id} value={event.name}>
@@ -220,8 +221,7 @@ function Tagging() {
                           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{mayronEntry}</p>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
-                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Handler</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.mayron_handler}</p>
+
                         </div>
                         <div>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
@@ -236,8 +236,7 @@ function Tagging() {
                           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{walaEntry}</p>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
-                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Handler</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.wala_handler}</p>
+
                         </div>
                         <div>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
@@ -257,8 +256,7 @@ function Tagging() {
                           {tag ? 'Change Outcome' : 'Select Outcome'}
                         </h4>
                         <div style={{ marginBottom: '2rem' }}>
-                          <h5 style={{ fontSize: '0.95rem', fontWeight: '600', marginBottom: '1rem', color: '#333' }}>Winner</h5>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <button
                               onClick={() => handleOutcomeSelect('winner', 'mayron')}
                               style={{
@@ -275,7 +273,7 @@ function Tagging() {
                               onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#2196F3'; e.currentTarget.style.color = '#fff'}}
                               onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#e3f2fd'; e.currentTarget.style.color = '#2196F3'}}
                             >
-                              {mayronEntry} Wins
+                              MAYRON
                             </button>
                             <button
                               onClick={() => handleOutcomeSelect('winner', 'wala')}
@@ -293,14 +291,8 @@ function Tagging() {
                               onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#2196F3'; e.currentTarget.style.color = '#fff'}}
                               onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#e3f2fd'; e.currentTarget.style.color = '#2196F3'}}
                             >
-                              {walaEntry} Wins
+                              WALA
                             </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h5 style={{ fontSize: '0.95rem', fontWeight: '600', marginBottom: '1rem', color: '#333' }}>Other Outcomes</h5>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <button
                               onClick={() => handleOutcomeSelect('draw')}
                               style={{
@@ -317,7 +309,7 @@ function Tagging() {
                               onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#ff9800'; e.currentTarget.style.color = '#fff'}}
                               onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#fff3e0'; e.currentTarget.style.color = '#ff9800'}}
                             >
-                              Draw
+                              DRAW
                             </button>
                             <button
                               onClick={() => handleOutcomeSelect('cancelled')}
@@ -335,15 +327,21 @@ function Tagging() {
                               onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#f44336'; e.currentTarget.style.color = '#fff'}}
                               onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#ffebee'; e.currentTarget.style.color = '#f44336'}}
                             >
-                              Cancelled
+                              CANCELLED
                             </button>
                           </div>
                         </div>
                       </>
                     ) : (
-                      <div style={{ padding: '1.5rem', backgroundColor: '#e8f5e9', borderRadius: '8px', textAlign: 'center' }}>
-                        <p style={{ fontSize: '1rem', fontWeight: '600', color: '#2e7d32' }}>✓ Fight Tagged</p>
-                        <p style={{ fontSize: '0.9rem', color: '#558b2f', marginTop: '0.5rem' }}>Outcome: {tag.outcome === 'draw' ? 'DRAW' : tag.outcome === 'cancelled' ? 'CANCELLED' : `${tag.outcomeWinner === 'mayron' ? mayronEntry : walaEntry} Wins`}</p>
+                      <div style={{ textAlign: 'center' }}>
+                        <p style={{ fontSize: '0.9rem', color: '#333', fontWeight: '600', marginBottom: '0.5rem' }}>
+                          OUTCOME
+                        </p>
+                        <div style={{ padding: '1.5rem', backgroundColor: '#e8f5e9', borderRadius: '8px' }}>
+                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#2e7d32', margin: '0' }}>
+                            Winner: {tag.outcome === 'draw' ? 'DRAW' : tag.outcome === 'cancelled' ? 'CANCELLED' : `${tag.outcomeWinner === 'mayron' ? 'MAYRON' : 'WALA'}`}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </>

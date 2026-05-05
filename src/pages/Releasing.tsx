@@ -86,9 +86,7 @@ function Releasing() {
       const winnerBetting = tagged.outcomeWinner === 'mayron'
         ? pairing.mayron_betting
         : pairing.wala_betting
-      const winnerHandler = tagged.outcomeWinner === 'mayron'
-        ? pairing.mayron_handler
-        : pairing.wala_handler
+
 
       const paradasNum = parseFloat(String(winnerBetting).replace(/,/g, ''))
       const plasadaNum = paradasNum * 0.11
@@ -118,8 +116,7 @@ function Releasing() {
               <div class="title">Sultada: ${pairing.fight_number}</div>
               
               <div class="section">
-                <div class="label">Handler Name:</div>
-                <div class="value">${winnerHandler}</div>
+
               </div>
 
               <div class="section">
@@ -147,14 +144,14 @@ function Releasing() {
         <h1>Releasing</h1>
         <p>Release tagged fights from events</p>
 
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '2rem', width: '100%', maxWidth: '200px', margin: '0 auto 2rem' }}>
           <label htmlFor="eventSelect" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#333' }}>Select Event</label>
           <select
             id="eventSelect"
             className="form-input"
             value={selectedEvent}
             onChange={(e) => setSelectedEvent(e.target.value)}
-            style={{ maxWidth: '400px', textAlign: 'center' }}
+            style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}
           >
             {sortedEvents.map((event) => (
               <option key={event.id} value={event.name}>
@@ -270,8 +267,7 @@ function Releasing() {
                           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{mayronEntry}</p>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
-                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Handler</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.mayron_handler}</p>
+
                         </div>
                         <div>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
@@ -286,8 +282,7 @@ function Releasing() {
                           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{walaEntry}</p>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
-                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Handler</p>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{pairing.wala_handler}</p>
+
                         </div>
                         <div>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
@@ -302,10 +297,15 @@ function Releasing() {
                     </div>
 
                     {tagged && (
-                      <div style={{ padding: '1rem', backgroundColor: '#e3f2fd', borderRadius: '8px', marginBottom: '2rem', textAlign: 'center' }}>
-                        <p style={{ fontSize: '0.9rem', color: '#1565c0', fontWeight: '600' }}>
-                          Outcome: {tagged.outcome === 'draw' ? '⚔️ DRAW' : tagged.outcome === 'cancelled' ? '❌ CANCELLED' : `${tagged.outcomeWinner === 'mayron' ? mayronEntry : walaEntry} Wins`}
+                      <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                        <p style={{ fontSize: '0.9rem', color: '#333', fontWeight: '600', marginBottom: '0.5rem' }}>
+                          OUTCOME
                         </p>
+                        <div style={{ padding: '1rem', backgroundColor: '#e3f2fd', borderRadius: '8px' }}>
+                          <p style={{ fontSize: '0.9rem', color: '#1565c0', fontWeight: '600', margin: '0' }}>
+                            Winner: {tagged.outcome === 'draw' ? 'DRAW' : tagged.outcome === 'cancelled' ? 'CANCELLED' : `${tagged.outcomeWinner === 'mayron' ? 'MAYRON' : 'WALA'}`}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </>

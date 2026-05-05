@@ -267,7 +267,7 @@ function Raffle() {
 
         <div className="raffle-toolbar">
           <div className="raffle-event-control">
-            <label htmlFor="raffleEventSelect">Event</label>
+            <label htmlFor="raffleEventSelect">Select Event</label>
             <select
               id="raffleEventSelect"
               className="search-input raffle-event-select"

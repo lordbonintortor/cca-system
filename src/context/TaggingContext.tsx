@@ -6,6 +6,8 @@ import {
   getReleasedFights,
   createTaggedFight,
   createReleasedFight,
+  deleteTaggedFight,
+  deleteReleasedFight,
   updateTaggedFight as updateTaggedFightDB,
   updateReleasedFight as updateReleasedFightDB
 } from '../lib/supabaseService'
@@ -124,9 +126,15 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const resetFight = (pairingId: number) => {
-    setTaggedFights(taggedFights.filter(t => t.pairingId !== pairingId))
-    setReleasedFights(releasedFights.filter(r => r.pairingId !== pairingId))
+  const resetFight = async (pairingId: number) => {
+    try {
+      await deleteTaggedFight(pairingId)
+      await deleteReleasedFight(pairingId)
+      setTaggedFights(taggedFights.filter(t => t.pairingId !== pairingId))
+      setReleasedFights(releasedFights.filter(r => r.pairingId !== pairingId))
+    } catch (error) {
+      console.error('Failed to reset fight:', error)
+    }
   }
 
   return (

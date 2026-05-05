@@ -307,6 +307,18 @@ export const createTaggedFight = async (fight: {
   return data[0]
 }
 
+export const deleteTaggedFight = async (pairingId: number) => {
+  const { error } = await supabase
+    .from('tagged_fights')
+    .delete()
+    .eq('pairing_id', pairingId)
+
+  if (error) {
+    console.error('Error deleting tagged fight:', error)
+    throw error
+  }
+}
+
 // ===== RELEASED FIGHTS =====
 export const getReleasedFights = async () => {
   const { data, error } = await supabase
@@ -354,6 +366,18 @@ export const createReleasedFight = async (fight: {
     throw error
   }
   return data[0]
+}
+
+export const deleteReleasedFight = async (pairingId: number) => {
+  const { error } = await supabase
+    .from('released_fights')
+    .delete()
+    .eq('pairing_id', pairingId)
+
+  if (error) {
+    console.error('Error deleting released fight:', error)
+    throw error
+  }
 }
 
 // ===== RAFFLE WINNERS =====

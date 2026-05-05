@@ -32,6 +32,10 @@ function PairingPage() {
   const [walaBetting, setWalaBetting] = useState('')
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [pendingPairing, setPendingPairing] = useState<PairingRecord | null>(null)
+  const [mayronSearch, setMayronSearch] = useState('')
+  const [walaSearch, setWalaSearch] = useState('')
+  const [mayronDropdownOpen, setMayronDropdownOpen] = useState(false)
+  const [walaDropdownOpen, setWalaDropdownOpen] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -77,6 +81,18 @@ function PairingPage() {
     })
     return set
   }, [eventPairings])
+
+  const filteredMayronMembers = useMemo(() => {
+    return selectableMembers.filter(m =>
+      m.entry_name.toLowerCase().includes(mayronSearch.toLowerCase())
+    )
+  }, [selectableMembers, mayronSearch])
+
+  const filteredWalaMembers = useMemo(() => {
+    return selectableMembers.filter(m =>
+      m.entry_name.toLowerCase().includes(walaSearch.toLowerCase())
+    )
+  }, [selectableMembers, walaSearch])
 
   const calculatedDiferencia = useMemo(() => {
     if (!mayronBetting || !walaBetting) return ''
@@ -180,10 +196,7 @@ function PairingPage() {
             margin: 10px 0;
             text-decoration: underline;
           }
-          .handler-name {
-            font-size: 14px;
-            margin: 8px 0;
-          }
+
           .weight {
             font-size: 14px;
             margin: 8px 0;
@@ -299,16 +312,7 @@ function PairingPage() {
             <div class="diferencia-header">DIFERENCIA</div>
             <div class="diferencia-amount">₱${pairing.diferencia}</div>
           </div>
-          <div class="signature-section">
-            <div class="signature-line">
-              <div class="sig-line"></div>
-              <div class="sig-label">Mayron Handler</div>
-            </div>
-            <div class="signature-line">
-              <div class="sig-line"></div>
-              <div class="sig-label">Wala Handler</div>
-            </div>
-          </div>
+
           <div class="parejo-section">
             PAREJO
             <div class="parejo-amount">₱ _____________</div>
@@ -340,6 +344,10 @@ function PairingPage() {
     setWalaEntry('')
     setMayronBetting('')
     setWalaBetting('')
+    setMayronSearch('')
+    setWalaSearch('')
+    setMayronDropdownOpen(false)
+    setWalaDropdownOpen(false)
   }
 
   const handleSavePairing = () => {
@@ -402,11 +410,9 @@ function PairingPage() {
           fight_number: pendingPairing.fight_number,
           sultada_number: String(pendingPairing.fight_number),
           mayron_entry_id: mayronMember.id,
-          mayron_handler: '',
           mayron_weight: '',
           mayron_betting: pendingPairing.mayron_betting,
           wala_entry_id: walaMember.id,
-          wala_handler: '',
           wala_weight: '',
           wala_betting: pendingPairing.wala_betting,
           diferencia: pendingPairing.diferencia
@@ -428,19 +434,29 @@ function PairingPage() {
     setPendingPairing(null)
   }
 
+  const handleEventChange = (value: string) => {
+    setEventName(value)
+    setMayronEntry('')
+    setWalaEntry('')
+    setMayronSearch('')
+    setWalaSearch('')
+    setMayronDropdownOpen(false)
+    setWalaDropdownOpen(false)
+  }
+
   return (
     <div className="page-content">
       <div className="page-main">
         <h1>Pairing</h1>
         <p>Create fight pairings</p>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem', width: '100%', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <div style={{ minWidth: '260px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', width: '100%', margin: '0 auto 0.5rem' }}>
+          <div style={{ flex: '0 0 200px', maxWidth: '200px' }}>
             <label htmlFor="pairingEventSelect" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#333' }}>Select Event</label>
             <select
               id="pairingEventSelect"
               className="form-input"
               value={eventName}
-              onChange={(e) => setEventName(e.target.value)}
+              onChange={(e) => handleEventChange(e.target.value)}
               style={{ textAlign: 'center' }}
             >
               {sortedEvents.map((event) => (
@@ -450,10 +466,10 @@ function PairingPage() {
               ))}
             </select>
           </div>
-          <button className="btn-add-event" onClick={handleCreatePairing}>+ Add New Pairing</button>
+          <button className="btn-add-event" onClick={handleCreatePairing} style={{ marginLeft: 'auto' }}>+ Add New Pairing</button>
         </div>
 
-        <div style={{ width: '100%', maxWidth: '1400px', margin: '2rem auto', overflowX: 'auto' }}>
+        <div style={{ width: '100%', margin: '1rem auto 0', overflowX: 'auto' }}>
           <table className="events-table" style={{ fontSize: '0.75rem' }}>
             <thead>
               <tr>
@@ -514,65 +530,154 @@ function PairingPage() {
             </div>
             
             <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="eventName">Event Name <span className="required-asterisk">*</span></label>
-                <select
-                  id="eventName"
-                  className="form-input"
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
-                  required
-                >
-                  <option value="">Select an event</option>
-                  {sortedEvents.map((event) => (
-                    <option key={event.id} value={event.name}>
-                      {event.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <div style={{ display: 'flex', gap: '2rem', marginBottom: '0.4rem', justifyContent: 'center' }}>
                 <label>Fighter (Standing) <span className="required-asterisk">*</span></label>
               </div>
               <div className="form-row">
                 <div className="form-group">
                   <label style={{ fontWeight: 'bold', display: 'block', textAlign: 'center', marginBottom: '0.5rem', fontSize: '1.1rem' }}>MAYRON</label>
-                  <select
-                    className="form-input"
-                    value={mayronEntry}
-                    onChange={(e) => setMayronEntry(e.target.value)}
-                    required
-                  >
-                    <option value="">Select member</option>
-                    {selectableMembers.map((member) => (
-                      <option key={member.id} value={String(member.id)} disabled={usedMemberIds.has(member.id)}>
-                        {member.entry_name}{usedMemberIds.has(member.id) ? ' (used)' : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Search member..."
+                      value={mayronSearch}
+                      onChange={(e) => setMayronSearch(e.target.value)}
+                      onFocus={() => setMayronDropdownOpen(true)}
+                      onBlur={() => setTimeout(() => setMayronDropdownOpen(false), 150)}
+                    />
+                    {mayronDropdownOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: '0',
+                        right: '0',
+                        backgroundColor: '#fff',
+                        border: '1px solid #ddd',
+                        borderRadius: '0 0 4px 4px',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                      }}>
+                        {filteredMayronMembers.length === 0 ? (
+                          <div style={{ padding: '0.5rem 1rem', color: '#999', fontSize: '0.9rem' }}>
+                            No members found
+                          </div>
+                        ) : (
+                          filteredMayronMembers.map((member) => (
+                            <div
+                              key={member.id}
+                              onClick={() => {
+                                setMayronEntry(String(member.id))
+                                setMayronSearch(member.entry_name)
+                                setMayronDropdownOpen(false)
+                              }}
+                              style={{
+                                padding: '0.6rem 1rem',
+                                cursor: usedMemberIds.has(member.id) ? 'not-allowed' : 'pointer',
+                                backgroundColor: mayronEntry === String(member.id) ? '#e3f2fd' : 'transparent',
+                                color: usedMemberIds.has(member.id) ? '#ccc' : '#333',
+                                borderBottom: '1px solid #f0f0f0',
+                                fontSize: '0.9rem',
+                                transition: 'background-color 0.1s'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!usedMemberIds.has(member.id)) {
+                                  e.currentTarget.style.backgroundColor = '#f5f5f5'
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (mayronEntry === String(member.id)) {
+                                  e.currentTarget.style.backgroundColor = '#e3f2fd'
+                                } else {
+                                  e.currentTarget.style.backgroundColor = 'transparent'
+                                }
+                              }}
+                            >
+                              {member.entry_name}{usedMemberIds.has(member.id) ? ' (used)' : ''}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="form-group">
                   <label style={{ fontWeight: 'bold', display: 'block', textAlign: 'center', marginBottom: '0.5rem', fontSize: '1.1rem' }}>WALA</label>
-                  <select
-                    className="form-input"
-                    value={walaEntry}
-                    onChange={(e) => setWalaEntry(e.target.value)}
-                    required
-                  >
-                    <option value="">Select member</option>
-                    {selectableMembers.map((member) => (
-                      <option key={member.id} value={String(member.id)} disabled={usedMemberIds.has(member.id)}>
-                        {member.entry_name}{usedMemberIds.has(member.id) ? ' (used)' : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Search member..."
+                      value={walaSearch}
+                      onChange={(e) => setWalaSearch(e.target.value)}
+                      onFocus={() => setWalaDropdownOpen(true)}
+                      onBlur={() => setTimeout(() => setWalaDropdownOpen(false), 150)}
+                    />
+                    {walaDropdownOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: '0',
+                        right: '0',
+                        backgroundColor: '#fff',
+                        border: '1px solid #ddd',
+                        borderRadius: '0 0 4px 4px',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                      }}>
+                        {filteredWalaMembers.length === 0 ? (
+                          <div style={{ padding: '0.5rem 1rem', color: '#999', fontSize: '0.9rem' }}>
+                            No members found
+                          </div>
+                        ) : (
+                          filteredWalaMembers.map((member) => (
+                            <div
+                              key={member.id}
+                              onClick={() => {
+                                setWalaEntry(String(member.id))
+                                setWalaSearch(member.entry_name)
+                                setWalaDropdownOpen(false)
+                              }}
+                              style={{
+                                padding: '0.6rem 1rem',
+                                cursor: usedMemberIds.has(member.id) ? 'not-allowed' : 'pointer',
+                                backgroundColor: walaEntry === String(member.id) ? '#e3f2fd' : 'transparent',
+                                color: usedMemberIds.has(member.id) ? '#ccc' : '#333',
+                                borderBottom: '1px solid #f0f0f0',
+                                fontSize: '0.9rem',
+                                transition: 'background-color 0.1s'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!usedMemberIds.has(member.id)) {
+                                  e.currentTarget.style.backgroundColor = '#f5f5f5'
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (walaEntry === String(member.id)) {
+                                  e.currentTarget.style.backgroundColor = '#e3f2fd'
+                                } else {
+                                  e.currentTarget.style.backgroundColor = 'transparent'
+                                }
+                              }}
+                            >
+                              {member.entry_name}{usedMemberIds.has(member.id) ? ' (used)' : ''}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="form-row">
+              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '1rem', alignItems: 'flex-end' }}>
                 <div className="form-group">
                   <label htmlFor="mayronBetting">Betting Amount <span className="required-asterisk">*</span></label>
                   <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#666', pointerEvents: 'none' }}>₱</span>
+                    <span style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#666', pointerEvents: 'none' }}>₱</span>
                     <input
                       id="mayronBetting"
                       type="text"
@@ -580,14 +685,15 @@ function PairingPage() {
                       placeholder="Enter amount"
                       value={mayronBetting}
                       onChange={(e) => setMayronBetting(formatNumberWithCommas(e.target.value))}
-                      style={{ paddingLeft: '1.8rem' }}
+                      style={{ paddingLeft: '1.5rem' }}
                     />
                   </div>
                 </div>
+                <div></div>
                 <div className="form-group">
                   <label htmlFor="walaBetting">Betting Amount <span className="required-asterisk">*</span></label>
                   <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#666', pointerEvents: 'none' }}>₱</span>
+                    <span style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#666', pointerEvents: 'none' }}>₱</span>
                     <input
                       id="walaBetting"
                       type="text"
@@ -595,16 +701,16 @@ function PairingPage() {
                       placeholder="Enter amount"
                       value={walaBetting}
                       onChange={(e) => setWalaBetting(formatNumberWithCommas(e.target.value))}
-                      style={{ paddingLeft: '1.8rem' }}
+                      style={{ paddingLeft: '1.5rem' }}
                     />
                   </div>
                 </div>
               </div>
-              <div className="form-row">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="diferencia">Diferencia</label>
+              <div className="form-row" style={{ display: 'flex', justifyContent: 'center' }}>
+                <div className="form-group" style={{ maxWidth: '150px' }}>
+                  <label htmlFor="diferencia" style={{ textAlign: 'center', display: 'block' }}>Diferencia</label>
                   <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#666', pointerEvents: 'none' }}>₱</span>
+                    <span style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#666', pointerEvents: 'none' }}>₱</span>
                     <input
                       id="diferencia"
                       type="text"
@@ -612,7 +718,7 @@ function PairingPage() {
                       placeholder="—"
                       value={calculatedDiferencia}
                       disabled
-                      style={{ paddingLeft: '1.8rem', backgroundColor: '#f0fff0' }}
+                      style={{ paddingLeft: '1.5rem', backgroundColor: '#f0fff0', textAlign: 'center' }}
                     />
                   </div>
                 </div>
@@ -669,7 +775,7 @@ function PairingPage() {
 
               <div style={{ padding: '1rem', backgroundColor: '#f0fff0', borderRadius: '5px', border: '2px solid #4caf50', textAlign: 'center' }}>
                 <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Diferencia</p>
-                <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#4caf50' }}>₱{pendingPairing.diferencia}</p>
+                <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#4caf50', letterSpacing: '-0.15em' }}>₱{pendingPairing.diferencia}</p>
               </div>
             </div>
 

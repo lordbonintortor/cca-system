@@ -6,7 +6,6 @@ import { TaggingContext } from '../context/tagging'
 type ReportRow = {
   fightNumber: number
   entryName: string
-  handlerName: string
   winningBet: number
   operatorsShare: number
   lguShare: number
@@ -86,9 +85,6 @@ function Reports() {
         const winnerEntry = tagged.outcomeWinner === 'mayron'
           ? mayronMember?.entry_name || 'N/A'
           : walaMember?.entry_name || 'N/A'
-        const winnerHandler = tagged.outcomeWinner === 'mayron'
-          ? pairing.mayron_handler
-          : pairing.wala_handler
 
         const winningBetNum = parseFloat(String(winnerBetting).replace(/,/g, ''))
         const operatorsShare = winningBetNum * 0.10
@@ -99,7 +95,6 @@ function Reports() {
         return {
           fightNumber: pairing.fight_number,
           entryName: winnerEntry,
-          handlerName: winnerHandler,
           winningBet: winningBetNum,
           operatorsShare,
           lguShare,
@@ -128,7 +123,6 @@ function Reports() {
         <tr>
           <td>${row.fightNumber}</td>
           <td>${row.entryName}</td>
-          <td>${row.handlerName}</td>
           <td>₱${row.winningBet.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
           <td>₱${row.operatorsShare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
           <td>₱${row.lguShare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -164,7 +158,6 @@ function Reports() {
               <tr>
                 <th>Fight Number</th>
                 <th>Entry Name</th>
-                <th>Handler Name</th>
                 <th>Winning Bet</th>
                 <th>Operators Share</th>
                 <th>LGU Share</th>
@@ -176,7 +169,7 @@ function Reports() {
             <tbody>
               ${tableRows}
               <tr class="total">
-                <td colspan="3">TOTAL:</td>
+                <td colspan="2">TOTAL:</td>
                 <td></td>
                 <td>₱${totals.operatorsShare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td>₱${totals.lguShare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -252,7 +245,6 @@ function Reports() {
                 <tr>
                   <th style={{ ...tableHeaderStyle, textAlign: 'left' }}>Fight Number</th>
                   <th style={{ ...tableHeaderStyle, textAlign: 'left' }}>Entry Name</th>
-                  <th style={{ ...tableHeaderStyle, textAlign: 'left' }}>Handler Name</th>
                   <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Winning Bet</th>
                   <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Operators Share</th>
                   <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>LGU Share</th>
@@ -266,7 +258,6 @@ function Reports() {
                   <tr key={idx} style={{ borderBottom: '1px solid #f0d7dc', backgroundColor: idx % 2 === 0 ? '#fff' : '#fffafb' }}>
                     <td style={{ padding: '1rem', fontSize: '0.95rem' }}>{row.fightNumber}</td>
                     <td style={{ padding: '1rem', fontSize: '0.95rem' }}>{row.entryName}</td>
-                    <td style={{ padding: '1rem', fontSize: '0.95rem' }}>{row.handlerName}</td>
                     <td style={currencyCellStyle}>₱{row.winningBet.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td style={currencyCellStyle}>₱{row.operatorsShare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td style={currencyCellStyle}>₱{row.lguShare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -276,7 +267,7 @@ function Reports() {
                   </tr>
                 ))}
                 <tr style={{ backgroundColor: 'var(--accent-red)', color: '#fff', fontWeight: '700' }}>
-                  <td colSpan={3} style={{ padding: '1rem', textAlign: 'right' }}>TOTAL:</td>
+                  <td colSpan={2} style={{ padding: '1rem', textAlign: 'right' }}>TOTAL:</td>
                   <td style={{ padding: '1rem', textAlign: 'right' }}></td>
                   <td style={{ padding: '1rem', textAlign: 'right' }}>₱{totals.operatorsShare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td style={{ padding: '1rem', textAlign: 'right' }}>₱{totals.lguShare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

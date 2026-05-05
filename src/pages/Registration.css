@@ -197,6 +197,8 @@
 
 .raffle-event-select {
   font-size: 0.75rem;
+  width: 180px !important;
+  max-width: 180px !important;
 }
 
 .search-input:focus {
