@@ -5,21 +5,52 @@ import { validateCredentials } from '../lib/credentials'
 
 const INACTIVITY_LIMIT_MS = 30 * 60 * 1000
 const LOGIN_SUCCESS_DELAY_MS = 1800
+const AUTH_SESSION_KEY = 'rememberedUser'
+
+type StoredAuthSession = {
+  user: User
+  lastActivityAt: number
+}
+
+const readStoredSession = (): StoredAuthSession | null => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const rememberedRaw = localStorage.getItem(AUTH_SESSION_KEY)
+  if (!rememberedRaw) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(rememberedRaw) as Partial<StoredAuthSession>
+    if (!parsed.user || !parsed.lastActivityAt) {
+      localStorage.removeItem(AUTH_SESSION_KEY)
+      return null
+    }
+
+    if (Date.now() - parsed.lastActivityAt > INACTIVITY_LIMIT_MS) {
+      localStorage.removeItem(AUTH_SESSION_KEY)
+      return null
+    }
+
+    return {
+      user: parsed.user,
+      lastActivityAt: parsed.lastActivityAt
+    }
+  } catch {
+    localStorage.removeItem(AUTH_SESSION_KEY)
+    return null
+  }
+}
+
+const writeStoredSession = (user: User, lastActivityAt = Date.now()) => {
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ user, lastActivityAt }))
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const rememberedRaw = typeof window !== 'undefined' ? localStorage.getItem('rememberedUser') : null
-  let initialUser: User | null = null
-  if (rememberedRaw) {
-    try {
-      const parsed = JSON.parse(rememberedRaw)
-      // support both { user } shape and legacy direct user object
-      if (parsed && parsed.user) initialUser = parsed.user as User
-      else if (parsed && parsed.username) initialUser = parsed as User
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      localStorage.removeItem('rememberedUser')
-    }
-  }
+  const storedSession = readStoredSession()
+  const initialUser = storedSession?.user ?? null
 
   const [user, setUser] = useState<User | null>(initialUser)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!initialUser)
@@ -50,22 +81,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setError(null)
     setLoginStatus('idle')
-    localStorage.removeItem('rememberedUser')
+    localStorage.removeItem(AUTH_SESSION_KEY)
   }, [clearInactivityTimer, clearLoginTimer])
 
-  const startInactivityTimer = useCallback(() => {
+  const startInactivityTimer = useCallback((timeoutMs = INACTIVITY_LIMIT_MS) => {
     clearInactivityTimer()
 
     inactivityTimerRef.current = window.setTimeout(() => {
       logout()
-    }, INACTIVITY_LIMIT_MS)
+    }, Math.max(0, timeoutMs))
   }, [clearInactivityTimer, logout])
 
   const handleUserActivity = useCallback(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && user) {
+      writeStoredSession(user)
       startInactivityTimer()
     }
-  }, [isLoggedIn, startInactivityTimer])
+  }, [isLoggedIn, startInactivityTimer, user])
 
   const login = (username: string, password: string) => {
     clearLoginTimer()
@@ -97,11 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null)
       setLoginStatus('idle')
 
-      // persist until explicit logout
       try {
-        localStorage.setItem('rememberedUser', JSON.stringify({ user: loggedInUser }))
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
+        writeStoredSession(loggedInUser)
+      } catch {
         // ignore storage errors
       }
     }, LOGIN_SUCCESS_DELAY_MS)
@@ -113,7 +143,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    startInactivityTimer()
+    const stored = readStoredSession()
+    if (!stored) {
+      window.setTimeout(logout, 0)
+      return
+    }
+
+    const elapsedMs = Date.now() - stored.lastActivityAt
+    startInactivityTimer(INACTIVITY_LIMIT_MS - elapsedMs)
 
     const activityEvents: Array<keyof WindowEventMap> = [
       'click',
@@ -135,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.removeEventListener(eventName, handleUserActivity)
       })
     }
-  }, [isLoggedIn, clearInactivityTimer, startInactivityTimer, handleUserActivity])
+  }, [isLoggedIn, clearInactivityTimer, startInactivityTimer, handleUserActivity, logout])
 
   useEffect(() => {
     return () => {

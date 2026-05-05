@@ -6,13 +6,16 @@ import { TaggingContext } from '../context/tagging'
 
 
 function Tagging() {
-  const { events, members, pairings } = useData()
+  const { events, members, pairings, updatePairingBettingData } = useData()
   const [selectedEvent, setSelectedEvent] = useState('')
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false)
+  const [mayronBetting, setMayronBetting] = useState('')
+  const [walaBetting, setWalaBetting] = useState('')
+  const [isSavingBetting, setIsSavingBetting] = useState(false)
+  const [bettingSaveMessage, setBettingSaveMessage] = useState('')
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedEvent((currentEvent) => {
       if (events.length === 0) {
         return ''
@@ -33,7 +36,7 @@ function Tagging() {
   const { taggedFights, updateTaggedFight, resetFight } = context
 
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
   const eventPairings = useMemo(() => {
@@ -46,8 +49,79 @@ function Tagging() {
   }, [pairings, selectedEvent, events])
 
   const handleTagFight = (pairingId: number) => {
+    const pairing = pairings.find(p => p.id === pairingId)
+    setMayronBetting(pairing?.mayron_betting || '')
+    setWalaBetting(pairing?.wala_betting || '')
+    setBettingSaveMessage('')
     setSelectedFightId(pairingId)
     setIsOutcomeModalOpen(true)
+  }
+
+  const handleMayronBettingChange = (value: string) => {
+    setMayronBetting(formatNumberWithCommas(value))
+    setBettingSaveMessage('')
+  }
+
+  const handleWalaBettingChange = (value: string) => {
+    setWalaBetting(formatNumberWithCommas(value))
+    setBettingSaveMessage('')
+  }
+
+  const formatNumberWithCommas = (value: string) => {
+    const numberOnly = value.replace(/,/g, '').replace(/[^\d.]/g, '')
+    if (!numberOnly) return ''
+
+    const [wholePart, decimalPart] = numberOnly.split('.')
+    const formattedWhole = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return decimalPart !== undefined ? `${formattedWhole}.${decimalPart}` : formattedWhole
+  }
+
+  const calculateDiferencia = (mayronValue: string, walaValue: string) => {
+    if (!mayronValue || !walaValue) return ''
+
+    const mayron = parseFloat(mayronValue.replace(/,/g, ''))
+    const wala = parseFloat(walaValue.replace(/,/g, ''))
+    if (isNaN(mayron) || isNaN(wala)) return ''
+
+    return Math.abs(mayron - wala)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  }
+
+  const editedDiferencia = useMemo(() => {
+    return calculateDiferencia(mayronBetting, walaBetting)
+  }, [mayronBetting, walaBetting])
+
+  const handleCloseOutcomeModal = () => {
+    setIsOutcomeModalOpen(false)
+    setSelectedFightId(null)
+    setMayronBetting('')
+    setWalaBetting('')
+    setBettingSaveMessage('')
+  }
+
+  const handleSaveBetting = async () => {
+    if (!selectedFightId) return
+
+    if (!mayronBetting.trim() || !walaBetting.trim()) {
+      alert('Please enter both betting amounts')
+      return
+    }
+
+    try {
+      setIsSavingBetting(true)
+      await updatePairingBettingData(selectedFightId, {
+        mayron_betting: mayronBetting,
+        wala_betting: walaBetting,
+        diferencia: editedDiferencia,
+      })
+      setBettingSaveMessage('Updated betting amounts have been saved.')
+    } catch (error) {
+      console.error('Error updating betting amounts:', error)
+      alert('Failed to update betting amounts')
+    } finally {
+      setIsSavingBetting(false)
+    }
   }
 
   const handleOutcomeSelect = async (outcome: 'winner' | 'loser' | 'draw' | 'cancelled', winner?: 'mayron' | 'wala') => {
@@ -68,14 +142,15 @@ function Tagging() {
       }
       setIsOutcomeModalOpen(false)
       setSelectedFightId(null)
+      setMayronBetting('')
+      setWalaBetting('')
     }
   }
 
   const handleResetFight = async () => {
     if (selectedFightId) {
       await resetFight(selectedFightId)
-      setIsOutcomeModalOpen(false)
-      setSelectedFightId(null)
+      handleCloseOutcomeModal()
     }
   }
 
@@ -180,11 +255,11 @@ function Tagging() {
       </div>
 
       {isOutcomeModalOpen && selectedFightId && (
-        <div className="modal-overlay" onClick={() => setIsOutcomeModalOpen(false)}>
+        <div className="modal-overlay" onClick={handleCloseOutcomeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Fight Details & Tagging</h2>
-              <button className="modal-close" onClick={() => setIsOutcomeModalOpen(false)}>×</button>
+              <button className="modal-close" onClick={handleCloseOutcomeModal}>×</button>
             </div>
             
             <div className="modal-body" style={{ padding: '2rem', maxHeight: 'calc(100vh - 250px)', overflowY: 'auto' }}>
@@ -224,8 +299,18 @@ function Tagging() {
 
                         </div>
                         <div>
-                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
-                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.mayron_betting}</p>
+                          <label htmlFor="taggingMayronBetting" style={{ display: 'block', fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting Amount</label>
+                          <div style={{ position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem', color: '#666', pointerEvents: 'none' }}>₱</span>
+                            <input
+                              id="taggingMayronBetting"
+                              className="form-input"
+                              type="text"
+                              value={mayronBetting}
+                              onChange={(e) => handleMayronBettingChange(e.target.value)}
+                              style={{ paddingLeft: '1.4rem', color: '#e94560', fontWeight: '600' }}
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -239,21 +324,46 @@ function Tagging() {
 
                         </div>
                         <div>
-                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
-                          <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.wala_betting}</p>
+                          <label htmlFor="taggingWalaBetting" style={{ display: 'block', fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting Amount</label>
+                          <div style={{ position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem', color: '#666', pointerEvents: 'none' }}>₱</span>
+                            <input
+                              id="taggingWalaBetting"
+                              className="form-input"
+                              type="text"
+                              value={walaBetting}
+                              onChange={(e) => handleWalaBettingChange(e.target.value)}
+                              style={{ paddingLeft: '1.4rem', color: '#e94560', fontWeight: '600' }}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
 
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                      <button
+                        className="btn-add"
+                        onClick={handleSaveBetting}
+                        disabled={isSavingBetting}
+                      >
+                        {isSavingBetting ? 'Saving...' : 'Save Betting Amounts'}
+                      </button>
+                    </div>
+                    {bettingSaveMessage && (
+                      <p style={{ textAlign: 'center', color: '#2e7d32', fontSize: '0.9rem', fontWeight: '600', margin: '-0.5rem 0 1rem' }}>
+                        {bettingSaveMessage}
+                      </p>
+                    )}
+
                     <div style={{ padding: '1.5rem', backgroundColor: '#f0fff0', borderRadius: '8px', border: '2px solid #4caf50', textAlign: 'center', marginBottom: '2rem' }}>
                       <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Diferencia</p>
-                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4caf50' }}>₱{pairing.diferencia}</p>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4caf50' }}>₱{editedDiferencia || '0'}</p>
                     </div>
 
                     {!tag || tag.status !== 'tagged' ? (
                       <>
                         <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#333', textAlign: 'center' }}>
-                          {tag ? 'Change Outcome' : 'Select Outcome'}
+                          {tag ? 'Change Winner' : 'Select Winner'}
                         </h4>
                         <div style={{ marginBottom: '2rem' }}>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -355,7 +465,7 @@ function Tagging() {
                 return tag ? (
                   <button className="btn-cancel" onClick={handleResetFight}>Reset</button>
                 ) : (
-                  <button className="btn-cancel" onClick={() => setIsOutcomeModalOpen(false)}>Close</button>
+                  <button className="btn-cancel" onClick={handleCloseOutcomeModal}>Close</button>
                 )
               })()}
             </div>

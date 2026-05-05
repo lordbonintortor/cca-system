@@ -30,6 +30,18 @@ const currencyCellStyle = {
   fontSize: '0.95rem'
 }
 
+const formatReleasedDate = (releasedAt?: string) => {
+  if (!releasedAt) {
+    return '-'
+  }
+
+  return new Date(releasedAt).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+}
+
 function Reports() {
   const { events, members, pairings } = useData()
   const [selectedEvent, setSelectedEvent] = useState('')
@@ -56,7 +68,7 @@ function Reports() {
   const { taggedFights, releasedFights } = context
 
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
   const reportData = useMemo<ReportRow[]>(() => {
@@ -100,7 +112,7 @@ function Reports() {
           lguShare,
           largada,
           netWinnings,
-          dateReleased: released.releasedAt ? new Date(released.releasedAt).toISOString().split('T')[0] : '-'
+          dateReleased: formatReleasedDate(released.releasedAt)
         }
       })
       .filter((row): row is ReportRow => row !== null)

@@ -34,7 +34,7 @@ function Releasing() {
   const { taggedFights, releasedFights, updateReleasedFight } = context
 
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
   const eventTaggedFights = useMemo(() => {
@@ -123,7 +123,7 @@ function Releasing() {
                 <div class="number">PARADA: ₱ <span class="value">${paradasNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                 <div class="number">PLASADA 11%: (₱ <span class="value">${plasadaNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>)</div>
                 <div class="number">LARGADA: (₱ <span class="value">500.00</span>)</div>
-                <div class="number">NET: ₱ <span class="value">${netNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                <div class="number">NET WINNINGS: ₱ <span class="value">${netNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
               </div>
             </div>
             <script>
@@ -270,7 +270,7 @@ function Releasing() {
 
                         </div>
                         <div>
-                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
+                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting Amount</p>
                           <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.mayron_betting}</p>
                         </div>
                       </div>
@@ -285,7 +285,7 @@ function Releasing() {
 
                         </div>
                         <div>
-                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting</p>
+                          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting Amount</p>
                           <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#e94560' }}>₱{pairing.wala_betting}</p>
                         </div>
                       </div>

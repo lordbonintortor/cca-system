@@ -4,13 +4,15 @@ import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
 
 type ResultRow = {
-  id: number
+  id: string
+  pairingId: number
   fightNumber: number
-  mayronEntry: string
-  mayronHandler: string
-  walaEntry: string
-  walaHandler: string
+  entryName: string
+  side: string
+  opponent: string
+  opponentSide: string
   result: string
+  resultColor: string
   outcome: string
 }
 
@@ -42,22 +44,26 @@ function Results() {
   const { taggedFights } = context
 
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
   const eventResults = useMemo<ResultRow[]>(() => {
-    const getOutcomeText = (pairingId: number) => {
-      const fight = taggedFights.find((f) => f.pairingId === pairingId)
-      if (!fight) return '-'
-
-      if (fight.outcome === 'draw') return '0 - 0'
-      if (fight.outcome === 'cancelled') return 'N/A'
-      if (fight.outcome === 'winner' || fight.outcome === 'loser') {
-        if (fight.outcomeWinner === 'mayron') return '1 - 0'
-        if (fight.outcomeWinner === 'wala') return '0 - 1'
+    const getEntryResult = (outcome: string | undefined, winner: string | undefined, side: 'mayron' | 'wala') => {
+      if (outcome === 'draw') {
+        return { result: 'Draw', resultColor: '#e65100' }
       }
 
-      return '-'
+      if (outcome === 'cancelled') {
+        return { result: 'Cancelled', resultColor: '#c62828' }
+      }
+
+      if ((outcome === 'winner' || outcome === 'loser') && winner) {
+        return winner === side
+          ? { result: 'Win', resultColor: '#2e7d32' }
+          : { result: 'Loss', resultColor: '#555' }
+      }
+
+      return { result: '-', resultColor: '#777' }
     }
 
     const event = events.find(e => e.name === selectedEvent)
@@ -76,27 +82,49 @@ function Results() {
         const mayronMember = members.find(m => m.id === pairing.mayron_entry_id)
         const walaMember = members.find(m => m.id === pairing.wala_entry_id)
 
-        return {
-          id: pairing.id,
-          fightNumber: pairing.fight_number,
-          mayronEntry: mayronMember?.entry_name || 'N/A',
-          mayronHandler: pairing.mayron_handler,
-          walaEntry: walaMember?.entry_name || 'N/A',
-          walaHandler: pairing.wala_handler,
-          result: getOutcomeText(pairing.id),
-          outcome: fight.outcome || ''
-        }
+        const mayronResult = getEntryResult(fight.outcome, fight.outcomeWinner, 'mayron')
+        const walaResult = getEntryResult(fight.outcome, fight.outcomeWinner, 'wala')
+
+        return [
+          {
+            id: `${pairing.id}-mayron`,
+            pairingId: pairing.id,
+            fightNumber: pairing.fight_number,
+            entryName: mayronMember?.entry_name || 'N/A',
+            side: 'Mayron',
+            opponent: walaMember?.entry_name || 'N/A',
+            opponentSide: 'Wala',
+            result: mayronResult.result,
+            resultColor: mayronResult.resultColor,
+            outcome: fight.outcome || ''
+          },
+          {
+            id: `${pairing.id}-wala`,
+            pairingId: pairing.id,
+            fightNumber: pairing.fight_number,
+            entryName: walaMember?.entry_name || 'N/A',
+            side: 'Wala',
+            opponent: mayronMember?.entry_name || 'N/A',
+            opponentSide: 'Mayron',
+            result: walaResult.result,
+            resultColor: walaResult.resultColor,
+            outcome: fight.outcome || ''
+          }
+        ]
       })
-      .filter((row): row is ResultRow => row !== null)
+      .flatMap((row) => row ?? [])
       .sort((a, b) => b.fightNumber - a.fightNumber)
   }, [events, members, pairings, selectedEvent, taggedFights])
 
   const summary = useMemo(() => {
-    const wins = eventResults.filter(row => row.outcome === 'winner' || row.outcome === 'loser').length
-    const draws = eventResults.filter(row => row.outcome === 'draw').length
-    const cancelled = eventResults.filter(row => row.outcome === 'cancelled').length
+    const uniqueFightRows = eventResults.filter((row, index, rows) => {
+      return rows.findIndex((item) => item.pairingId === row.pairingId) === index
+    })
+    const wins = uniqueFightRows.filter(row => row.outcome === 'winner' || row.outcome === 'loser').length
+    const draws = uniqueFightRows.filter(row => row.outcome === 'draw').length
+    const cancelled = uniqueFightRows.filter(row => row.outcome === 'cancelled').length
 
-    return { wins, draws, cancelled, total: eventResults.length }
+    return { wins, draws, cancelled, total: uniqueFightRows.length }
   }, [eventResults])
 
   const handlePrint = () => {
@@ -113,7 +141,9 @@ function Results() {
           th { background: #f8f8f8; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: 600; }
           td { padding: 10px 12px; border: 1px solid #ddd; }
           tr:nth-child(even) { background: #f9f9f9; }
-          .result-cell { text-align: center; font-weight: bold; }
+          .result-cell { text-align: left; font-weight: bold; }
+          .entry-name { font-weight: 600; }
+          .side-cell { text-align: left; }
           .summary { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 4px; }
           .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
           .summary-item { text-align: center; }
@@ -128,10 +158,10 @@ function Results() {
           <thead>
             <tr>
               <th>Sultada</th>
-              <th>Mayron Entry</th>
-              <th>Mayron Handler</th>
-              <th>Wala Entry</th>
-              <th>Wala Handler</th>
+              <th>Entry Name</th>
+              <th>Side</th>
+              <th>Opponent</th>
+              <th>Opponent Side</th>
               <th>Result</th>
             </tr>
           </thead>
@@ -139,11 +169,11 @@ function Results() {
             ${eventResults.map((row) => `
               <tr>
                 <td>${row.fightNumber}</td>
-                <td>${row.mayronEntry}</td>
-                <td>${row.mayronHandler}</td>
-                <td>${row.walaEntry}</td>
-                <td>${row.walaHandler}</td>
-                <td class="result-cell">${row.result}</td>
+                <td class="entry-name">${row.entryName}</td>
+                <td class="side-cell">${row.side}</td>
+                <td>${row.opponent}</td>
+                <td class="side-cell">${row.opponentSide}</td>
+                <td class="result-cell" style="color: ${row.resultColor};">${row.result}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -247,10 +277,10 @@ function Results() {
                 <thead>
                   <tr>
                     <th>Sultada</th>
-                    <th>Mayron Entry</th>
-                    <th>Mayron Handler</th>
-                    <th>Wala Entry</th>
-                    <th>Wala Handler</th>
+                    <th>Entry Name</th>
+                    <th>Side</th>
+                    <th>Opponent</th>
+                    <th>Opponent Side</th>
                     <th>Result</th>
                   </tr>
                 </thead>
@@ -258,11 +288,11 @@ function Results() {
                   {eventResults.map((row) => (
                     <tr key={row.id}>
                       <td>{row.fightNumber}</td>
-                      <td>{row.mayronEntry}</td>
-                      <td>{row.mayronHandler}</td>
-                      <td>{row.walaEntry}</td>
-                      <td>{row.walaHandler}</td>
-                      <td style={{ fontWeight: 'bold', textAlign: 'center' }}>{row.result}</td>
+                      <td style={{ fontWeight: '600' }}>{row.entryName}</td>
+                      <td>{row.side}</td>
+                      <td>{row.opponent}</td>
+                      <td>{row.opponentSide}</td>
+                      <td style={{ fontWeight: 'bold', color: row.resultColor }}>{row.result}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -36,7 +36,7 @@ function Registration() {
 
   // Sort events so newest (most recent dates) are at the top
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
   useEffect(() => {

@@ -17,6 +17,7 @@ import {
   updatePairingsByEventId,
   updateRaffleWinnersByEventName,
   createPairing,
+  updatePairingBetting,
   createRaffleWinner,
 } from '../lib/supabaseService'
 
@@ -42,9 +43,11 @@ export interface Pairing {
   fight_number: number
   sultada_number: string
   mayron_entry_id: number
+  mayron_handler: string
   mayron_weight: string
   mayron_betting: string
   wala_entry_id: number
+  wala_handler: string
   wala_weight: string
   wala_betting: string
   diferencia: string
@@ -96,6 +99,10 @@ interface DataContextType {
   addMember: (member: Omit<Member, 'id'>) => Promise<void>
   addMultipleMembers: (members: Array<Omit<Member, 'id'>>) => Promise<void>
   addPairing: (pairing: Omit<Pairing, 'id'>) => Promise<void>
+  updatePairingBettingData: (
+    id: number,
+    pairing: Pick<Pairing, 'mayron_betting' | 'wala_betting' | 'diferencia'>
+  ) => Promise<void>
   addRaffleWinner: (winner: Omit<RaffleWinner, 'id'>) => Promise<void>
   
   // Refresh
@@ -273,6 +280,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updatePairingBettingData = async (
+    id: number,
+    pairing: Pick<Pairing, 'mayron_betting' | 'wala_betting' | 'diferencia'>
+  ) => {
+    try {
+      await updatePairingBetting(id, {
+        mayron_betting: pairing.mayron_betting,
+        wala_betting: pairing.wala_betting,
+        diferencia: pairing.diferencia,
+      })
+      await refreshData()
+    } catch (error) {
+      console.error('Error updating pairing betting:', error)
+      throw error
+    }
+  }
+
   const addRaffleWinner = async (winner: Omit<RaffleWinner, 'id'>) => {
     try {
       await createRaffleWinner({
@@ -303,6 +327,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addMember,
     addMultipleMembers,
     addPairing,
+    updatePairingBettingData,
     addRaffleWinner,
     refreshData,
   }

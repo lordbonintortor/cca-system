@@ -5,9 +5,23 @@ import {
 } from './supabaseService'
 
 // Sample data - empty by default
-const INITIAL_EVENTS = []
+type SeedEvent = {
+  name: string
+  type: string
+  derbyInfo: string
+  date: string
+}
 
-const INITIAL_MEMBERS = []
+type SeedMember = {
+  entryName: string
+  eventName: string
+  numberOfEntries: number
+  registrationDate: string
+}
+
+const INITIAL_EVENTS: SeedEvent[] = []
+
+const INITIAL_MEMBERS: SeedMember[] = []
 
 export const seedDatabase = async () => {
   try {

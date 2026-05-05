@@ -5,7 +5,7 @@ export const getEvents = async () => {
   const { data, error } = await supabase
     .from('events')
     .select('*')
-    .order('date', { ascending: false })
+    .order('id', { ascending: false })
 
   if (error) {
     console.error('Error fetching events:', error)
@@ -232,6 +232,27 @@ export const createPairing = async (pairing: {
   return data[0]
 }
 
+export const updatePairingBetting = async (
+  id: number,
+  pairing: {
+    mayron_betting: string
+    wala_betting: string
+    diferencia: string
+  }
+) => {
+  const { data, error } = await supabase
+    .from('pairings')
+    .update(pairing)
+    .eq('id', id)
+    .select()
+
+  if (error) {
+    console.error('Error updating pairing betting:', error)
+    throw error
+  }
+  return data[0]
+}
+
 export const updatePairingsByEventId = async (
   oldEventId: number,
   newEventId: number
@@ -334,13 +355,14 @@ export const getReleasedFights = async () => {
 
 export const updateReleasedFight = async (
   pairingId: number,
-  releaseStatus: string
+  releaseStatus: string,
+  releasedAt?: string
 ) => {
   const { data, error } = await supabase
     .from('released_fights')
     .update({
       release_status: releaseStatus,
-      released_at: releaseStatus === 'released' ? new Date().toISOString() : null,
+      released_at: releaseStatus === 'released' ? releasedAt || new Date().toISOString() : null,
     })
     .eq('pairing_id', pairingId)
     .select()
@@ -355,6 +377,7 @@ export const updateReleasedFight = async (
 export const createReleasedFight = async (fight: {
   pairing_id: number
   release_status: string
+  released_at?: string | null
 }) => {
   const { data, error } = await supabase
     .from('released_fights')

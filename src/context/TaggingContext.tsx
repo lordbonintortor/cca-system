@@ -96,11 +96,13 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
 
   const updateReleasedFight = async (pairingId: number, releaseStatus: 'unreleased' | 'released') => {
     try {
-      const updatedRows = await updateReleasedFightDB(pairingId, releaseStatus)
+      const releasedAt = releaseStatus === 'released' ? new Date().toISOString() : undefined
+      const updatedRows = await updateReleasedFightDB(pairingId, releaseStatus, releasedAt)
       if (!updatedRows || updatedRows.length === 0) {
         await createReleasedFight({
           pairing_id: pairingId,
-          release_status: releaseStatus
+          release_status: releaseStatus,
+          released_at: releasedAt || null
         })
       }
 
@@ -111,14 +113,14 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
         updated[existingIndex] = {
           ...updated[existingIndex],
           releaseStatus,
-          releasedAt: releaseStatus === 'released' ? new Date().toISOString() : undefined
+          releasedAt
         }
         setReleasedFights(updated)
       } else {
         setReleasedFights([...releasedFights, {
           pairingId,
           releaseStatus,
-          releasedAt: releaseStatus === 'released' ? new Date().toISOString() : undefined
+          releasedAt
         }])
       }
     } catch (error) {

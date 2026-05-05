@@ -53,7 +53,7 @@ function PairingPage() {
   }, [events])
 
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
   const filteredMembers = useMemo(() => {
@@ -410,9 +410,11 @@ function PairingPage() {
           fight_number: pendingPairing.fight_number,
           sultada_number: String(pendingPairing.fight_number),
           mayron_entry_id: mayronMember.id,
+          mayron_handler: '',
           mayron_weight: '',
           mayron_betting: pendingPairing.mayron_betting,
           wala_entry_id: walaMember.id,
+          wala_handler: '',
           wala_weight: '',
           wala_betting: pendingPairing.wala_betting,
           diferencia: pendingPairing.diferencia
@@ -775,7 +777,7 @@ function PairingPage() {
 
               <div style={{ padding: '1rem', backgroundColor: '#f0fff0', borderRadius: '5px', border: '2px solid #4caf50', textAlign: 'center' }}>
                 <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Diferencia</p>
-                <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#4caf50', letterSpacing: '-0.15em' }}>₱{pendingPairing.diferencia}</p>
+                <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#4caf50' }}>₱{pendingPairing.diferencia}</p>
               </div>
             </div>
 

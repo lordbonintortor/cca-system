@@ -1,5 +1,5 @@
 import './Events.css'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useData } from '../context/useDataContext'
 import type { Event as ArenaEvent } from '../context/DataContext'
 
@@ -7,7 +7,6 @@ type PendingEvent = Omit<ArenaEvent, 'id'>
 
 function Events() {
   const { events, addEvent, updateEventWithMembers } = useData()
-  const [displayEvents, setDisplayEvents] = useState(events)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -168,18 +167,18 @@ function Events() {
     setPendingEvent(null)
   }
 
-  useEffect(() => {
-    setDisplayEvents(events)
+  const sortedEvents = useMemo(() => {
+    return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
   const filteredEvents = useMemo(() => {
-    if (!searchQuery) return displayEvents
-    return displayEvents.filter((event) =>
+    if (!searchQuery) return sortedEvents
+    return sortedEvents.filter((event) =>
       event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.derby_info.toLowerCase().includes(searchQuery.toLowerCase())
     )
-  }, [searchQuery, displayEvents])
+  }, [searchQuery, sortedEvents])
 
   const paginatedEvents = useMemo(() => {
     const startIdx = (currentPage - 1) * itemsPerPage

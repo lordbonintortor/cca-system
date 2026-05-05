@@ -40,7 +40,7 @@ function Raffle() {
   }, [events])
 
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
   const eventMembers = useMemo(() => {
@@ -315,7 +315,7 @@ function Raffle() {
               id="raffleSearch"
               className="search-input"
               type="text"
-              placeholder="Search ticket, participant, entry"
+              placeholder="Search ticket"
               value={raffleSearch}
               onChange={(e) => setRaffleSearch(e.target.value)}
             />
