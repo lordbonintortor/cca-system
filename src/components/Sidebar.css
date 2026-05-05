@@ -201,3 +201,50 @@
   min-height: 100vh;
   width: calc(100% - 250px);
 }
+
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    padding: 14px;
+  }
+
+  .sidebar-header {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+
+  .logo-container {
+    width: 82px;
+    height: 82px;
+  }
+
+  .sidebar-header h2 {
+    font-size: 15px;
+  }
+
+  .sidebar-nav {
+    max-height: none;
+    padding-right: 0;
+  }
+
+  .nav-item,
+  .nav-submenu-item {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    min-height: auto;
+  }
+}

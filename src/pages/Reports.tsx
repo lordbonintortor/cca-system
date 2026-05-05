@@ -1,7 +1,12 @@
 import './Registration.css'
-import { useState, useMemo, useContext, useEffect } from 'react'
+import { useMemo, useContext } from 'react'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
+import type { Event } from '../context/DataContext'
+
+const formatEventOption = (event: Event) => {
+  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+}
 
 type ReportRow = {
   fightNumber: number
@@ -43,23 +48,7 @@ const formatReleasedDate = (releasedAt?: string) => {
 }
 
 function Reports() {
-  const { events, members, pairings } = useData()
-  const [selectedEvent, setSelectedEvent] = useState('')
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedEvent((currentEvent) => {
-      if (events.length === 0) {
-        return ''
-      }
-
-      if (currentEvent && events.some((event) => event.name === currentEvent)) {
-        return currentEvent
-      }
-
-      return events[0].name
-    })
-  }, [events])
+  const { events, members, pairings, selectedEventId, setSelectedEventId } = useData()
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -71,14 +60,19 @@ function Reports() {
     return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
+  const selectedEvent = useMemo(() => {
+    return events.find((event) => String(event.id) === selectedEventId)
+  }, [events, selectedEventId])
+
+  const selectedEventLabel = selectedEvent ? formatEventOption(selectedEvent) : ''
+
   const reportData = useMemo<ReportRow[]>(() => {
-    const event = events.find(e => e.name === selectedEvent)
-    if (!event) {
+    if (!selectedEvent) {
       return []
     }
 
     return pairings
-      .filter((p) => p.event_id === event.id)
+      .filter((p) => p.event_id === selectedEvent.id)
       .map(pairing => {
         const tagged = taggedFights.find(t => t.pairingId === pairing.id)
         const released = releasedFights.find(r => r.pairingId === pairing.id)
@@ -117,7 +111,7 @@ function Reports() {
       })
       .filter((row): row is ReportRow => row !== null)
       .sort((a, b) => b.fightNumber - a.fightNumber)
-  }, [pairings, selectedEvent, events, members, taggedFights, releasedFights])
+  }, [pairings, selectedEvent, members, taggedFights, releasedFights])
 
   const totals = useMemo(() => {
     return {
@@ -148,7 +142,7 @@ function Reports() {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Reports - ${selectedEvent}</title>
+          <title>Reports - ${selectedEventLabel}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 2rem; color: #333; }
             h1 { text-align: center; margin-bottom: 1rem; color: #e94560; }
@@ -164,7 +158,7 @@ function Reports() {
         </head>
         <body>
           <h1>Reports Information</h1>
-          <div class="subtitle">${selectedEvent}</div>
+          <div class="subtitle">${selectedEventLabel}</div>
           <table>
             <thead>
               <tr>
@@ -210,13 +204,13 @@ function Reports() {
             <select
               id="eventSelect"
               className="form-input"
-              value={selectedEvent}
-              onChange={(e) => setSelectedEvent(e.target.value)}
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
               style={{ width: '220px', maxWidth: '220px', textAlign: 'center' }}
             >
               {sortedEvents.map((event) => (
-                <option key={event.id} value={event.name}>
-                  {event.name}
+                <option key={event.id} value={String(event.id)}>
+                  {formatEventOption(event)}
                 </option>
               ))}
             </select>

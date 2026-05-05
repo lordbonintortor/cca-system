@@ -8,6 +8,7 @@ import {
   createReleasedFight,
   deleteTaggedFight,
   deleteReleasedFight,
+  createAuditLog,
   updateTaggedFight as updateTaggedFightDB,
   updateReleasedFight as updateReleasedFightDB
 } from '../lib/supabaseService'
@@ -79,6 +80,12 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
           ...dbFight
         })
       }
+      await createAuditLog({
+        action: 'tagged',
+        entity_type: 'fight',
+        entity_id: fight.pairingId,
+        details: dbFight,
+      })
 
       // Update local state
       const existingIndex = taggedFights.findIndex(t => t.pairingId === fight.pairingId)
@@ -105,6 +112,12 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
           released_at: releasedAt || null
         })
       }
+      await createAuditLog({
+        action: releaseStatus === 'released' ? 'released' : 'unreleased',
+        entity_type: 'fight',
+        entity_id: pairingId,
+        details: { releaseStatus, releasedAt },
+      })
 
       // Update local state
       const existingIndex = releasedFights.findIndex(r => r.pairingId === pairingId)
@@ -132,6 +145,11 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
     try {
       await deleteTaggedFight(pairingId)
       await deleteReleasedFight(pairingId)
+      await createAuditLog({
+        action: 'reset',
+        entity_type: 'fight',
+        entity_id: pairingId,
+      })
       setTaggedFights(taggedFights.filter(t => t.pairingId !== pairingId))
       setReleasedFights(releasedFights.filter(r => r.pairingId !== pairingId))
     } catch (error) {

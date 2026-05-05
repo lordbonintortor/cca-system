@@ -642,6 +642,51 @@
   .registration-controls .btn-add-event {
     width: 100%;
   }
+
+  .search-action-row,
+  .pairing-controls {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 1rem;
+  }
+
+  .search-container {
+    left: 0;
+    width: 100%;
+  }
+
+  .search-input,
+  .search-btn,
+  .btn-add-event {
+    width: 100%;
+  }
+
+  .pairing-controls > div,
+  .pairing-controls .form-input {
+    width: 100%;
+    max-width: none !important;
+    flex-basis: auto !important;
+  }
+
+  .pairing-controls .btn-add-event {
+    margin-left: 0 !important;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .modal-body {
+    padding: 1rem !important;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+
+  .events-table-wrapper {
+    max-width: 100%;
+  }
 }
 
 .page-copyright {
@@ -652,4 +697,3 @@
   border-top: 1px solid #e8e8e8;
   margin-top: auto;
 }
-

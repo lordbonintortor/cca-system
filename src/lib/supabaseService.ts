@@ -1,5 +1,32 @@
 import { supabase } from './supabaseClient'
 
+// ===== AUDIT LOGS =====
+export const createAuditLog = async (log: {
+  action: string
+  entity_type: string
+  entity_id?: string | number | null
+  details?: Record<string, unknown>
+  actor?: string
+}) => {
+  const { data, error } = await supabase
+    .from('audit_logs')
+    .insert([{
+      action: log.action,
+      entity_type: log.entity_type,
+      entity_id: log.entity_id === undefined || log.entity_id === null ? null : String(log.entity_id),
+      details: log.details || {},
+      actor: log.actor || 'system',
+    }])
+    .select()
+
+  if (error) {
+    console.warn('Audit log skipped:', error.message)
+    return null
+  }
+
+  return data[0]
+}
+
 // ===== EVENTS =====
 export const getEvents = async () => {
   const { data, error } = await supabase
@@ -107,6 +134,7 @@ export const getMembersByEvent = async (eventName: string) => {
 }
 
 export const createMember = async (member: {
+  event_id?: number
   entry_name: string
   event_name: string
   number_of_entries: number
@@ -125,6 +153,7 @@ export const createMember = async (member: {
 }
 
 export const createMultipleMembers = async (members: Array<{
+  event_id?: number
   entry_name: string
   event_name: string
   number_of_entries: number
@@ -175,6 +204,24 @@ export const updateMembersByEventName = async (
   }
 
   return updatedRows
+}
+
+export const updateMembersByEventId = async (
+  eventId: number,
+  newEventName: string
+) => {
+  const { data, error } = await supabase
+    .from('members')
+    .update({ event_name: newEventName })
+    .eq('event_id', eventId)
+    .select('id')
+
+  if (error) {
+    console.error('Error updating members event name by id:', error)
+    throw error
+  }
+
+  return data || []
 }
 
 // ===== PAIRINGS =====
@@ -418,6 +465,7 @@ export const getRaffleWinners = async () => {
 }
 
 export const createRaffleWinner = async (winner: {
+  event_id?: number
   ticket_number: string
   participant_name: string
   entry_name: string
@@ -469,4 +517,22 @@ export const updateRaffleWinnersByEventName = async (
   }
 
   return updatedRows
+}
+
+export const updateRaffleWinnersByEventId = async (
+  eventId: number,
+  newEventName: string
+) => {
+  const { data, error } = await supabase
+    .from('raffle_winners')
+    .update({ event_name: newEventName })
+    .eq('event_id', eventId)
+    .select('id')
+
+  if (error) {
+    console.error('Error updating raffle winners event name by id:', error)
+    throw error
+  }
+
+  return data || []
 }

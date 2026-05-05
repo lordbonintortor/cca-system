@@ -1,31 +1,18 @@
 import './Registration.css'
-import { useState, useMemo, useContext, useEffect } from 'react'
+import { useState, useMemo, useContext } from 'react'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
+import type { Event } from '../context/DataContext'
 
-
+const formatEventOption = (event: Event) => {
+  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+}
 
 function Releasing() {
-  const { events, members, pairings } = useData()
-  const [selectedEvent, setSelectedEvent] = useState('')
+  const { events, members, pairings, selectedEventId, setSelectedEventId } = useData()
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false)
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedEvent((currentEvent) => {
-      if (events.length === 0) {
-        return ''
-      }
-
-      if (currentEvent && events.some((event) => event.name === currentEvent)) {
-        return currentEvent
-      }
-
-      return events[0].name
-    })
-  }, [events])
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -41,11 +28,10 @@ function Releasing() {
     return taggedFights
       .filter((t) => {
         const pairing = pairings.find(p => p.id === t.pairingId)
-        const event = events.find(e => e.name === selectedEvent)
-        return pairing?.event_id === event?.id
+        return pairing?.event_id === Number(selectedEventId)
       })
       .sort((a, b) => b.fightNumber - a.fightNumber)
-  }, [taggedFights, pairings, selectedEvent, events])
+  }, [taggedFights, pairings, selectedEventId])
 
   const getReleaseStatus = (pairingId: number): 'unreleased' | 'released' | 'special' => {
     const tagged = taggedFights.find(t => t.pairingId === pairingId)
@@ -149,13 +135,13 @@ function Releasing() {
           <select
             id="eventSelect"
             className="form-input"
-            value={selectedEvent}
-            onChange={(e) => setSelectedEvent(e.target.value)}
+            value={selectedEventId}
+            onChange={(e) => setSelectedEventId(e.target.value)}
             style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}
           >
             {sortedEvents.map((event) => (
-              <option key={event.id} value={event.name}>
-                {event.name}
+              <option key={event.id} value={String(event.id)}>
+                {formatEventOption(event)}
               </option>
             ))}
           </select>

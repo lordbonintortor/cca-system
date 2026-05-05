@@ -14,11 +14,14 @@ import {
   deleteEvent,
   isForeignKeyUpdateError,
   updateMembersByEventName,
+  updateMembersByEventId,
   updatePairingsByEventId,
   updateRaffleWinnersByEventName,
+  updateRaffleWinnersByEventId,
   createPairing,
   updatePairingBetting,
   createRaffleWinner,
+  createAuditLog,
 } from '../lib/supabaseService'
 
 export interface Event {
@@ -31,6 +34,7 @@ export interface Event {
 
 export interface Member {
   id: number
+  event_id?: number
   entry_name: string
   event_name: string
   number_of_entries: number
@@ -72,6 +76,7 @@ export interface ReleasedFight {
 
 export interface RaffleWinner {
   id: number
+  event_id?: number
   ticket_number: string
   participant_name: string
   entry_name: string
@@ -87,6 +92,8 @@ interface DataContextType {
   releasedFights: ReleasedFight[]
   raffleWinners: RaffleWinner[]
   isLoading: boolean
+  selectedEventId: string
+  setSelectedEventId: (eventId: string) => void
   
   // Actions
   addEvent: (event: Omit<Event, 'id'>) => Promise<void>
@@ -118,6 +125,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [taggedFights, setTaggedFights] = useState<TaggedFight[]>([])
   const [releasedFights, setReleasedFights] = useState<ReleasedFight[]>([])
   const [raffleWinners, setRaffleWinners] = useState<RaffleWinner[]>([])
+  const [selectedEventId, setSelectedEventId] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   const refreshData = async () => {
@@ -152,6 +160,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     loadData()
   }, [])
 
+  useEffect(() => {
+    setSelectedEventId((currentEventId) => {
+      if (events.length === 0) {
+        return ''
+      }
+
+      if (currentEventId && events.some((event) => String(event.id) === currentEventId)) {
+        return currentEventId
+      }
+
+      return String(events[0].id)
+    })
+  }, [events])
+
   const addEvent = async (event: Omit<Event, 'id'>) => {
     try {
       await createEvent({
@@ -159,6 +181,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: event.type,
         derby_info: event.derby_info,
         date: event.date,
+      })
+      await createAuditLog({
+        action: 'created',
+        entity_type: 'event',
+        details: event,
       })
       await refreshData()
     } catch (error) {
@@ -174,6 +201,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: event.type,
         derby_info: event.derby_info,
         date: event.date,
+      })
+      await createAuditLog({
+        action: 'updated',
+        entity_type: 'event',
+        entity_id: id,
+        details: event,
       })
       await refreshData()
     } catch (error) {
@@ -197,14 +230,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       if (oldEventName === event.name) {
         await updateEvent(id, eventPayload)
+        await createAuditLog({
+          action: 'updated',
+          entity_type: 'event',
+          entity_id: id,
+          details: eventPayload,
+        })
         await refreshData()
         return
       }
 
       try {
         await updateEvent(id, eventPayload)
-        await updateMembersByEventName(oldEventName, event.name)
-        await updateRaffleWinnersByEventName(oldEventName, event.name)
+        await updateMembersByEventId(id, event.name)
+        await updateRaffleWinnersByEventId(id, event.name)
       } catch (error) {
         if (!isForeignKeyUpdateError(error)) {
           throw error
@@ -218,6 +257,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
 
       await refreshData()
+      await createAuditLog({
+        action: 'updated_with_related_records',
+        entity_type: 'event',
+        entity_id: id,
+        details: { oldEventName, ...eventPayload },
+      })
     } catch (error) {
       console.error('Error updating event:', error)
       throw error
@@ -227,10 +272,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addMember = async (member: Omit<Member, 'id'>) => {
     try {
       await createMember({
+        event_id: member.event_id,
         entry_name: member.entry_name,
         event_name: member.event_name,
         number_of_entries: member.number_of_entries,
         registration_date: member.registration_date,
+      })
+      await createAuditLog({
+        action: 'created',
+        entity_type: 'member',
+        details: member,
       })
       await refreshData()
     } catch (error) {
@@ -244,12 +295,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await createMultipleMembers(
         members.map(member => ({
           entry_name: member.entry_name,
+          event_id: member.event_id,
           event_name: member.event_name,
           number_of_entries: member.number_of_entries,
           registration_date: member.registration_date,
         }))
       )
       await refreshData()
+      await createAuditLog({
+        action: 'created_multiple',
+        entity_type: 'member',
+        details: { count: members.length, event_name: members[0]?.event_name },
+      })
     } catch (error) {
       console.error('Error adding multiple members:', error)
       throw error
@@ -273,6 +330,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
         diferencia: pairing.diferencia,
         parada_amount: pairing.parada_amount,
       })
+      await createAuditLog({
+        action: 'created',
+        entity_type: 'pairing',
+        details: {
+          event_id: pairing.event_id,
+          fight_number: pairing.fight_number,
+          mayron_entry_id: pairing.mayron_entry_id,
+          wala_entry_id: pairing.wala_entry_id,
+        },
+      })
       await refreshData()
     } catch (error) {
       console.error('Error adding pairing:', error)
@@ -290,6 +357,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         wala_betting: pairing.wala_betting,
         diferencia: pairing.diferencia,
       })
+      await createAuditLog({
+        action: 'updated_betting',
+        entity_type: 'pairing',
+        entity_id: id,
+        details: pairing,
+      })
       await refreshData()
     } catch (error) {
       console.error('Error updating pairing betting:', error)
@@ -304,7 +377,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         participant_name: winner.participant_name,
         entry_name: winner.entry_name,
         event_name: winner.event_name,
+        event_id: winner.event_id,
         drawn_at: winner.drawn_at,
+      })
+      await createAuditLog({
+        action: 'created',
+        entity_type: 'raffle_winner',
+        details: winner,
       })
       await refreshData()
     } catch (error) {
@@ -321,6 +400,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     releasedFights,
     raffleWinners,
     isLoading,
+    selectedEventId,
+    setSelectedEventId,
     addEvent,
     updateEventData,
     updateEventWithMembers,

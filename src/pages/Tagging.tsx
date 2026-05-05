@@ -1,33 +1,21 @@
 import './Registration.css'
-import { useState, useMemo, useContext, useEffect } from 'react'
+import { useState, useMemo, useContext } from 'react'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
+import type { Event } from '../context/DataContext'
 
-
+const formatEventOption = (event: Event) => {
+  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+}
 
 function Tagging() {
-  const { events, members, pairings, updatePairingBettingData } = useData()
-  const [selectedEvent, setSelectedEvent] = useState('')
+  const { events, members, pairings, updatePairingBettingData, selectedEventId, setSelectedEventId } = useData()
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false)
   const [mayronBetting, setMayronBetting] = useState('')
   const [walaBetting, setWalaBetting] = useState('')
   const [isSavingBetting, setIsSavingBetting] = useState(false)
   const [bettingSaveMessage, setBettingSaveMessage] = useState('')
-
-  useEffect(() => {
-    setSelectedEvent((currentEvent) => {
-      if (events.length === 0) {
-        return ''
-      }
-
-      if (currentEvent && events.some((event) => event.name === currentEvent)) {
-        return currentEvent
-      }
-
-      return events[0].name
-    })
-  }, [events])
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -41,12 +29,9 @@ function Tagging() {
 
   const eventPairings = useMemo(() => {
     return pairings
-      .filter((p) => {
-        const event = events.find(e => e.name === selectedEvent)
-        return p.event_id === event?.id
-      })
+      .filter((p) => p.event_id === Number(selectedEventId))
       .sort((a, b) => b.fight_number - a.fight_number)
-  }, [pairings, selectedEvent, events])
+  }, [pairings, selectedEventId])
 
   const handleTagFight = (pairingId: number) => {
     const pairing = pairings.find(p => p.id === pairingId)
@@ -177,13 +162,13 @@ function Tagging() {
           <select
             id="eventSelect"
             className="form-input"
-            value={selectedEvent}
-            onChange={(e) => setSelectedEvent(e.target.value)}
+            value={selectedEventId}
+            onChange={(e) => setSelectedEventId(e.target.value)}
             style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}
           >
             {sortedEvents.map((event) => (
-              <option key={event.id} value={event.name}>
-                {event.name}
+              <option key={event.id} value={String(event.id)}>
+                {formatEventOption(event)}
               </option>
             ))}
           </select>

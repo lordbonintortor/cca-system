@@ -13,6 +13,7 @@ export interface AuthContextType {
   logout: () => void
   isLoading?: boolean
   error?: string | null
+  logoutReason?: 'expired' | null
   loginStatus?: 'idle' | 'loading' | 'success'
 }
 

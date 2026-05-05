@@ -1,7 +1,7 @@
 import './Registration.css'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useData } from '../context/useDataContext'
-import type { Pairing, Member } from '../context/DataContext'
+import type { Event, Pairing, Member } from '../context/DataContext'
 
 interface PairingRecord {
   id: number
@@ -22,10 +22,13 @@ const getBaseEntryName = (entryName: string) => {
   return entryName.replace(/\s+-\s+Entry\s+\d+$/i, '')
 }
 
+const formatEventOption = (event: Event) => {
+  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+}
+
 function PairingPage() {
-  const { events, members, pairings, addPairing } = useData()
+  const { events, members, pairings, addPairing, selectedEventId, setSelectedEventId } = useData()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [eventName, setEventName] = useState('')
   const [mayronEntry, setMayronEntry] = useState('')
   const [walaEntry, setWalaEntry] = useState('')
   const [mayronBetting, setMayronBetting] = useState('')
@@ -37,41 +40,31 @@ function PairingPage() {
   const [mayronDropdownOpen, setMayronDropdownOpen] = useState(false)
   const [walaDropdownOpen, setWalaDropdownOpen] = useState(false)
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEventName((currentEventName) => {
-      if (events.length === 0) {
-        return ''
-      }
-
-      if (currentEventName && events.some((event) => event.name === currentEventName)) {
-        return currentEventName
-      }
-
-      return events[0].name
-    })
-  }, [events])
-
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
+  const selectedEvent = useMemo(() => {
+    return events.find((event) => String(event.id) === selectedEventId)
+  }, [events, selectedEventId])
+
+  const eventName = selectedEvent?.name || ''
+
   const filteredMembers = useMemo(() => {
-    if (!eventName) return members
-    return members.filter((member) => member.event_name === eventName)
-  }, [eventName, members])
+    if (!selectedEvent) return members
+    return members.filter((member) => member.event_id === selectedEvent.id || (!member.event_id && member.event_name === selectedEvent.name))
+  }, [selectedEvent, members])
 
   // Show all entries (including Entry #) and do not dedupe
   const selectableMembers = useMemo(() => filteredMembers, [filteredMembers])
 
   const eventPairings = useMemo(() => {
-    const event = events.find((e) => e.name === eventName)
-    if (!event) return []
+    if (!selectedEvent) return []
 
     return pairings
-      .filter((pairing) => pairing.event_id === event.id)
+      .filter((pairing) => pairing.event_id === selectedEvent.id)
       .sort((a, b) => b.fight_number - a.fight_number)
-  }, [events, eventName, pairings])
+  }, [selectedEvent, pairings])
 
   const usedMemberIds = useMemo(() => {
     const set = new Set<number>()
@@ -332,8 +325,8 @@ function PairingPage() {
   }
 
   const handleCreatePairing = () => {
-    if (sortedEvents.length > 0 && !eventName) {
-      setEventName(sortedEvents[0].name)
+    if (sortedEvents.length > 0 && !selectedEventId) {
+      setSelectedEventId(String(sortedEvents[0].id))
     }
     setIsModalOpen(true)
   }
@@ -351,7 +344,7 @@ function PairingPage() {
   }
 
   const handleSavePairing = () => {
-    if (!eventName.trim() || !mayronEntry.trim() || !walaEntry.trim() || !mayronBetting.trim() || !walaBetting.trim()) {
+    if (!selectedEvent || !mayronEntry.trim() || !walaEntry.trim() || !mayronBetting.trim() || !walaBetting.trim()) {
       alert('Please fill in all required fields')
       return
     }
@@ -361,10 +354,12 @@ function PairingPage() {
       return
     }
 
-    const eventData = events.find((e) => e.name === eventName)
-    const nextFightNumber = eventData
-      ? Math.max(0, ...pairings.filter((p) => p.event_id === eventData.id).map((p) => p.fight_number)) + 1
-      : 1
+    if (usedMemberIds.has(Number(mayronEntry)) || usedMemberIds.has(Number(walaEntry))) {
+      alert('One of the selected entries is already used in this event')
+      return
+    }
+
+    const nextFightNumber = Math.max(0, ...pairings.filter((p) => p.event_id === selectedEvent.id).map((p) => p.fight_number)) + 1
 
     const mayronMember = members.find((m) => String(m.id) === mayronEntry)
     const walaMember = members.find((m) => String(m.id) === walaEntry)
@@ -389,24 +384,22 @@ function PairingPage() {
     if (pendingPairing) {
       try {
         // Find member IDs from the stored pending pairing ids
-        const mayronMember = members.find((m) => m.id === pendingPairing.mayron_entry_id && m.event_name === eventName)
-        const walaMember = members.find((m) => m.id === pendingPairing.wala_entry_id && m.event_name === eventName)
+        const mayronMember = members.find((m) => m.id === pendingPairing.mayron_entry_id && selectedEvent && (m.event_id === selectedEvent.id || (!m.event_id && m.event_name === selectedEvent.name)))
+        const walaMember = members.find((m) => m.id === pendingPairing.wala_entry_id && selectedEvent && (m.event_id === selectedEvent.id || (!m.event_id && m.event_name === selectedEvent.name)))
 
         if (!mayronMember || !walaMember) {
           alert('Could not find selected members')
           return
         }
 
-        // Get event ID
-        const eventData = events.find((e) => e.name === eventName)
-        if (!eventData) {
+        if (!selectedEvent) {
           alert('Could not find selected event')
           return
         }
 
         // Convert to Pairing format with IDs
         const pairingToSave = {
-          event_id: eventData.id,
+          event_id: selectedEvent.id,
           fight_number: pendingPairing.fight_number,
           sultada_number: String(pendingPairing.fight_number),
           mayron_entry_id: mayronMember.id,
@@ -437,7 +430,7 @@ function PairingPage() {
   }
 
   const handleEventChange = (value: string) => {
-    setEventName(value)
+    setSelectedEventId(value)
     setMayronEntry('')
     setWalaEntry('')
     setMayronSearch('')
@@ -451,19 +444,19 @@ function PairingPage() {
       <div className="page-main">
         <h1>Pairing</h1>
         <p>Create fight pairings</p>
-        <div style={{ display: 'flex', alignItems: 'flex-end', width: '100%', margin: '0 auto 0.5rem' }}>
+        <div className="pairing-controls" style={{ display: 'flex', alignItems: 'flex-end', width: '100%', margin: '0 auto 0.5rem' }}>
           <div style={{ flex: '0 0 200px', maxWidth: '200px' }}>
             <label htmlFor="pairingEventSelect" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#333' }}>Select Event</label>
             <select
               id="pairingEventSelect"
               className="form-input"
-              value={eventName}
+              value={selectedEventId}
               onChange={(e) => handleEventChange(e.target.value)}
               style={{ textAlign: 'center' }}
             >
               {sortedEvents.map((event) => (
-                <option key={event.id} value={event.name}>
-                  {event.name}
+                <option key={event.id} value={String(event.id)}>
+                  {formatEventOption(event)}
                 </option>
               ))}
             </select>
@@ -571,6 +564,7 @@ function PairingPage() {
                             <div
                               key={member.id}
                               onClick={() => {
+                                if (usedMemberIds.has(member.id)) return
                                 setMayronEntry(String(member.id))
                                 setMayronSearch(member.entry_name)
                                 setMayronDropdownOpen(false)
@@ -640,6 +634,7 @@ function PairingPage() {
                             <div
                               key={member.id}
                               onClick={() => {
+                                if (usedMemberIds.has(member.id)) return
                                 setWalaEntry(String(member.id))
                                 setWalaSearch(member.entry_name)
                                 setWalaDropdownOpen(false)

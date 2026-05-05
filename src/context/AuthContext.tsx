@@ -56,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!initialUser)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [logoutReason, setLogoutReason] = useState<'expired' | null>(null)
   const [loginStatus, setLoginStatus] = useState<'idle' | 'loading' | 'success'>('idle')
   const inactivityTimerRef = useRef<number | null>(null)
   const loginTimerRef = useRef<number | null>(null)
@@ -74,12 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const logout = useCallback(() => {
+  const logout = useCallback((reason?: 'expired') => {
     clearInactivityTimer()
     clearLoginTimer()
     setIsLoggedIn(false)
     setUser(null)
     setError(null)
+    setLogoutReason(reason || null)
     setLoginStatus('idle')
     localStorage.removeItem(AUTH_SESSION_KEY)
   }, [clearInactivityTimer, clearLoginTimer])
@@ -88,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearInactivityTimer()
 
     inactivityTimerRef.current = window.setTimeout(() => {
-      logout()
+      logout('expired')
     }, Math.max(0, timeoutMs))
   }, [clearInactivityTimer, logout])
 
@@ -103,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearLoginTimer()
     setIsLoading(true)
     setError(null)
+    setLogoutReason(null)
     setLoginStatus('loading')
 
     const validatedUser = validateCredentials(username, password)
@@ -145,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const stored = readStoredSession()
     if (!stored) {
-      window.setTimeout(logout, 0)
+      window.setTimeout(() => logout('expired'), 0)
       return
     }
 
@@ -182,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearInactivityTimer, clearLoginTimer])
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout, isLoading, error, loginStatus }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, login, logout, isLoading, error, logoutReason, loginStatus }}>
       {children}
     </AuthContext.Provider>
   )

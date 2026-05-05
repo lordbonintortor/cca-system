@@ -1,17 +1,20 @@
 import './Registration.css'
 import { useState, useMemo, useEffect } from 'react'
 import { useData } from '../context/useDataContext'
-import type { Member } from '../context/DataContext'
+import type { Event, Member } from '../context/DataContext'
+
+const formatEventOption = (event: Event) => {
+  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+}
 
 
 
 function Registration() {
-  const { events, members, addMultipleMembers } = useData()
+  const { events, members, addMultipleMembers, selectedEventId, setSelectedEventId } = useData()
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [entryName, setEntryName] = useState('')
-  const [selectedEventName, setSelectedEventName] = useState('')
   const [eventName, setEventName] = useState('')
   const [numberOfEntries, setNumberOfEntries] = useState('')
   const [registrationDate, setRegistrationDate] = useState('')
@@ -41,23 +44,8 @@ function Registration() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedEventName((currentEventName) => {
-      if (sortedEvents.length === 0) {
-        return ''
-      }
-
-      if (currentEventName && sortedEvents.some((event) => event.name === currentEventName)) {
-        return currentEventName
-      }
-
-      return sortedEvents[0].name
-    })
-  }, [sortedEvents])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1)
-  }, [searchQuery, selectedEventName])
+  }, [searchQuery, selectedEventId])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -66,7 +54,7 @@ function Registration() {
 
   const handleRegisterMember = () => {
     setRegistrationDate(getTodayInPhilippines())
-    const selectedEvent = events.find(e => e.name === selectedEventName) || sortedEvents[0]
+    const selectedEvent = events.find(e => String(e.id) === selectedEventId) || sortedEvents[0]
     if (selectedEvent) {
       setEventName(selectedEvent.name)
       const perEntryMatch = selectedEvent.derby_info.match(/(\d+) per Entry/)
@@ -90,6 +78,21 @@ function Registration() {
       return
     }
 
+    const normalizedEntryName = entryName.trim().toLowerCase()
+    const selectedEvent = events.find(e => e.name === eventName && String(e.id) === selectedEventId)
+    const duplicateEntry = members.some((member) => {
+      const baseEntryName = member.entry_name.replace(/\s+-\s+Entry\s+\d+$/i, '').trim().toLowerCase()
+      const sameEvent = selectedEvent
+        ? member.event_id === selectedEvent.id || (!member.event_id && member.event_name === selectedEvent.name)
+        : member.event_name === eventName
+      return sameEvent && baseEntryName === normalizedEntryName
+    })
+
+    if (duplicateEntry) {
+      alert('This entry is already registered for the selected event')
+      return
+    }
+
     const numEntries = parseInt(numberOfEntries)
     const newMembers: Member[] = []
 
@@ -97,6 +100,7 @@ function Registration() {
     for (let i = 1; i <= numEntries; i++) {
       const newMember: Member = {
         id: Math.max(...members.map(m => m.id), 0) + i,
+        event_id: selectedEvent?.id,
         entry_name: `${entryName} - Entry ${i}`,
         event_name: eventName,
         number_of_entries: 1,
@@ -129,8 +133,9 @@ function Registration() {
   }
 
   const filteredMembers = useMemo(() => {
-    const eventMembers = selectedEventName
-      ? members.filter((member) => member.event_name === selectedEventName)
+    const selectedEvent = events.find(e => String(e.id) === selectedEventId)
+    const eventMembers = selectedEvent
+      ? members.filter((member) => member.event_id === selectedEvent.id || (!member.event_id && member.event_name === selectedEvent.name))
       : members
 
     let result = eventMembers
@@ -142,7 +147,7 @@ function Registration() {
     }
 
     return [...result].sort((a, b) => b.id - a.id)
-  }, [searchQuery, selectedEventName, members])
+  }, [searchQuery, selectedEventId, members, events])
 
   const paginatedMembers = useMemo(() => {
     const startIdx = (currentPage - 1) * itemsPerPage
@@ -206,12 +211,12 @@ function Registration() {
             <select
               id="registrationEventSelect"
               className="form-input"
-              value={selectedEventName}
-              onChange={(e) => setSelectedEventName(e.target.value)}
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
             >
               {sortedEvents.map((event) => (
-                <option key={event.id} value={event.name}>
-                  {event.name}
+                <option key={event.id} value={String(event.id)}>
+                  {formatEventOption(event)}
                 </option>
               ))}
             </select>

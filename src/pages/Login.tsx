@@ -7,7 +7,7 @@ function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const { login, isLoggedIn, isLoading, error, loginStatus } = useAuth()
+  const { login, isLoggedIn, isLoading, error, logoutReason, loginStatus } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -44,6 +44,9 @@ function Login() {
         </div>
         <h1 className={isLoginSuccess ? 'login-title-success' : ''}>USER LOGIN</h1>
         {error && <div className="error-message">{error}</div>}
+        {!error && logoutReason === 'expired' && (
+          <div className="error-message">Session expired. Please log in again.</div>
+        )}
         <form onSubmit={handleSubmit} className={isLoginSuccess ? 'login-form-success' : ''}>
           <input
             type="text"

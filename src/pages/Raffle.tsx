@@ -1,8 +1,12 @@
 import './Registration.css'
 import './Raffle.css'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useData } from '../context/useDataContext'
-import type { RaffleWinner } from '../context/DataContext'
+import type { Event, RaffleWinner } from '../context/DataContext'
+
+const formatEventOption = (event: Event) => {
+  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+}
 
 interface Ticket {
   id: number
@@ -10,12 +14,12 @@ interface Ticket {
   participant_name: string
   entry_name: string
   event_name: string
+  event_id?: number
   created_at: string
 }
 
 function Raffle() {
-  const { events, members, raffleWinners, addRaffleWinner } = useData()
-  const [selectedEvent, setSelectedEvent] = useState('')
+  const { events, members, raffleWinners, addRaffleWinner, selectedEventId, setSelectedEventId } = useData()
   const [isAddingWinner, setIsAddingWinner] = useState(false)
   const [drawnWinner, setDrawnWinner] = useState<Omit<RaffleWinner, 'id'> | null>(null)
   const [showWinnerModal, setShowWinnerModal] = useState(false)
@@ -24,28 +28,20 @@ function Raffle() {
   const [wheelRotation, setWheelRotation] = useState(0)
   const [raffleSearch, setRaffleSearch] = useState('')
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedEvent((currentEvent) => {
-      if (events.length === 0) {
-        return ''
-      }
-
-      if (currentEvent && events.some((event) => event.name === currentEvent)) {
-        return currentEvent
-      }
-
-      return events[0].name
-    })
-  }, [events])
-
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => b.id - a.id)
   }, [events])
 
+  const selectedEventDetails = useMemo(() => {
+    return events.find((event) => String(event.id) === selectedEventId)
+  }, [events, selectedEventId])
+
+  const selectedEventLabel = selectedEventDetails ? formatEventOption(selectedEventDetails) : ''
+
   const eventMembers = useMemo(() => {
-    return members.filter((m) => m.event_name === selectedEvent)
-  }, [selectedEvent, members])
+    if (!selectedEventDetails) return []
+    return members.filter((m) => m.event_id === selectedEventDetails.id || (!m.event_id && m.event_name === selectedEventDetails.name))
+  }, [selectedEventDetails, members])
 
   const eventTickets: Ticket[] = useMemo(() => {
     return eventMembers.map((member, index) => ({
@@ -54,19 +50,16 @@ function Raffle() {
       participant_name: member.entry_name,
       entry_name: member.entry_name,
       event_name: member.event_name,
+      event_id: member.event_id,
       created_at: member.registration_date,
     }))
   }, [eventMembers])
 
   const eventWinners = useMemo(() => {
     return raffleWinners
-      .filter((w) => w.event_name === selectedEvent)
+      .filter((w) => selectedEventDetails && (w.event_id === selectedEventDetails.id || (!w.event_id && w.event_name === selectedEventDetails.name)))
       .sort((a, b) => new Date(b.drawn_at).getTime() - new Date(a.drawn_at).getTime())
-  }, [raffleWinners, selectedEvent])
-
-  const selectedEventDetails = useMemo(() => {
-    return events.find((event) => event.name === selectedEvent)
-  }, [events, selectedEvent])
+  }, [raffleWinners, selectedEventDetails])
 
   const winnerTicketNumbers = useMemo(() => {
     return new Set(eventWinners.map((winner) => winner.ticket_number))
@@ -146,10 +139,11 @@ function Raffle() {
         // Keep wheel displayed for 2 seconds while it stays on winner, then show modal
         setTimeout(() => {
           const newWinner: Omit<RaffleWinner, 'id'> = {
+            event_id: selectedEventDetails?.id,
             ticket_number: winner.ticket_number,
             participant_name: winner.participant_name,
             entry_name: winner.entry_name,
-            event_name: winner.event_name,
+            event_name: selectedEventDetails?.name || winner.event_name,
             drawn_at: new Date().toISOString(),
           }
 
@@ -182,7 +176,7 @@ function Raffle() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Raffle Results - ${selectedEvent}</title>
+        <title>Raffle Results - ${selectedEventLabel}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; background: white; }
           h1 { text-align: center; margin-bottom: 10px; }
@@ -198,7 +192,7 @@ function Raffle() {
       </head>
       <body>
         <h1>RAFFLE RESULTS</h1>
-        <div class="event-info">${selectedEvent}</div>
+        <div class="event-info">${selectedEventLabel}</div>
         
         <div class="section">
           <h2>Raffle Participants (${eventTickets.length})</h2>
@@ -271,12 +265,12 @@ function Raffle() {
             <select
               id="raffleEventSelect"
               className="search-input raffle-event-select"
-              value={selectedEvent}
-              onChange={(e) => setSelectedEvent(e.target.value)}
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
             >
               {sortedEvents.map((event) => (
-                <option key={event.id} value={event.name}>
-                  {event.name}
+                <option key={event.id} value={String(event.id)}>
+                  {formatEventOption(event)}
                 </option>
               ))}
             </select>

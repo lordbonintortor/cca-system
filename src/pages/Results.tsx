@@ -1,7 +1,12 @@
 import './Registration.css'
-import { useState, useMemo, useContext, useEffect } from 'react'
+import { useMemo, useContext } from 'react'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
+import type { Event } from '../context/DataContext'
+
+const formatEventOption = (event: Event) => {
+  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+}
 
 type ResultRow = {
   id: string
@@ -17,25 +22,7 @@ type ResultRow = {
 }
 
 function Results() {
-  const { events, members, pairings } = useData()
-  const [selectedEvent, setSelectedEvent] = useState<string>(() => {
-    return events.length > 0 ? events[0].name : ''
-  })
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedEvent((currentEvent) => {
-      if (events.length === 0) {
-        return ''
-      }
-
-      if (currentEvent && events.some((event) => event.name === currentEvent)) {
-        return currentEvent
-      }
-
-      return events[0].name
-    })
-  }, [events])
+  const { events, members, pairings, selectedEventId, setSelectedEventId } = useData()
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -46,6 +33,12 @@ function Results() {
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => b.id - a.id)
   }, [events])
+
+  const selectedEvent = useMemo(() => {
+    return events.find((event) => String(event.id) === selectedEventId)
+  }, [events, selectedEventId])
+
+  const selectedEventLabel = selectedEvent ? formatEventOption(selectedEvent) : ''
 
   const eventResults = useMemo<ResultRow[]>(() => {
     const getEntryResult = (outcome: string | undefined, winner: string | undefined, side: 'mayron' | 'wala') => {
@@ -66,7 +59,7 @@ function Results() {
       return { result: '-', resultColor: '#777' }
     }
 
-    const event = events.find(e => e.name === selectedEvent)
+    const event = events.find(e => String(e.id) === selectedEventId)
     if (!event) {
       return []
     }
@@ -114,7 +107,7 @@ function Results() {
       })
       .flatMap((row) => row ?? [])
       .sort((a, b) => b.fightNumber - a.fightNumber)
-  }, [events, members, pairings, selectedEvent, taggedFights])
+  }, [events, members, pairings, selectedEventId, taggedFights])
 
   const summary = useMemo(() => {
     const uniqueFightRows = eventResults.filter((row, index, rows) => {
@@ -132,7 +125,7 @@ function Results() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Fight Results - ${selectedEvent}</title>
+        <title>Fight Results - ${selectedEventLabel}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; background: white; }
           h1 { text-align: center; margin-bottom: 10px; }
@@ -153,7 +146,7 @@ function Results() {
       </head>
       <body>
         <h1>FIGHT RESULTS</h1>
-        <div class="event-info">${selectedEvent}</div>
+        <div class="event-info">${selectedEventLabel}</div>
         <table>
           <thead>
             <tr>
@@ -221,13 +214,13 @@ function Results() {
             <select
               id="resultsEventSelect"
               className="form-input"
-              value={selectedEvent}
-              onChange={(e) => setSelectedEvent(e.target.value)}
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
               style={{ width: '220px', maxWidth: '220px', textAlign: 'center' }}
             >
               {sortedEvents.map((event) => (
-                <option key={event.id} value={event.name}>
-                  {event.name}
+                <option key={event.id} value={String(event.id)}>
+                  {formatEventOption(event)}
                 </option>
               ))}
             </select>
