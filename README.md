@@ -1,73 +1,63 @@
-# React + TypeScript + Vite
+# CCA System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React, TypeScript, Vite, and Supabase app for Calinan Cockpit Arena operations.
 
-Currently, two official plugins are available:
+## Local Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Install dependencies:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Create `.env.local` from `.env.example` and fill in the Supabase values:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
+
+3. Run locally:
+
+```sh
+npm run dev
+```
+
+## Production Deployment Checklist
+
+Before deploying, confirm each item:
+
+- Supabase Auth users exist for the people who need access.
+- Programmer users have metadata containing `"role": "programmer"`.
+- Hosting environment variables are set:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+- Database SQL has been applied in this order:
+  1. `src/lib/schema.sql`
+  2. `src/lib/duplicate_event_names_migration.sql`
+  3. `src/lib/audit_logs_migration.sql`
+  4. `src/lib/member_schema_alignment_migration.sql`
+  5. `src/lib/rls_policies_migration.sql`
+- RLS is enabled and policies are active for all app tables.
+- Direct route refreshes work, for example `/dashboard`, `/pairing`, and `/tagging`.
+- Final checks pass:
+
+```sh
+npm run lint
+npm run build
+```
+
+## Deployment Settings
+
+Use these settings for common static hosts:
+
+- Build command: `npm run build`
+- Output directory: `dist`
+- Vercel SPA rewrites are configured in `vercel.json`.
+- Netlify SPA redirects are configured in `public/_redirects`.
+
+## Login
+
+The app uses Supabase Auth. Log in with a Supabase Auth user's email and password.
+
+User display name and role are read from Supabase user metadata. If no role is set, the app defaults to `admin`.

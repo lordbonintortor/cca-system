@@ -1,4 +1,3 @@
-import './Registration.css'
 import { useState, useMemo } from 'react'
 import { useData } from '../context/useDataContext'
 import type { Event, Pairing, Member } from '../context/DataContext'

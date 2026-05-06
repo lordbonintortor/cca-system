@@ -1,5 +1,3 @@
-import './Registration.css'
-import './Raffle.css'
 import { useState, useMemo } from 'react'
 import { useData } from '../context/useDataContext'
 import type { Event, RaffleWinner } from '../context/DataContext'

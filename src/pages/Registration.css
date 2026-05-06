@@ -169,18 +169,18 @@
 .search-action-row {
   display: flex;
   width: 100%;
+  max-width: 1000px;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  margin-bottom: -0.50rem;
+  margin: 0 auto -0.50rem;
 }
 
 .search-container {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  position: relative;
-  left: 78px;
+  position: static;
 }
 
 .search-input {
@@ -233,10 +233,11 @@
 
 .registration-controls {
   display: grid;
-  grid-template-columns: 220px 1fr 180px;
+  grid-template-columns: 220px 298px 180px;
   width: 100%;
   max-width: 1000px;
   align-items: flex-end;
+  justify-content: space-between;
   gap: 1rem;
   margin: 0.75rem auto 0;
 }
@@ -287,11 +288,11 @@
 
 .registration-controls .btn-add-event {
   flex: 0 0 auto !important;
-  width: auto;
-  min-width: 160px;
+  width: 180px;
+  min-width: 180px;
   justify-self: end;
   margin-left: 0;
-  transform: translateX(60px);
+  transform: none;
   height: 42px;
   padding-left: 0.9rem;
   padding-right: 0.9rem;
@@ -301,7 +302,7 @@
 }
 
 .registration-controls .btn-add-event:hover {
-  transform: translateX(60px) translateY(-2px);
+  transform: translateY(-2px);
 }
 
 .btn-register {

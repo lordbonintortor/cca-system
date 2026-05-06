@@ -49,12 +49,13 @@ function Login() {
         )}
         <form onSubmit={handleSubmit} className={isLoginSuccess ? 'login-form-success' : ''}>
           <input
-            type="text"
-            placeholder="Username"
+            type="email"
+            placeholder="Email"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
             disabled={isLoading || isLoginSuccess}
+            autoComplete="username"
           />
           <div className="password-input-container">
             <input
@@ -64,6 +65,7 @@ function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading || isLoginSuccess}
+              autoComplete="current-password"
             />
             <button
               type="button"

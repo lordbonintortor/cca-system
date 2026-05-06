@@ -1,4 +1,3 @@
-import './Events.css'
 import { useState, useMemo } from 'react'
 import { useData } from '../context/useDataContext'
 import type { Event as ArenaEvent } from '../context/DataContext'

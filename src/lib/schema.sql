@@ -15,8 +15,6 @@ CREATE TABLE members (
   event_id BIGINT REFERENCES events(id),
   entry_name TEXT NOT NULL,
   event_name TEXT NOT NULL,
-  handler_name TEXT NOT NULL,
-  cock_type TEXT NOT NULL,
   number_of_entries INTEGER NOT NULL,
   registration_date DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

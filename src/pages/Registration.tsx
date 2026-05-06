@@ -1,4 +1,3 @@
-import './Registration.css'
 import { useState, useMemo, useEffect } from 'react'
 import { useData } from '../context/useDataContext'
 import type { Event, Member } from '../context/DataContext'

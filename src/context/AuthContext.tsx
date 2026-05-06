@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AuthContext, type User } from './auth'
-import { validateCredentials } from '../lib/credentials'
+import { signOutUser, validateCredentials } from '../lib/credentials'
 
 const INACTIVITY_LIMIT_MS = 30 * 60 * 1000
 const LOGIN_SUCCESS_DELAY_MS = 1800
@@ -76,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback((reason?: 'expired') => {
+    void signOutUser()
     clearInactivityTimer()
     clearLoginTimer()
     setIsLoggedIn(false)
@@ -101,17 +102,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [isLoggedIn, startInactivityTimer, user])
 
-  const login = (username: string, password: string) => {
+  const login = async (username: string, password: string) => {
     clearLoginTimer()
     setIsLoading(true)
     setError(null)
     setLogoutReason(null)
     setLoginStatus('loading')
 
-    const validatedUser = validateCredentials(username, password)
+    const validatedUser = await validateCredentials(username, password)
 
     if (!validatedUser) {
-      setError('Invalid username or password')
+      setError('Invalid email or password')
       setIsLoading(false)
       setLoginStatus('idle')
       return
@@ -120,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loggedInUser: User = {
       username: validatedUser.username,
       fullName: validatedUser.fullName,
-      role: validatedUser.role
+      role: validatedUser.role,
     }
 
     setLoginStatus('success')

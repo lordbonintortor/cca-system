@@ -1,4 +1,3 @@
-import './Registration.css'
 import { useMemo, useContext } from 'react'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
