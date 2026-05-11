@@ -208,6 +208,52 @@
   background: #4caf50;
 }
 
+.dashboard-balance-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+.dashboard-balance-details div {
+  padding: 0.75rem 0.55rem;
+  border-radius: 7px;
+  background: #fafafa;
+  text-align: center;
+}
+
+.dashboard-balance-details strong {
+  display: block;
+  margin-top: 0.3rem;
+  color: #222;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.dashboard-balance-note {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding: 0.8rem;
+  border-radius: 7px;
+  background: #f6f8fb;
+}
+
+.dashboard-balance-note strong {
+  color: #222;
+  font-size: 0.95rem;
+}
+
+.dashboard-balance-note em {
+  color: #666;
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 650;
+  text-align: right;
+}
+
 .dashboard-money-list,
 .dashboard-entry-grid {
   display: grid;
@@ -326,8 +372,13 @@
   }
 
   .dashboard-versus-row,
-  .dashboard-recent-row {
+  .dashboard-recent-row,
+  .dashboard-balance-note {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-balance-note em {
+    text-align: left;
   }
 
   .dashboard-ratio {

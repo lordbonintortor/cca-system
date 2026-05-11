@@ -98,11 +98,48 @@ function Dashboard() {
     const mayronBetTotal = eventPairings.reduce((sum, pairing) => sum + parseAmount(pairing.mayron_betting), 0)
     const walaBetTotal = eventPairings.reduce((sum, pairing) => sum + parseAmount(pairing.wala_betting), 0)
     const diferenciaTotal = eventPairings.reduce((sum, pairing) => sum + parseAmount(pairing.diferencia), 0)
+    const bettingEdge = Math.abs(mayronBetTotal - walaBetTotal)
+    const bettingLeader = mayronBetTotal === walaBetTotal
+      ? 'Even betting'
+      : mayronBetTotal > walaBetTotal
+        ? 'Mayron higher'
+        : 'Wala higher'
     const decisiveTotal = mayronWins + walaWins
     const mayronWinRate = decisiveTotal > 0 ? (mayronWins / decisiveTotal) * 100 : 0
     const walaWinRate = decisiveTotal > 0 ? (walaWins / decisiveTotal) * 100 : 0
     const taggedProgress = totalFights > 0 ? (taggedCount / totalFights) * 100 : 0
     const releaseProgress = totalFights > 0 ? (released / totalFights) * 100 : 0
+
+    const finishedResults = taggedPairings
+      .slice()
+      .sort((a, b) => b.pairing.fight_number - a.pairing.fight_number)
+    const lastFinishedFight = finishedResults[0]
+    const nextPendingFight = eventPairings
+      .slice()
+      .sort((a, b) => a.fight_number - b.fight_number)
+      .find((pairing) => {
+        const tag = taggedFights.find((fight) => fight.pairingId === pairing.id)
+        return !tag || tag.status !== 'tagged'
+      })
+    const winnerSequence = finishedResults
+      .filter(({ tag }) => tag.outcome === 'winner' || tag.outcome === 'loser')
+      .map(({ tag }) => tag.outcomeWinner)
+    const currentStreakSide = winnerSequence[0]
+    const currentStreakCount = currentStreakSide
+      ? winnerSequence.findIndex((winner) => winner !== currentStreakSide)
+      : 0
+    const normalizedStreakCount = currentStreakSide
+      ? currentStreakCount === -1 ? winnerSequence.length : currentStreakCount
+      : 0
+    const lastWinner = lastFinishedFight?.tag.outcome === 'draw'
+      ? 'Draw'
+      : lastFinishedFight?.tag.outcome === 'cancelled'
+        ? 'Cancelled'
+        : lastFinishedFight?.tag.outcomeWinner === 'mayron'
+          ? 'Mayron'
+          : lastFinishedFight?.tag.outcomeWinner === 'wala'
+            ? 'Wala'
+            : '-'
 
     const recentResults = taggedPairings
       .slice()
@@ -145,6 +182,13 @@ function Dashboard() {
       mayronBetTotal,
       walaBetTotal,
       diferenciaTotal,
+      bettingEdge,
+      bettingLeader,
+      lastWinner,
+      lastFinishedFightNumber: lastFinishedFight?.pairing.fight_number,
+      nextPendingFightNumber: nextPendingFight?.fight_number,
+      currentStreakSide,
+      currentStreakCount: normalizedStreakCount,
       recentResults
     }
   }, [eventPairings, taggedFights, releasedFights, members])
@@ -241,6 +285,21 @@ function Dashboard() {
               <div className="dashboard-progress-track dashboard-progress-track-green">
                 <span style={{ width: `${dashboardStats.releaseProgress}%` }} />
               </div>
+            </div>
+            <div className="dashboard-balance-details">
+              <div>
+                <span>Last Winner</span>
+                <strong>{dashboardStats.lastWinner}</strong>
+              </div>
+              <div>
+                <span>Next Pending</span>
+                <strong>{dashboardStats.nextPendingFightNumber ? `#${dashboardStats.nextPendingFightNumber}` : '-'}</strong>
+              </div>
+            </div>
+            <div className="dashboard-balance-note">
+              <span>Betting Edge</span>
+              <strong>{dashboardStats.bettingLeader}</strong>
+              <em>{formatCurrency(dashboardStats.bettingEdge)} difference between sides</em>
             </div>
           </section>
 
