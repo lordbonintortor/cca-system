@@ -29,6 +29,10 @@
   font-size: 0.9rem;
 }
 
+.raffle-toolbar .raffle-event-select {
+  font-size: 0.75rem;
+}
+
 .page-content .raffle-draw-button {
   background: #ff9800 !important;
   min-width: 150px;
@@ -232,10 +236,18 @@
 
 .raffle-winner-modal {
   text-align: center;
-  background: #e8f5e9 !important;
+  width: min(760px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  background: #fff !important;
+}
+
+.raffle-result-modal {
+  width: min(520px, calc(100vw - 2rem));
 }
 
 .raffle-winner-modal-header {
+  position: relative;
   background: #2e7d32 !important;
   color: white !important;
 }
@@ -243,6 +255,39 @@
 .raffle-winner-modal-header h2 {
   margin: 0 !important;
   color: white !important;
+}
+
+.raffle-winner-close {
+  color: white !important;
+}
+
+.raffle-winner-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.raffle-winner-modal-body {
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  padding: 1.25rem !important;
+}
+
+.raffle-wheel-modal-panel {
+  padding: 1rem;
+  border: none;
+  background: #f8faf8;
+}
+
+.raffle-winner-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  background: #e8f5e9;
+}
+
+.raffle-winner-result-details {
+  margin-top: 0;
 }
 
 .raffle-winner-name {
@@ -263,6 +308,21 @@
   margin: 0.35rem 0 !important;
   color: #777 !important;
   font-size: 0.9rem !important;
+}
+
+.raffle-save-status {
+  margin: 0.75rem 0 0 !important;
+  color: #666 !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+}
+
+.raffle-save-status-success {
+  color: #2e7d32 !important;
+}
+
+.raffle-save-status-error {
+  color: #c62828 !important;
 }
 
 @media (max-width: 900px) {

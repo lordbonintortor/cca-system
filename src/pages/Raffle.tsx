@@ -18,13 +18,14 @@ interface Ticket {
 
 function Raffle() {
   const { events, members, raffleWinners, addRaffleWinner, selectedEventId, setSelectedEventId } = useData()
-  const [isAddingWinner, setIsAddingWinner] = useState(false)
   const [drawnWinner, setDrawnWinner] = useState<Omit<RaffleWinner, 'id'> | null>(null)
+  const [showWheelModal, setShowWheelModal] = useState(false)
   const [showWinnerModal, setShowWinnerModal] = useState(false)
   const [isSpinning, setIsSpinning] = useState(false)
   const [showWheel, setShowWheel] = useState(false)
   const [wheelRotation, setWheelRotation] = useState(0)
   const [raffleSearch, setRaffleSearch] = useState('')
+  const [winnerSaveStatus, setWinnerSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => b.id - a.id)
@@ -102,6 +103,10 @@ function Raffle() {
 
     setIsSpinning(true)
     setShowWheel(true)
+    setShowWheelModal(true)
+    setShowWinnerModal(false)
+    setDrawnWinner(null)
+    setWinnerSaveStatus('idle')
     setWheelRotation(0)
 
     // Spin for 7 seconds
@@ -129,7 +134,9 @@ function Raffle() {
 
         // Calculate final rotation to land on winner
         const degreesPerTicket = 360 / eligibleTickets.length
-        const finalRotation = totalRotation + (360 - degreesPerTicket * randomIndex - degreesPerTicket / 2)
+        const selectedSliceCenter = degreesPerTicket * randomIndex + degreesPerTicket / 2
+        const pointerAngle = 270
+        const finalRotation = totalRotation + pointerAngle - selectedSliceCenter
 
         setWheelRotation(finalRotation)
         setIsSpinning(false)
@@ -146,27 +153,40 @@ function Raffle() {
           }
 
           setDrawnWinner(newWinner)
+          setWinnerSaveStatus('saving')
+          setShowWheelModal(false)
+          setShowWheel(false)
           setShowWinnerModal(true)
-          setIsAddingWinner(true)
 
           // Save to Supabase
           addRaffleWinner(newWinner)
             .then(() => {
-              setIsAddingWinner(false)
+              setWinnerSaveStatus('saved')
             })
             .catch((error) => {
               console.error('Error saving winner:', error)
-              setIsAddingWinner(false)
+              setWinnerSaveStatus('error')
             })
-
-          setTimeout(() => {
-            setShowWinnerModal(false)
-            setDrawnWinner(null)
-            setShowWheel(false)
-          }, 2000)
         }, 2000)
       }
     }, 30)
+  }
+
+  const handleCloseWinnerModal = () => {
+    setShowWinnerModal(false)
+    setDrawnWinner(null)
+    setWinnerSaveStatus('idle')
+  }
+
+  const handleCloseWheelModal = () => {
+    if (isSpinning) {
+      return
+    }
+
+    setShowWheelModal(false)
+    setDrawnWinner(null)
+    setShowWheel(false)
+    setWinnerSaveStatus('idle')
   }
 
   const handlePrint = () => {
@@ -321,84 +341,6 @@ function Raffle() {
         )}
 
         <div className="raffle-content-grid">
-          {showWheel && eligibleTickets.length > 0 && (
-            <div className="raffle-wheel-panel">
-              <div className="raffle-wheel">
-                {/* Spinning wheel */}
-                <svg
-                  width="350"
-                  height="350"
-                  viewBox="0 0 350 350"
-                  className="raffle-wheel-svg"
-                  style={{ transform: `rotate(${wheelRotation}deg)`, transition: isSpinning ? 'none' : 'transform 0.3s ease-out' }}
-                >
-                  {/* Circle background */}
-                  <circle cx="175" cy="175" r="165" fill="#fff" stroke="#333" strokeWidth="3" />
-                  
-                  {/* Draw segments for each ticket */}
-                  {eligibleTickets.map((ticket, index) => {
-                    const total = eligibleTickets.length
-                    const angle = (360 / total) * index
-                    const startAngle = angle * (Math.PI / 180)
-                    const endAngle = ((angle + 360 / total) * Math.PI) / 180
-                    const radius = 165
-
-                    const x1 = 175 + radius * Math.cos(startAngle)
-                    const y1 = 175 + radius * Math.sin(startAngle)
-                    const x2 = 175 + radius * Math.cos(endAngle)
-                    const y2 = 175 + radius * Math.sin(endAngle)
-
-                    const labelAngle = startAngle + (endAngle - startAngle) / 2
-                    const labelRadius = 120
-                    const labelX = 175 + labelRadius * Math.cos(labelAngle)
-                    const labelY = 175 + labelRadius * Math.sin(labelAngle)
-
-                    const colors = [
-                      '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-                      '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B195', '#6C5CE7'
-                    ]
-                    const color = colors[index % colors.length]
-
-                    return (
-                      <g key={index}>
-                        <path
-                          d={`M 175 175 L ${x1} ${y1} A 165 165 0 ${360 / total > 180 ? 1 : 0} 1 ${x2} ${y2} Z`}
-                          fill={color}
-                          stroke="#fff"
-                          strokeWidth="2"
-                        />
-                        <text
-                          x={labelX}
-                          y={labelY}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          fill="#fff"
-                          fontSize="11"
-                          fontWeight="bold"
-                          style={{ pointerEvents: 'none', textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
-                        >
-                          {ticket.ticket_number}
-                        </text>
-                      </g>
-                    )
-                  })}
-                </svg>
-
-                {/* Center circle */}
-                <div className="raffle-wheel-center">
-                  🎲
-                </div>
-
-                {/* Pointer */}
-                <div className="raffle-wheel-pointer" />
-              </div>
-
-              <p className="raffle-wheel-caption">
-                {isSpinning ? 'Drawing a winner...' : 'Winner selected'}
-              </p>
-            </div>
-          )}
-
           <div className="events-table-wrapper raffle-table-panel">
             <div className="raffle-table-heading">
               <h3>Raffle Participants ({filteredTickets.length})</h3>
@@ -463,24 +405,131 @@ function Raffle() {
         </div>
       </div>
 
-      {showWinnerModal && drawnWinner && (
+      {showWheelModal && showWheel && eligibleTickets.length > 0 && (
         <div className="modal-overlay">
           <div className="modal-content raffle-winner-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header raffle-winner-modal-header">
-              <h2>🎉 WINNER! 🎉</h2>
+              <h2>Drawing Winner</h2>
+              <button
+                className="modal-close raffle-winner-close"
+                onClick={handleCloseWheelModal}
+                disabled={isSpinning}
+                aria-label="Close wheel popup"
+              >
+                ×
+              </button>
             </div>
-            <div className="modal-body">
-              <p className="raffle-winner-name">
-                {drawnWinner.participant_name}
-              </p>
-              <p className="raffle-winner-ticket">
-                Ticket #: <strong>{drawnWinner.ticket_number}</strong>
-              </p>
-              <p className="raffle-winner-entry">{drawnWinner.entry_name}</p>
-              <p className="raffle-winner-time">
-                {new Date(drawnWinner.drawn_at).toLocaleTimeString()}
-              </p>
-              {isAddingWinner && <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>Saving winner...</p>}
+            <div className="modal-body raffle-winner-modal-body">
+              <div className="raffle-wheel-panel raffle-wheel-modal-panel">
+                <div className="raffle-wheel">
+                  <svg
+                    width="350"
+                    height="350"
+                    viewBox="0 0 350 350"
+                    className="raffle-wheel-svg"
+                    style={{ transform: `rotate(${wheelRotation}deg)`, transition: isSpinning ? 'none' : 'transform 0.3s ease-out' }}
+                  >
+                    <circle cx="175" cy="175" r="165" fill="#fff" stroke="#333" strokeWidth="3" />
+
+                    {eligibleTickets.map((ticket, index) => {
+                      const total = eligibleTickets.length
+                      const angle = (360 / total) * index
+                      const startAngle = angle * (Math.PI / 180)
+                      const endAngle = ((angle + 360 / total) * Math.PI) / 180
+                      const radius = 165
+
+                      const x1 = 175 + radius * Math.cos(startAngle)
+                      const y1 = 175 + radius * Math.sin(startAngle)
+                      const x2 = 175 + radius * Math.cos(endAngle)
+                      const y2 = 175 + radius * Math.sin(endAngle)
+
+                      const labelAngle = startAngle + (endAngle - startAngle) / 2
+                      const labelRadius = 120
+                      const labelX = 175 + labelRadius * Math.cos(labelAngle)
+                      const labelY = 175 + labelRadius * Math.sin(labelAngle)
+
+                      const colors = [
+                        '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+                        '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B195', '#6C5CE7'
+                      ]
+                      const color = colors[index % colors.length]
+
+                      return (
+                        <g key={index}>
+                          <path
+                            d={`M 175 175 L ${x1} ${y1} A 165 165 0 ${360 / total > 180 ? 1 : 0} 1 ${x2} ${y2} Z`}
+                            fill={color}
+                            stroke="#fff"
+                            strokeWidth="2"
+                          />
+                          <text
+                            x={labelX}
+                            y={labelY}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fill="#fff"
+                            fontSize="11"
+                            fontWeight="bold"
+                            style={{ pointerEvents: 'none', textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
+                          >
+                            {ticket.ticket_number}
+                          </text>
+                        </g>
+                      )
+                    })}
+                  </svg>
+
+                  <div className="raffle-wheel-center">
+                    🎲
+                  </div>
+
+                  <div className="raffle-wheel-pointer" />
+                </div>
+
+                <p className="raffle-wheel-caption">
+                  {isSpinning ? 'Drawing a winner...' : 'Winner selected'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showWinnerModal && drawnWinner && (
+        <div className="modal-overlay">
+          <div className="modal-content raffle-winner-modal raffle-result-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header raffle-winner-modal-header">
+              <h2>🎉 WINNER! 🎉</h2>
+              <button
+                className="modal-close raffle-winner-close"
+                onClick={handleCloseWinnerModal}
+                aria-label="Close winner popup"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body raffle-winner-modal-body">
+              <div className="raffle-winner-details raffle-winner-result-details">
+                <p className="raffle-winner-name">
+                  {drawnWinner.participant_name}
+                </p>
+                <p className="raffle-winner-ticket">
+                  Ticket #: <strong>{drawnWinner.ticket_number}</strong>
+                </p>
+                <p className="raffle-winner-entry">{drawnWinner.entry_name}</p>
+                <p className="raffle-winner-time">
+                  {new Date(drawnWinner.drawn_at).toLocaleTimeString()}
+                </p>
+                {winnerSaveStatus === 'saving' && (
+                  <p className="raffle-save-status">Saving winner...</p>
+                )}
+                {winnerSaveStatus === 'saved' && (
+                  <p className="raffle-save-status raffle-save-status-success">Winner saved. You can close this popup when ready.</p>
+                )}
+                {winnerSaveStatus === 'error' && (
+                  <p className="raffle-save-status raffle-save-status-error">Winner could not be saved. Please try again.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>

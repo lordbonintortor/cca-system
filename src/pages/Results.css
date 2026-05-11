@@ -1,0 +1,194 @@
+.results-toolbar {
+  display: flex;
+  gap: 1rem;
+  margin: 0.75rem auto 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.results-event-filter {
+  flex: 0 0 260px;
+  text-align: left;
+}
+
+.results-event-filter label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.results-event-filter .form-input {
+  width: 100%;
+  text-align: left;
+}
+
+.results-print-button {
+  background-color: #2e7d32;
+}
+
+.results-print-button:hover {
+  background-color: #256b2b;
+}
+
+.results-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 1000px;
+  margin-top: 1.25rem;
+}
+
+.results-summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 52px;
+  padding: 0.65rem 0.85rem;
+  background: #f7f7f7;
+  border: 1px solid #e2e2e2;
+  border-radius: 6px;
+}
+
+.results-summary-item span {
+  color: #666;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.results-summary-item strong {
+  color: #333;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.results-summary-win strong {
+  color: #2e7d32;
+}
+
+.results-summary-draw strong {
+  color: #e65100;
+}
+
+.results-summary-cancelled strong {
+  color: #c62828;
+}
+
+.results-table-wrapper {
+  margin-top: 1rem;
+}
+
+.results-table th,
+.results-table td {
+  padding: 0.65rem 0.8rem;
+  vertical-align: middle;
+}
+
+.results-table th:first-child,
+.results-table td:first-child {
+  width: 90px;
+  text-align: center;
+}
+
+.results-fight-number {
+  color: #222;
+  font-weight: 800;
+}
+
+.results-side-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 0.55rem;
+  border-radius: 50%;
+  background: #eef5ff;
+  color: #1769aa;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.results-side-label-wala {
+  background: #fff4e5;
+  color: #9c5a00;
+}
+
+.results-entry-name {
+  color: #333;
+  font-weight: 650;
+}
+
+.results-betting-stack {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 116px;
+  color: #555;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.results-betting-stack span {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.results-betting-stack strong {
+  color: #333;
+  font-weight: 800;
+}
+
+.results-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 105px;
+  min-height: 30px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.results-badge-mayron,
+.results-badge-wala {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.results-badge-draw {
+  background: #fff3e0;
+  color: #a65700;
+}
+
+.results-badge-cancelled {
+  background: #ffebee;
+  color: #a32020;
+}
+
+@media (max-width: 768px) {
+  .results-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .results-event-filter {
+    flex: 1 1 auto;
+  }
+
+  .results-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 0.55rem 0.6rem;
+  }
+}
