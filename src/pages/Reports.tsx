@@ -109,7 +109,7 @@ function Reports() {
         }
       })
       .filter((row): row is ReportRow => row !== null)
-      .sort((a, b) => b.fightNumber - a.fightNumber)
+      .sort((a, b) => a.fightNumber - b.fightNumber)
   }, [pairings, selectedEvent, members, taggedFights, releasedFights])
 
   const totals = useMemo(() => {

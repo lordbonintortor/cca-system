@@ -34,51 +34,6 @@
   background-color: #256b2b;
 }
 
-.results-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-  width: 100%;
-  max-width: 1000px;
-  margin-top: 1.25rem;
-}
-
-.results-summary-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  min-height: 52px;
-  padding: 0.65rem 0.85rem;
-  background: #f7f7f7;
-  border: 1px solid #e2e2e2;
-  border-radius: 6px;
-}
-
-.results-summary-item span {
-  color: #666;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.results-summary-item strong {
-  color: #333;
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-.results-summary-win strong {
-  color: #2e7d32;
-}
-
-.results-summary-draw strong {
-  color: #e65100;
-}
-
-.results-summary-cancelled strong {
-  color: #c62828;
-}
-
 .results-table-wrapper {
   margin-top: 1rem;
 }
@@ -91,86 +46,63 @@
 
 .results-table th:first-child,
 .results-table td:first-child {
-  width: 90px;
+  min-width: 220px;
+  text-align: left;
+}
+
+.results-table th:not(:first-child),
+.results-table td:not(:first-child) {
   text-align: center;
 }
 
-.results-fight-number {
+.results-event-name strong {
+  display: block;
   color: #222;
+  font-size: 0.92rem;
   font-weight: 800;
 }
 
-.results-side-label {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  margin-right: 0.55rem;
-  border-radius: 50%;
-  background: #eef5ff;
-  color: #1769aa;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.results-side-label-wala {
-  background: #fff4e5;
-  color: #9c5a00;
-}
-
-.results-entry-name {
-  color: #333;
+.results-event-name span {
+  display: block;
+  margin-top: 0.2rem;
+  color: #666;
+  font-size: 0.78rem;
   font-weight: 650;
 }
 
-.results-betting-stack {
-  display: grid;
-  gap: 0.18rem;
-  min-width: 116px;
+.results-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 30px;
+  border-radius: 6px;
+  background: #f0f0f0;
   color: #555;
-  font-size: 0.78rem;
-  font-weight: 650;
-}
-
-.results-betting-stack span {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.65rem;
-}
-
-.results-betting-stack strong {
-  color: #333;
+  font-size: 0.82rem;
   font-weight: 800;
 }
 
-.results-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 105px;
-  min-height: 30px;
-  padding: 0.3rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.results-badge-mayron,
-.results-badge-wala {
+.results-mark-w {
   background: #e8f5e9;
   color: #1b5e20;
 }
 
-.results-badge-draw {
+.results-mark-l {
+  background: #ffebee;
+  color: #a32020;
+}
+
+.results-mark-d,
+.results-mark-c {
   background: #fff3e0;
   color: #a65700;
 }
 
-.results-badge-cancelled {
-  background: #ffebee;
-  color: #a32020;
+.results-result-text,
+.results-total-wins {
+  color: #222;
+  font-weight: 800;
 }
 
 @media (max-width: 768px) {
@@ -181,10 +113,6 @@
 
   .results-event-filter {
     flex: 1 1 auto;
-  }
-
-  .results-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .results-table th,
