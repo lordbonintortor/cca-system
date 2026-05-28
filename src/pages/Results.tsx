@@ -10,14 +10,30 @@ const formatEventOption = (event: Event) => {
 
 type GameResultRow = {
   id: string
-  eventName: string
   entryName: string
-  firstFight: string
-  secondFight: string
-  thirdFight: string
-  result: string
+  fights: string[]
   totalWins: number
   firstFightNumber: number
+}
+
+const getRequiredFightCount = (event: Event) => {
+  const perEntry = Number(event.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1] || 1)
+  if (Number.isFinite(perEntry) && perEntry > 0) {
+    return Math.min(perEntry, 3)
+  }
+
+  if (event.type === '2 Wins') return 2
+  if (event.type === '3 Wins') return 3
+  return 1
+}
+
+const getEntryGroup = (entryName: string) => {
+  const match = entryName.match(/^(.*?)\s*-\s*Entry\s*(\d+)$/i)
+
+  return {
+    baseName: match?.[1]?.trim() || entryName,
+    entryNumber: match ? Number(match[2]) : 1
+  }
 }
 
 const escapeHtml = (value: string | number) => {
@@ -47,6 +63,7 @@ function Results() {
   }, [events, selectedEventId])
 
   const selectedEventLabel = selectedEvent ? formatEventOption(selectedEvent) : ''
+  const requiredFightCount = selectedEvent ? getRequiredFightCount(selectedEvent) : 1
 
   const eventResults = useMemo<GameResultRow[]>(() => {
     const event = events.find(e => String(e.id) === selectedEventId)
@@ -68,9 +85,16 @@ function Results() {
       return '-'
     }
 
-    return members
+    const rowsByEntry = new Map<string, {
+      entryName: string
+      fights: string[]
+      firstFightNumber: number
+    }>()
+
+    members
       .filter(member => member.event_id === event.id || member.event_name === event.name)
-      .map(member => {
+      .forEach(member => {
+        const entryGroup = getEntryGroup(member.entry_name)
         const memberFights = pairings
           .filter(pairing => pairing.event_id === event.id)
           .map(pairing => {
@@ -94,25 +118,28 @@ function Results() {
           .sort((a, b) => a.fightNumber - b.fightNumber)
 
         if (memberFights.length === 0) {
-          return null
+          return
         }
 
-        const fightMarks = memberFights.slice(0, 3).map(fight => fight.mark)
-        const totalWins = fightMarks.filter(mark => mark === 'W').length
-
-        return {
-          id: String(member.id),
-          eventName: event.name,
-          entryName: member.entry_name,
-          firstFight: fightMarks[0] || '-',
-          secondFight: fightMarks[1] || '-',
-          thirdFight: fightMarks[2] || '-',
-          result: fightMarks.length ? fightMarks.join('') : '-',
-          totalWins,
-          firstFightNumber: memberFights[0].fightNumber
+        const existing = rowsByEntry.get(entryGroup.baseName) || {
+          entryName: entryGroup.baseName,
+          fights: Array.from({ length: getRequiredFightCount(event) }, () => '-'),
+          firstFightNumber: Number.MAX_SAFE_INTEGER
         }
+        const targetIndex = Math.min(Math.max(entryGroup.entryNumber - 1, 0), existing.fights.length - 1)
+        existing.fights[targetIndex] = memberFights[0].mark
+        existing.firstFightNumber = Math.min(existing.firstFightNumber, memberFights[0].fightNumber)
+        rowsByEntry.set(entryGroup.baseName, existing)
       })
-      .filter((row): row is GameResultRow => Boolean(row))
+
+    return Array.from(rowsByEntry.entries())
+      .map(([id, row]) => ({
+          id,
+          entryName: row.entryName,
+          fights: row.fights,
+          totalWins: row.fights.filter(mark => mark === 'W').length,
+          firstFightNumber: row.firstFightNumber
+        }))
       .sort((a, b) => a.firstFightNumber - b.firstFightNumber || a.entryName.localeCompare(b.entryName))
   }, [events, members, pairings, selectedEventId, taggedFights])
 
@@ -132,9 +159,8 @@ function Results() {
           td { padding: 5px 7px; border: 1px solid #ccc; line-height: 1.2; }
           tr { break-inside: avoid; page-break-inside: avoid; }
           tr:nth-child(even) { background: #fafafa; }
-          .event-cell strong { display: block; }
-          .event-cell span { display: block; color: #555; font-size: 10px; margin-top: 2px; }
-          .fight-cell, .result-cell, .wins-cell { text-align: center; font-weight: 700; }
+          .entry-cell { font-weight: 700; }
+          .fight-cell, .wins-cell { text-align: center; font-weight: 700; }
         </style>
       </head>
       <body>
@@ -143,22 +169,16 @@ function Results() {
         <table>
           <thead>
             <tr>
-              <th>Event Name</th>
-              <th>First Fight</th>
-              <th>2nd Fight</th>
-              <th>3rd Fight</th>
-              <th>Result</th>
+              <th>Entry Name</th>
+              ${Array.from({ length: requiredFightCount }, (_, index) => `<th>${index + 1}${index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'} Fight</th>`).join('')}
               <th>Total Wins</th>
             </tr>
           </thead>
           <tbody>
             ${eventResults.map((row) => `
               <tr>
-                <td class="event-cell"><strong>${escapeHtml(row.eventName)}</strong><span>${escapeHtml(row.entryName)}</span></td>
-                <td class="fight-cell">${row.firstFight}</td>
-                <td class="fight-cell">${row.secondFight}</td>
-                <td class="fight-cell">${row.thirdFight}</td>
-                <td class="result-cell">${row.result}</td>
+                <td class="entry-cell">${escapeHtml(row.entryName)}</td>
+                ${row.fights.map(fight => `<td class="fight-cell">${fight}</td>`).join('')}
                 <td class="wins-cell">${row.totalWins}</td>
               </tr>
             `).join('')}
@@ -210,25 +230,22 @@ function Results() {
               <table className="events-table results-table">
                 <thead>
                   <tr>
-                    <th>Event Name</th>
-                    <th>1st Fight</th>
-                    <th>2nd Fight</th>
-                    <th>3rd Fight</th>
-                    <th>Result</th>
+                    <th>Entry Name</th>
+                    {Array.from({ length: requiredFightCount }, (_, index) => (
+                      <th key={index}>{index + 1}{index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'} Fight</th>
+                    ))}
                     <th>Total Wins</th>
                   </tr>
                 </thead>
                 <tbody>
                   {eventResults.map((row) => (
                     <tr key={row.id}>
-                      <td className="results-event-name">
-                        <strong>{row.eventName}</strong>
-                        <span>{row.entryName}</span>
-                      </td>
-                      <td><span className={`results-mark results-mark-${row.firstFight.toLowerCase()}`}>{row.firstFight}</span></td>
-                      <td><span className={`results-mark results-mark-${row.secondFight.toLowerCase()}`}>{row.secondFight}</span></td>
-                      <td><span className={`results-mark results-mark-${row.thirdFight.toLowerCase()}`}>{row.thirdFight}</span></td>
-                      <td className="results-result-text">{row.result}</td>
+                      <td className="results-event-name">{row.entryName}</td>
+                      {row.fights.map((fight, index) => (
+                        <td key={index}>
+                          <span className={`results-mark results-mark-${fight.toLowerCase()}`}>{fight}</span>
+                        </td>
+                      ))}
                       <td className="results-total-wins">{row.totalWins}</td>
                     </tr>
                   ))}
