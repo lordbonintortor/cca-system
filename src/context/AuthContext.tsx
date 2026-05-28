@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const validatedUser = await validateCredentials(username, password)
 
     if (!validatedUser) {
-      setError('Invalid email or password')
+      setError('Invalid username or password')
       setIsLoading(false)
       setLoginStatus('idle')
       return

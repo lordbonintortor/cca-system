@@ -2,6 +2,7 @@ import type { User } from '../context/auth'
 import { supabase } from './supabaseClient'
 
 type Metadata = Record<string, unknown>
+const AUTH_USERNAME_DOMAIN = 'cca.local'
 
 const getMetadataString = (metadata: Metadata, keys: string[]) => {
   for (const key of keys) {
@@ -18,10 +19,12 @@ export const validateCredentials = async (
   username: string,
   password: string
 ): Promise<User | null> => {
-  const email = username.trim()
-  if (!email || !password) {
+  const loginName = username.trim().toLowerCase()
+  if (!loginName || !password) {
     return null
   }
+
+  const email = loginName.includes('@') ? loginName : `${loginName}@${AUTH_USERNAME_DOMAIN}`
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -40,10 +43,10 @@ export const validateCredentials = async (
     'admin'
 
   return {
-    username: email,
+    username: getMetadataString(userMetadata, ['username', 'user_name']) || loginName.split('@')[0],
     fullName:
       getMetadataString(userMetadata, ['full_name', 'fullName', 'name', 'display_name']) ||
-      email,
+      loginName.split('@')[0],
     role,
   }
 }

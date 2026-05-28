@@ -49,8 +49,8 @@ function Login() {
         )}
         <form onSubmit={handleSubmit} className={isLoginSuccess ? 'login-form-success' : ''}>
           <input
-            type="email"
-            placeholder="Email"
+            type="text"
+            placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
