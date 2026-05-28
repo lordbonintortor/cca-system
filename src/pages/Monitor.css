@@ -1,8 +1,13 @@
 .monitor-screen {
   min-height: 100vh;
-  padding: 2rem;
+  height: 100vh;
+  padding: clamp(0.75rem, 1.5vw, 1.5rem);
   background: #f5f7fb;
   color: #1f2937;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: clamp(0.55rem, 1vw, 0.9rem);
+  overflow: hidden;
   text-align: left;
 }
 
@@ -11,10 +16,9 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 2rem;
-  margin-bottom: 1.5rem;
 }
 
-.monitor-header span,
+.monitor-brand span,
 .monitor-section-heading span,
 .monitor-score span,
 .monitor-latest span,
@@ -26,18 +30,43 @@
   text-transform: uppercase;
 }
 
-.monitor-header h1 {
-  margin: 0.3rem 0 0;
+.monitor-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.monitor-brand img {
+  width: clamp(42px, 4vw, 58px);
+  height: clamp(42px, 4vw, 58px);
+  object-fit: contain;
+}
+
+.monitor-brand strong {
+  display: block;
   color: #111827;
-  font-size: 3rem;
+  font-size: clamp(0.95rem, 1.4vw, 1.2rem);
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.monitor-brand span {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.monitor-header h1 {
+  margin: clamp(0.35rem, 0.8vw, 0.7rem) 0 0;
+  color: #111827;
+  font-size: clamp(1.9rem, 4vw, 3rem);
   font-weight: 900;
   line-height: 1;
 }
 
 .monitor-header p {
-  margin-top: 0.6rem;
+  margin-top: 0.35rem;
   color: #475569;
-  font-size: 1.1rem;
+  font-size: clamp(0.9rem, 1.3vw, 1.1rem);
   font-weight: 750;
 }
 
@@ -67,8 +96,7 @@
 .monitor-scoreboard {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: clamp(0.55rem, 1vw, 0.9rem);
 }
 
 .monitor-score,
@@ -82,15 +110,15 @@
 }
 
 .monitor-score {
-  min-height: 150px;
-  padding: 1.2rem;
+  min-height: 0;
+  padding: clamp(0.55rem, 1vw, 0.9rem);
 }
 
 .monitor-score strong {
   display: block;
-  margin-top: 0.45rem;
+  margin-top: 0.25rem;
   color: #111827;
-  font-size: 4.8rem;
+  font-size: clamp(2.2rem, 6vw, 4rem);
   font-weight: 950;
   line-height: 1;
 }
@@ -114,17 +142,16 @@
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 1.4rem;
-  min-height: 110px;
-  margin-bottom: 1rem;
-  padding: 1.1rem 1.25rem;
+  gap: 1rem;
+  min-height: 0;
+  padding: clamp(0.55rem, 1vw, 0.85rem);
 }
 
 .monitor-latest strong {
   display: block;
-  margin-top: 0.25rem;
+  margin-top: 0.15rem;
   color: #111827;
-  font-size: 2.3rem;
+  font-size: clamp(1.35rem, 3vw, 2rem);
   font-weight: 950;
   line-height: 1;
 }
@@ -132,13 +159,17 @@
 .monitor-latest h2 {
   margin: 0;
   color: #111827;
-  font-size: 2.5rem;
+  font-size: clamp(1.45rem, 3.2vw, 2.15rem);
   font-weight: 950;
   text-align: right;
 }
 
 .monitor-pattern-panel {
-  padding: 1.2rem;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  padding: clamp(0.55rem, 1vw, 0.8rem);
+  overflow: hidden;
 }
 
 .monitor-section-heading {
@@ -146,65 +177,68 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.35rem;
 }
 
 .monitor-section-heading h2 {
   margin: 0;
   color: #111827;
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
   font-weight: 900;
 }
 
 .monitor-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-bottom: 1rem;
+  gap: 0.45rem;
+  margin-bottom: 0.4rem;
 }
 
 .monitor-legend span {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.4rem 0.65rem;
+  padding: 0.3rem 0.55rem;
   border: 1px solid #dde3ed;
   border-radius: 7px;
   background: #f8fafc;
   color: #334155;
-  font-size: 0.86rem;
+  font-size: 0.78rem;
   font-weight: 850;
 }
 
 .monitor-legend-color {
   display: block;
-  width: 32px;
-  height: 24px;
+  width: 28px;
+  height: 20px;
   border-radius: 6px;
 }
 
 .monitor-pattern-strip {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 0.7rem;
+  gap: clamp(0.35rem, 0.8vw, 0.65rem);
+  align-content: start;
+  min-height: 0;
 }
 
 .monitor-pattern-item {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.18rem;
   justify-items: center;
+  align-content: start;
 }
 
 .monitor-pattern-item span {
   color: #475569;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 850;
 }
 
 .monitor-color {
   display: block;
   width: 100%;
-  height: clamp(44px, 7vw, 84px);
+  height: clamp(22px, 3.6vw, 44px);
   border-radius: 8px;
 }
 
@@ -223,22 +257,21 @@
 .monitor-trend-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-  padding: 1.1rem;
+  gap: clamp(0.55rem, 1vw, 0.9rem);
+  padding: clamp(0.55rem, 1vw, 0.8rem);
 }
 
 .monitor-trend-panel div {
-  padding: 0.9rem;
+  padding: clamp(0.55rem, 1vw, 0.8rem);
   border-radius: 8px;
   background: #f8fafc;
 }
 
 .monitor-trend-panel strong {
   display: block;
-  margin-top: 0.45rem;
+  margin-top: 0.25rem;
   color: #111827;
-  font-size: 1.45rem;
+  font-size: clamp(1rem, 2vw, 1.35rem);
   font-weight: 900;
   line-height: 1.15;
 }

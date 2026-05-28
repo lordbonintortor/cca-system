@@ -126,7 +126,13 @@ function Monitor() {
     <div className="monitor-screen">
       <header className="monitor-header">
         <div>
-          <span>Live Monitor</span>
+          <div className="monitor-brand">
+            <img src="/logo.png" alt="Calinan Cockpit Arena Logo" />
+            <div>
+              <strong>Calinan Cockpit Arena</strong>
+              <span>Live Monitor</span>
+            </div>
+          </div>
           <h1>{selectedEvent?.name || 'No event selected'}</h1>
           <p>{selectedEvent ? new Date(selectedEvent.date).toLocaleDateString() : '-'}</p>
         </div>
