@@ -7,6 +7,33 @@ const formatEventOption = (event: Event) => {
   return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
 }
 
+const getEntryGroup = (entryName: string) => {
+  const match = entryName.match(/^(.*?)\s*-\s*Entry\s*(\d+)$/i)
+
+  return match?.[1]?.trim() || entryName
+}
+
+const getPrizeInfo = (event?: Event) => {
+  const perEntry = Number(event?.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1] || 1)
+  const winsRequired = Number.isFinite(perEntry) && perEntry > 0
+    ? perEntry
+    : event?.type === '3 Wins'
+      ? 3
+      : event?.type === '2 Wins'
+        ? 2
+        : 1
+
+  if (winsRequired >= 3) {
+    return { winsRequired: 3, prize: 25000, label: '3 Wins' }
+  }
+
+  if (winsRequired === 2) {
+    return { winsRequired: 2, prize: 5000, label: '2 Wins' }
+  }
+
+  return { winsRequired: 1, prize: 1000, label: 'Hack Fight' }
+}
+
 function Releasing() {
   const { events, members, pairings, selectedEventId, setSelectedEventId } = useData()
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
@@ -66,12 +93,45 @@ function Releasing() {
   const handlePrintRelease = (pairingId: number) => {
     const pairing = pairings.find(p => p.id === pairingId)
     const tagged = taggedFights.find(t => t.pairingId === pairingId)
+    const selectedEvent = events.find(event => event.id === pairing?.event_id)
 
     if (pairing && tagged) {
+      if (!tagged.outcomeWinner) {
+        alert('Draw or cancelled fights do not have a winner release print.')
+        return
+      }
+
+      const prizeInfo = getPrizeInfo(selectedEvent)
+      const mayronMember = members.find(member => member.id === pairing.mayron_entry_id)
+      const walaMember = members.find(member => member.id === pairing.wala_entry_id)
+      const winnerMember = tagged.outcomeWinner === 'mayron' ? mayronMember : walaMember
+      const winnerGroupName = getEntryGroup(winnerMember?.entry_name || 'N/A')
+      const eventMembers = members.filter(member => (
+        member.event_id === pairing.event_id ||
+        (!member.event_id && selectedEvent && member.event_name === selectedEvent.name)
+      ))
+      const winnerGroupMemberIds = eventMembers
+        .filter(member => getEntryGroup(member.entry_name) === winnerGroupName)
+        .map(member => member.id)
+      const currentWins = pairings
+        .filter(eventPairing => eventPairing.event_id === pairing.event_id)
+        .filter(eventPairing => {
+          const eventTag = taggedFights.find(fight => fight.pairingId === eventPairing.id)
+          if (!eventTag || eventTag.status !== 'tagged') return false
+
+          const side = winnerGroupMemberIds.includes(eventPairing.mayron_entry_id)
+            ? 'mayron'
+            : winnerGroupMemberIds.includes(eventPairing.wala_entry_id)
+              ? 'wala'
+              : null
+
+          return Boolean(side && eventTag.outcomeWinner === side)
+        }).length
+      const prizeQualified = currentWins >= prizeInfo.winsRequired
+      const prizeLabel = prizeQualified ? 'PRIZE AMOUNT' : 'PRIZE IF COMPLETED'
       const winnerBetting = tagged.outcomeWinner === 'mayron'
         ? pairing.mayron_betting
         : pairing.wala_betting
-
 
       const paradasNum = parseFloat(String(winnerBetting).replace(/,/g, ''))
       const plasadaNum = paradasNum * 0.11
@@ -89,6 +149,8 @@ function Releasing() {
               body { font-family: Arial, sans-serif; padding: 2rem; background: #f5f5f5; }
               .container { background: white; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 0 auto; }
               .title { font-size: 1.2rem; font-weight: bold; margin-bottom: 1.5rem; }
+              .congrats { padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px; background: #e8f5e9; color: #1b5e20; text-align: center; font-size: 1.15rem; font-weight: 800; }
+              .prize-box { padding: 0.9rem; margin-bottom: 1.5rem; border: 2px solid #2e7d32; border-radius: 8px; background: #f7fff7; }
               .section { margin-bottom: 1.5rem; }
               .label { font-size: 0.9rem; color: #666; margin-bottom: 0.3rem; }
               .value { font-size: 1rem; font-weight: 600; color: #333; text-decoration: underline; }
@@ -99,9 +161,13 @@ function Releasing() {
           <body>
             <div class="container">
               <div class="title">Sultada: ${pairing.fight_number}</div>
+              <div class="congrats">Congratulations!</div>
               
-              <div class="section">
-
+              <div class="prize-box">
+                <div class="number">EVENT TYPE: <span class="value">${selectedEvent?.type || prizeInfo.label}</span></div>
+                <div class="number">PROGRESS: <span class="value">${Math.min(currentWins, prizeInfo.winsRequired)} / ${prizeInfo.winsRequired} wins</span></div>
+                <div class="number">PRIZE STATUS: <span class="value">${prizeQualified ? 'Qualified' : 'Pending'}</span></div>
+                <div class="number">${prizeLabel}: ₱ <span class="value">${prizeInfo.prize.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
               </div>
 
               <div class="section">
