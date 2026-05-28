@@ -21,6 +21,7 @@ const Releasing = lazy(() => import('./pages/Releasing'))
 const Reports = lazy(() => import('./pages/Reports'))
 const Results = lazy(() => import('./pages/Results'))
 const Raffle = lazy(() => import('./pages/Raffle'))
+const Monitor = lazy(() => import('./pages/Monitor'))
 const ProgrammerSettings = lazy(() => import('./pages/ProgrammerSettings'))
 
 function AppContent() {
@@ -41,6 +42,7 @@ function AuthenticatedApp() {
       <TaggingProvider>
         <Suspense fallback={<div className="page-content">Loading...</div>}>
           <Routes>
+            <Route path="/monitor" element={<Monitor />} />
             <Route element={<Sidebar />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/events" element={<Events />} />

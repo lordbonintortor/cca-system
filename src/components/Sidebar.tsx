@@ -58,6 +58,13 @@ function Sidebar() {
             <img src="/dashboard.png" alt="Dashboard" className="nav-icon" />
             Dashboard
           </button>
+          <button 
+            onClick={() => window.open('/monitor', '_blank', 'noopener,noreferrer')}
+            className={`nav-item ${isActive('/monitor') ? 'nav-item-active' : ''}`}
+          >
+            <img src="/dashboard.png" alt="Monitor" className="nav-icon" />
+            Monitor
+          </button>
           <div className="nav-item-with-submenu">
             <button 
               onClick={handleEventsClick}

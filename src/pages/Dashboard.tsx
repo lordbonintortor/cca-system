@@ -25,7 +25,9 @@ const formatMonthLabel = (date: string) => {
   })
 }
 
-const getWinnerSideMark = (tag: TaggedFight) => {
+type WinnerMark = 'M' | 'W' | 'D' | 'C' | '-'
+
+const getWinnerSideMark = (tag: TaggedFight): WinnerMark => {
   if (tag.outcome === 'draw') return 'D'
   if (tag.outcome === 'cancelled') return 'C'
   if (tag.outcomeWinner === 'mayron') return 'M'
@@ -33,32 +35,69 @@ const getWinnerSideMark = (tag: TaggedFight) => {
   return '-'
 }
 
-const getFightResult = (tag: TaggedFight) => {
-  if (tag.outcomeWinner === 'mayron') return 'Mayron wins'
-  if (tag.outcomeWinner === 'wala') return 'Wala wins'
-  return 'Draw / Cancelled'
+const getMonthlyTrendRead = (marks: string[]) => {
+  const decisiveMarks = marks.filter((mark) => mark === 'M' || mark === 'W')
+  const latestFive = decisiveMarks.slice(-5)
+  const latestThree = decisiveMarks.slice(-3)
+
+  if (latestThree.length < 3) {
+    return {
+      pattern: latestFive.join('-') || '-',
+      trend: 'No clear trend',
+      lean: 'No lean',
+      streak: '-'
+    }
+  }
+
+  const latest = latestThree[latestThree.length - 1]
+  const streakCount = [...decisiveMarks].reverse().findIndex((mark) => mark !== latest)
+  const normalizedStreak = streakCount === -1 ? decisiveMarks.length : streakCount
+  const isStreak = latestThree.every((mark) => mark === latest)
+  const isAlternating = latestThree.every((mark, index) => index === 0 || mark !== latestThree[index - 1])
+
+  if (isStreak) {
+    return {
+      pattern: latestFive.join('-'),
+      trend: latest === 'M' ? 'Mayron streak' : 'Wala streak',
+      lean: latest === 'M' ? 'Lean Mayron' : 'Lean Wala',
+      streak: `${latest === 'M' ? 'Mayron' : 'Wala'} x${normalizedStreak}`
+    }
+  }
+
+  if (isAlternating) {
+    const nextSide = latest === 'M' ? 'W' : 'M'
+    return {
+      pattern: latestFive.join('-'),
+      trend: 'Alternating',
+      lean: nextSide === 'M' ? 'Lean Mayron' : 'Lean Wala',
+      streak: '-'
+    }
+  }
+
+  return {
+    pattern: latestFive.join('-'),
+    trend: 'No clear trend',
+    lean: 'No lean',
+    streak: '-'
+  }
 }
 
 type MonthlyFight = {
   eventName: string
   eventDate: string
   fightNumber: number
-  mark: string
+  mark: WinnerMark
 }
 
 type PatternRow = {
   id: string
   eventName: string
-  fightNumber: number
-  mayronEntry: string
-  walaEntry: string
-  resultMark: string
-  result: string
+  fights: WinnerMark[]
 }
 
 function Dashboard() {
   const { user } = useAuth()
-  const { events, members, pairings, selectedEventId, setSelectedEventId } = useData()
+  const { events, pairings, selectedEventId, setSelectedEventId } = useData()
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -124,30 +163,37 @@ function Dashboard() {
 
   const patternRows = useMemo<PatternRow[]>(() => {
     return selectedMonthEvents
-      .flatMap((event) => pairings
-        .filter((pairing) => pairing.event_id === event.id)
-        .sort((a, b) => a.fight_number - b.fight_number)
-        .map((pairing) => {
-          const tag = taggedFights.find((fight) => fight.pairingId === pairing.id)
-          if (!tag || tag.status !== 'tagged') return null
+      .map((event) => {
+        const eventFights = pairings
+          .filter((pairing) => pairing.event_id === event.id)
+          .sort((a, b) => a.fight_number - b.fight_number)
+          .map((pairing) => {
+            const tag = taggedFights.find((fight) => fight.pairingId === pairing.id)
+            return tag && tag.status === 'tagged' ? getWinnerSideMark(tag) : null
+          })
+          .filter((mark): mark is WinnerMark => mark !== null)
 
-          const mayronMember = members.find((item) => item.id === pairing.mayron_entry_id)
-          const walaMember = members.find((item) => item.id === pairing.wala_entry_id)
+        if (eventFights.length === 0) {
+          return null
+        }
 
-          return {
-            id: String(pairing.id),
-            eventName: event.name,
-            fightNumber: pairing.fight_number,
-            mayronEntry: mayronMember?.entry_name || 'N/A',
-            walaEntry: walaMember?.entry_name || 'N/A',
-            resultMark: getWinnerSideMark(tag),
-            result: getFightResult(tag)
-          }
-        })
-        .filter((row): row is PatternRow => row !== null)
-      )
+        return {
+          id: String(event.id),
+          eventName: event.name,
+          fights: eventFights
+        }
+      })
+      .filter((row): row is PatternRow => row !== null)
       .reverse()
-  }, [members, pairings, selectedMonthEvents, taggedFights])
+  }, [pairings, selectedMonthEvents, taggedFights])
+
+  const patternFightCount = useMemo(() => {
+    return Math.max(0, ...patternRows.map((row) => row.fights.length))
+  }, [patternRows])
+
+  const patternFightColumns = useMemo(() => {
+    return Array.from({ length: patternFightCount }, (_, index) => index + 1)
+  }, [patternFightCount])
 
   const dashboardStats = useMemo(() => {
     const taggedPairings = eventPairings
@@ -210,6 +256,10 @@ function Dashboard() {
       leader,
       totalTagged: monthlyFights.length
     }
+  }, [monthlyFights])
+
+  const monthlyTrend = useMemo(() => {
+    return getMonthlyTrendRead(monthlyFights.map((fight) => fight.mark))
   }, [monthlyFights])
 
   return (
@@ -290,6 +340,34 @@ function Dashboard() {
             </div>
           </section>
 
+          <section className="dashboard-panel dashboard-trend-panel">
+            <div className="dashboard-panel-heading">
+              <h2>Monthly Trend</h2>
+              <span>{selectedMonthLabel}</span>
+            </div>
+            <div className="dashboard-trend-grid">
+              <div>
+                <span>Latest Pattern</span>
+                <strong>{monthlyTrend.pattern}</strong>
+              </div>
+              <div>
+                <span>Trend</span>
+                <strong>{monthlyTrend.trend}</strong>
+              </div>
+              <div>
+                <span>Current Streak</span>
+                <strong>{monthlyTrend.streak}</strong>
+              </div>
+              <div>
+                <span>Next Lean</span>
+                <strong>{monthlyTrend.lean}</strong>
+              </div>
+            </div>
+            <p className="dashboard-trend-note">
+              Soft guide only, based on recent decisive monthly results.
+            </p>
+          </section>
+
           <section className="dashboard-panel dashboard-pattern-panel">
             <div className="dashboard-panel-heading">
               <h2>Winning Pattern</h2>
@@ -308,31 +386,33 @@ function Dashboard() {
                   <thead>
                     <tr>
                       <th>Event</th>
-                      <th>Fight #</th>
-                      <th>Entry</th>
-                      <th aria-label="Result color"></th>
-                      <th>Result</th>
+                      {patternFightColumns.map((fightNumber) => (
+                        <th key={fightNumber}>Fight #{fightNumber}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {patternRows.map((row) => (
                       <tr key={row.id}>
                         <td>{row.eventName}</td>
-                        <td className="dashboard-fight-number">#{row.fightNumber}</td>
-                        <td className="dashboard-matchup-cell">
-                          <strong>{row.mayronEntry}</strong>
-                          <span>vs {row.walaEntry}</span>
-                        </td>
-                        <td className="dashboard-result-color-cell">
-                          <span
-                            className={`dashboard-fight-chip ${row.resultMark === 'D' || row.resultMark === 'C'
-                              ? 'dashboard-mark-neutral'
-                              : `dashboard-mark-${row.resultMark.toLowerCase()}`}`}
-                          />
-                        </td>
-                        <td className="dashboard-result-text-cell">
-                          <strong>{row.result}</strong>
-                        </td>
+                        {patternFightColumns.map((fightNumber, index) => {
+                          const mark = row.fights[index]
+
+                          return (
+                            <td key={fightNumber} className="dashboard-pattern-color-cell">
+                              {mark ? (
+                                <span
+                                  className={`dashboard-fight-chip ${mark === 'D' || mark === 'C'
+                                    ? 'dashboard-mark-neutral'
+                                    : `dashboard-mark-${mark.toLowerCase()}`}`}
+                                  title={`Fight #${fightNumber}`}
+                                />
+                              ) : (
+                                <span className="dashboard-fight-chip dashboard-fight-chip-empty" />
+                              )}
+                            </td>
+                          )
+                        })}
                       </tr>
                     ))}
                   </tbody>
@@ -340,7 +420,7 @@ function Dashboard() {
               </div>
             )}
             <p className="dashboard-pattern-note">
-              Each row is one fight matchup. The color indicator and result text show the tagged outcome.
+              Each row is one event. Fight columns use color only to show the tagged winner.
             </p>
           </section>
         </div>

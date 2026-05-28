@@ -1,0 +1,276 @@
+.monitor-screen {
+  min-height: 100vh;
+  padding: 2rem;
+  background: #f5f7fb;
+  color: #1f2937;
+  text-align: left;
+}
+
+.monitor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.monitor-header span,
+.monitor-section-heading span,
+.monitor-score span,
+.monitor-latest span,
+.monitor-trend-panel span {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.monitor-header h1 {
+  margin: 0.3rem 0 0;
+  color: #111827;
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.monitor-header p {
+  margin-top: 0.6rem;
+  color: #475569;
+  font-size: 1.1rem;
+  font-weight: 750;
+}
+
+.monitor-controls {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.monitor-controls select,
+.monitor-controls button {
+  min-height: 42px;
+  padding: 0 0.8rem;
+  border-radius: 7px;
+  border: 1px solid #d7dde8;
+  background: #fff;
+  color: #1f2937;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.monitor-controls button {
+  background: #111827;
+  color: #fff;
+  cursor: pointer;
+}
+
+.monitor-scoreboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.monitor-score,
+.monitor-latest,
+.monitor-pattern-panel,
+.monitor-trend-panel {
+  border: 1px solid #dde3ed;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.monitor-score {
+  min-height: 150px;
+  padding: 1.2rem;
+}
+
+.monitor-score strong {
+  display: block;
+  margin-top: 0.45rem;
+  color: #111827;
+  font-size: 4.8rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.monitor-score-mayron {
+  border-color: #16813d;
+  background: #f0fdf4;
+}
+
+.monitor-score-wala {
+  border-color: #1f5fc4;
+  background: #eff6ff;
+}
+
+.monitor-score-neutral {
+  border-color: #b91c1c;
+  background: #fef2f2;
+}
+
+.monitor-latest {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 1.4rem;
+  min-height: 110px;
+  margin-bottom: 1rem;
+  padding: 1.1rem 1.25rem;
+}
+
+.monitor-latest strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: #111827;
+  font-size: 2.3rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.monitor-latest h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 2.5rem;
+  font-weight: 950;
+  text-align: right;
+}
+
+.monitor-pattern-panel {
+  padding: 1.2rem;
+}
+
+.monitor-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.monitor-section-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.monitor-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.monitor-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #dde3ed;
+  border-radius: 7px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.monitor-legend-color {
+  display: block;
+  width: 32px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+.monitor-pattern-strip {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.monitor-pattern-item {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+}
+
+.monitor-pattern-item span {
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.monitor-color {
+  display: block;
+  width: 100%;
+  height: clamp(44px, 7vw, 84px);
+  border-radius: 8px;
+}
+
+.monitor-color-m {
+  background: #12803a;
+}
+
+.monitor-color-w {
+  background: #1d5fbd;
+}
+
+.monitor-color-n {
+  background: #b91c1c;
+}
+
+.monitor-trend-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.1rem;
+}
+
+.monitor-trend-panel div {
+  padding: 0.9rem;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.monitor-trend-panel strong {
+  display: block;
+  margin-top: 0.45rem;
+  color: #111827;
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.monitor-empty {
+  color: #64748b;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .monitor-screen {
+    padding: 1rem;
+  }
+
+  .monitor-header,
+  .monitor-latest {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .monitor-controls,
+  .monitor-scoreboard,
+  .monitor-trend-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .monitor-pattern-strip {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .monitor-latest h2 {
+    text-align: left;
+  }
+}
