@@ -15,6 +15,7 @@ npm install
 ```sh
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_AUTH_ADMIN_EMAIL=your-admin-email@example.com
 ```
 
 3. Run locally:
@@ -32,6 +33,7 @@ Before deploying, confirm each item:
 - Hosting environment variables are set:
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+  - `VITE_AUTH_ADMIN_EMAIL`
 - Database SQL has been applied in this order:
   1. `src/lib/schema.sql`
   2. `src/lib/duplicate_event_names_migration.sql`

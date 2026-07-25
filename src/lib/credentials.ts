@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient'
 
 type Metadata = Record<string, unknown>
 const AUTH_USERNAME_DOMAIN = 'cca.local'
+const ADMIN_LOGIN_EMAIL = import.meta.env.VITE_AUTH_ADMIN_EMAIL?.trim().toLowerCase()
 
 const getMetadataString = (metadata: Metadata, keys: string[]) => {
   for (const key of keys) {
@@ -24,7 +25,12 @@ export const validateCredentials = async (
     return null
   }
 
-  const email = loginName.includes('@') ? loginName : `${loginName}@${AUTH_USERNAME_DOMAIN}`
+  const email =
+    loginName === 'admin' && ADMIN_LOGIN_EMAIL
+      ? ADMIN_LOGIN_EMAIL
+      : loginName.includes('@')
+        ? loginName
+        : `${loginName}@${AUTH_USERNAME_DOMAIN}`
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
