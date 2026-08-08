@@ -12,6 +12,7 @@ interface PairingRecord {
   wala_entry_id?: number
   wala_betting: string
   diferencia: string
+  standingWasAdjusted: boolean
 }
 
 
@@ -24,6 +25,8 @@ const getBaseEntryName = (entryName: string) => {
 const formatEventOption = (event: Event) => {
   return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
 }
+
+const parseBettingAmount = (value: string) => Number(value.replace(/,/g, ''))
 
 function PairingPage() {
   const { events, members, pairings, addPairing, selectedEventId, setSelectedEventId } = useData()
@@ -88,8 +91,8 @@ function PairingPage() {
 
   const calculatedDiferencia = useMemo(() => {
     if (!mayronBetting || !walaBetting) return ''
-    const mayron = parseFloat(mayronBetting.replace(/,/g, ''))
-    const wala = parseFloat(walaBetting.replace(/,/g, ''))
+    const mayron = parseBettingAmount(mayronBetting)
+    const wala = parseBettingAmount(walaBetting)
     if (isNaN(mayron) || isNaN(wala)) return ''
     const diff = Math.abs(mayron - wala).toString()
     return diff.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -362,17 +365,27 @@ function PairingPage() {
 
     const mayronMember = members.find((m) => String(m.id) === mayronEntry)
     const walaMember = members.find((m) => String(m.id) === walaEntry)
+    const mayronAmount = parseBettingAmount(mayronBetting)
+    const walaAmount = parseBettingAmount(walaBetting)
+
+    if (!Number.isFinite(mayronAmount) || !Number.isFinite(walaAmount) || mayronAmount < 0 || walaAmount < 0) {
+      alert('Please enter valid betting amounts')
+      return
+    }
+
+    const shouldSwapStanding = walaAmount > mayronAmount
 
     const newPairing: PairingRecord = {
       id: Date.now(),
       fight_number: nextFightNumber,
-      mayron_entry: mayronMember ? mayronMember.entry_name : '',
-      mayron_entry_id: mayronMember ? mayronMember.id : undefined,
-      mayron_betting: mayronBetting,
-      wala_entry: walaMember ? walaMember.entry_name : '',
-      wala_entry_id: walaMember ? walaMember.id : undefined,
-      wala_betting: walaBetting,
-      diferencia: calculatedDiferencia
+      mayron_entry: shouldSwapStanding ? walaMember?.entry_name || '' : mayronMember?.entry_name || '',
+      mayron_entry_id: shouldSwapStanding ? walaMember?.id : mayronMember?.id,
+      mayron_betting: shouldSwapStanding ? walaBetting : mayronBetting,
+      wala_entry: shouldSwapStanding ? mayronMember?.entry_name || '' : walaMember?.entry_name || '',
+      wala_entry_id: shouldSwapStanding ? mayronMember?.id : walaMember?.id,
+      wala_betting: shouldSwapStanding ? mayronBetting : walaBetting,
+      diferencia: calculatedDiferencia,
+      standingWasAdjusted: shouldSwapStanding
     }
 
     setPendingPairing(newPairing)
@@ -742,6 +755,12 @@ function PairingPage() {
                 <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#333' }}>Event</h3>
                 <p style={{ fontSize: '1rem', fontWeight: '500', color: '#555' }}>{eventName}</p>
               </div>
+
+              {pendingPairing.standingWasAdjusted && (
+                <div style={{ padding: '0.8rem 1rem', marginBottom: '1.5rem', borderRadius: '5px', backgroundColor: '#e3f2fd', color: '#0d47a1', textAlign: 'center', fontWeight: '600' }}>
+                  Standing adjusted automatically: the higher bettor is Mayron.
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
