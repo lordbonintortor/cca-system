@@ -40,7 +40,9 @@ Before deploying, confirm each item:
   3. `src/lib/audit_logs_migration.sql`
   4. `src/lib/member_schema_alignment_migration.sql`
   5. `src/lib/rls_policies_migration.sql`
+  6. `src/lib/operational_safety_migration.sql`
 - RLS is enabled and policies are active for all app tables.
+- The operational safety migration has been applied to prevent duplicate fight records.
 - Direct route refreshes work, for example `/dashboard`, `/pairing`, and `/tagging`.
 - Final checks pass:
 

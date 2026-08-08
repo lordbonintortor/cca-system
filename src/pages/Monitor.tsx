@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo } from 'react'
+import { useContext, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
@@ -60,21 +60,13 @@ const getTrend = (marks: WinnerMark[]) => {
 
 function Monitor() {
   const navigate = useNavigate()
-  const { events, pairings, selectedEventId, setSelectedEventId, refreshData } = useData()
+  const { events, pairings, selectedEventId, setSelectedEventId } = useData()
 
   const context = useContext(TaggingContext)
   if (!context) {
     throw new Error('Monitor must be used within TaggingProvider')
   }
   const { taggedFights } = context
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      void refreshData()
-    }, 10000)
-
-    return () => window.clearInterval(interval)
-  }, [refreshData])
 
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => b.id - a.id)

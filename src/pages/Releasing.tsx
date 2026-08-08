@@ -39,6 +39,7 @@ function Releasing() {
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false)
+  const [isReleasing, setIsReleasing] = useState(false)
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -84,9 +85,17 @@ function Releasing() {
 
   const handleConfirmRelease = async () => {
     if (selectedFightId) {
-      await updateReleasedFight(selectedFightId, 'released')
-      setIsReleaseModalOpen(false)
-      setIsConfirmationModalOpen(true)
+      try {
+        setIsReleasing(true)
+        await updateReleasedFight(selectedFightId, 'released')
+        setIsReleaseModalOpen(false)
+        setIsConfirmationModalOpen(true)
+      } catch (error) {
+        console.error('Error releasing fight:', error)
+        alert('The fight was not released. Check the connection and try again.')
+      } finally {
+        setIsReleasing(false)
+      }
     }
   }
 
@@ -376,7 +385,9 @@ function Releasing() {
                 >
                   Print
                 </button>
-                <button className="btn-add" onClick={handleConfirmRelease}>Release</button>
+                <button className="btn-add" onClick={handleConfirmRelease} disabled={isReleasing}>
+                  {isReleasing ? 'Releasing...' : 'Release'}
+                </button>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from 'react'
+import { createContext, useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   getEvents,
@@ -128,7 +128,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [selectedEventId, setSelectedEventId] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     try {
       const [eventsData, membersData, pairingsData, taggedData, releasedData, raffleData] = await Promise.all([
         getEvents(),
@@ -148,7 +148,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error refreshing data:', error)
     }
-  }
+  }, [])
 
   useEffect(() => {
     const loadData = async () => {
@@ -158,7 +158,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
 
     loadData()
-  }, [])
+  }, [refreshData])
+
+  useEffect(() => {
+    const refreshSafely = () => void refreshData()
+    const interval = window.setInterval(refreshSafely, 5000)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshSafely()
+    }
+
+    window.addEventListener('focus', refreshSafely)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', refreshSafely)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [refreshData])
 
   useEffect(() => {
     setSelectedEventId((currentEventId) => {

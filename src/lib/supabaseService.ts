@@ -36,7 +36,7 @@ export const getEvents = async () => {
 
   if (error) {
     console.error('Error fetching events:', error)
-    return []
+    throw error
   }
   return data
 }
@@ -114,7 +114,7 @@ export const getMembers = async () => {
 
   if (error) {
     console.error('Error fetching members:', error)
-    return []
+    throw error
   }
   return data
 }
@@ -128,7 +128,7 @@ export const getMembersByEvent = async (eventName: string) => {
 
   if (error) {
     console.error('Error fetching members:', error)
-    return []
+    throw error
   }
   return data
 }
@@ -233,7 +233,7 @@ export const getPairings = async () => {
 
   if (error) {
     console.error('Error fetching pairings:', error)
-    return []
+    throw error
   }
   return data
 }
@@ -247,7 +247,7 @@ export const getPairingsByEvent = async (eventId: number) => {
 
   if (error) {
     console.error('Error fetching pairings:', error)
-    return []
+    throw error
   }
   return data
 }
@@ -330,7 +330,7 @@ export const getTaggedFights = async () => {
 
   if (error) {
     console.error('Error fetching tagged fights:', error)
-    return []
+    throw error
   }
   return data
 }
@@ -395,7 +395,7 @@ export const getReleasedFights = async () => {
 
   if (error) {
     console.error('Error fetching released fights:', error)
-    return []
+    throw error
   }
   return data
 }
@@ -459,7 +459,7 @@ export const getRaffleWinners = async () => {
 
   if (error) {
     console.error('Error fetching raffle winners:', error)
-    return []
+    throw error
   }
   return data
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { TaggingContext, type TaggedFight, type ReleasedFight } from './tagging'
 import {
@@ -47,23 +47,41 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
   const [taggedFights, setTaggedFights] = useState<TaggedFight[]>([])
   const [releasedFights, setReleasedFights] = useState<ReleasedFight[]>([])
 
-  // Load data from Supabase on mount
+  const refreshFightData = useCallback(async () => {
+    const [tagged, released] = await Promise.all([
+      getTaggedFights(),
+      getReleasedFights()
+    ])
+    setTaggedFights((tagged as TaggedFightRow[]).map(mapTaggedFight))
+    setReleasedFights((released as ReleasedFightRow[]).map(mapReleasedFight))
+  }, [])
+
+  // Keep fight status synchronized across the tagging, releasing, report, and monitor screens.
   useEffect(() => {
-    const loadData = async () => {
+    const refreshSafely = async () => {
       try {
-        const [tagged, released] = await Promise.all([
-          getTaggedFights(),
-          getReleasedFights()
-        ])
-        setTaggedFights((tagged as TaggedFightRow[]).map(mapTaggedFight))
-        setReleasedFights((released as ReleasedFightRow[]).map(mapReleasedFight))
+        await refreshFightData()
       } catch (error) {
         console.error('Failed to load tagging data:', error)
       }
     }
 
-    loadData()
-  }, [])
+    void refreshSafely()
+    const interval = window.setInterval(() => void refreshSafely(), 5000)
+    const handleFocus = () => void refreshSafely()
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void refreshSafely()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [refreshFightData])
 
   const updateTaggedFight = async (fight: TaggedFight) => {
     try {
@@ -86,18 +104,10 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
         entity_id: fight.pairingId,
         details: dbFight,
       })
-
-      // Update local state
-      const existingIndex = taggedFights.findIndex(t => t.pairingId === fight.pairingId)
-      if (existingIndex >= 0) {
-        const updated = [...taggedFights]
-        updated[existingIndex] = fight
-        setTaggedFights(updated)
-      } else {
-        setTaggedFights([...taggedFights, fight])
-      }
+      await refreshFightData()
     } catch (error) {
       console.error('Failed to update tagged fight:', error)
+      throw error
     }
   }
 
@@ -118,26 +128,10 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
         entity_id: pairingId,
         details: { releaseStatus, releasedAt },
       })
-
-      // Update local state
-      const existingIndex = releasedFights.findIndex(r => r.pairingId === pairingId)
-      if (existingIndex >= 0) {
-        const updated = [...releasedFights]
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          releaseStatus,
-          releasedAt
-        }
-        setReleasedFights(updated)
-      } else {
-        setReleasedFights([...releasedFights, {
-          pairingId,
-          releaseStatus,
-          releasedAt
-        }])
-      }
+      await refreshFightData()
     } catch (error) {
       console.error('Failed to update released fight:', error)
+      throw error
     }
   }
 
@@ -150,15 +144,15 @@ export function TaggingProvider({ children }: { children: ReactNode }) {
         entity_type: 'fight',
         entity_id: pairingId,
       })
-      setTaggedFights(taggedFights.filter(t => t.pairingId !== pairingId))
-      setReleasedFights(releasedFights.filter(r => r.pairingId !== pairingId))
+      await refreshFightData()
     } catch (error) {
       console.error('Failed to reset fight:', error)
+      throw error
     }
   }
 
   return (
-    <TaggingContext.Provider value={{ taggedFights, releasedFights, updateTaggedFight, updateReleasedFight, resetFight }}>
+    <TaggingContext.Provider value={{ taggedFights, releasedFights, refreshFightData, updateTaggedFight, updateReleasedFight, resetFight }}>
       {children}
     </TaggingContext.Provider>
   )

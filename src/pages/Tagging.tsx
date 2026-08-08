@@ -14,6 +14,7 @@ function Tagging() {
   const [mayronBetting, setMayronBetting] = useState('')
   const [walaBetting, setWalaBetting] = useState('')
   const [isSavingBetting, setIsSavingBetting] = useState(false)
+  const [isSavingOutcome, setIsSavingOutcome] = useState(false)
   const [bettingSaveMessage, setBettingSaveMessage] = useState('')
 
   const context = useContext(TaggingContext)
@@ -113,28 +114,44 @@ function Tagging() {
       const pairing = pairings.find(p => p.id === selectedFightId)
       const existingTag = taggedFights.find(t => t.pairingId === selectedFightId)
       
-      if (pairing) {
-        const updatedTag = {
-          pairingId: selectedFightId,
-          fightNumber: pairing.fight_number,
-          status: 'tagged' as const,
-          outcome,
-          outcomeWinner: winner,
-          taggedAt: existingTag?.taggedAt || new Date().toISOString()
+      try {
+        setIsSavingOutcome(true)
+        if (pairing) {
+          const updatedTag = {
+            pairingId: selectedFightId,
+            fightNumber: pairing.fight_number,
+            status: 'tagged' as const,
+            outcome,
+            outcomeWinner: winner,
+            taggedAt: existingTag?.taggedAt || new Date().toISOString()
+          }
+          await updateTaggedFight(updatedTag)
         }
-        await updateTaggedFight(updatedTag)
+        setIsOutcomeModalOpen(false)
+        setSelectedFightId(null)
+        setMayronBetting('')
+        setWalaBetting('')
+      } catch (error) {
+        console.error('Error saving fight outcome:', error)
+        alert('The fight outcome was not saved. Check the connection and try again.')
+      } finally {
+        setIsSavingOutcome(false)
       }
-      setIsOutcomeModalOpen(false)
-      setSelectedFightId(null)
-      setMayronBetting('')
-      setWalaBetting('')
     }
   }
 
   const handleResetFight = async () => {
     if (selectedFightId) {
-      await resetFight(selectedFightId)
-      handleCloseOutcomeModal()
+      try {
+        setIsSavingOutcome(true)
+        await resetFight(selectedFightId)
+        handleCloseOutcomeModal()
+      } catch (error) {
+        console.error('Error resetting fight:', error)
+        alert('The fight could not be reset. Check the connection and try again.')
+      } finally {
+        setIsSavingOutcome(false)
+      }
     }
   }
 
@@ -353,6 +370,7 @@ function Tagging() {
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <button
                               onClick={() => handleOutcomeSelect('winner', 'mayron')}
+                              disabled={isSavingOutcome}
                               style={{
                                 padding: '1rem',
                                 backgroundColor: '#e3f2fd',
@@ -371,6 +389,7 @@ function Tagging() {
                             </button>
                             <button
                               onClick={() => handleOutcomeSelect('winner', 'wala')}
+                              disabled={isSavingOutcome}
                               style={{
                                 padding: '1rem',
                                 backgroundColor: '#e3f2fd',
@@ -389,6 +408,7 @@ function Tagging() {
                             </button>
                             <button
                               onClick={() => handleOutcomeSelect('draw')}
+                              disabled={isSavingOutcome}
                               style={{
                                 padding: '1rem',
                                 backgroundColor: '#fff3e0',
@@ -407,6 +427,7 @@ function Tagging() {
                             </button>
                             <button
                               onClick={() => handleOutcomeSelect('cancelled')}
+                              disabled={isSavingOutcome}
                               style={{
                                 padding: '1rem',
                                 backgroundColor: '#ffebee',
@@ -447,7 +468,9 @@ function Tagging() {
               {(() => {
                 const tag = taggedFights.find(t => t.pairingId === selectedFightId)
                 return tag ? (
-                  <button className="btn-cancel" onClick={handleResetFight}>Reset</button>
+                  <button className="btn-cancel" onClick={handleResetFight} disabled={isSavingOutcome}>
+                    {isSavingOutcome ? 'Saving...' : 'Reset'}
+                  </button>
                 ) : (
                   <button className="btn-cancel" onClick={handleCloseOutcomeModal}>Close</button>
                 )

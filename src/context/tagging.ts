@@ -18,9 +18,10 @@ export interface ReleasedFight {
 export interface TaggingContextType {
   taggedFights: TaggedFight[]
   releasedFights: ReleasedFight[]
-  updateTaggedFight: (fight: TaggedFight) => void
-  updateReleasedFight: (pairingId: number, releaseStatus: 'unreleased' | 'released') => void
-  resetFight: (pairingId: number) => void
+  refreshFightData: () => Promise<void>
+  updateTaggedFight: (fight: TaggedFight) => Promise<void>
+  updateReleasedFight: (pairingId: number, releaseStatus: 'unreleased' | 'released') => Promise<void>
+  resetFight: (pairingId: number) => Promise<void>
 }
 
 export const TaggingContext = createContext<TaggingContextType | undefined>(undefined)
