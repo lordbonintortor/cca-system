@@ -155,16 +155,19 @@ function Releasing() {
           <head>
             <title>Release Print - Fight #${pairing.fight_number}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 2rem; background: #f5f5f5; }
-              .container { background: white; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 0 auto; }
-              .title { font-size: 1.2rem; font-weight: bold; margin-bottom: 1.5rem; }
-              .congrats { padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px; background: #e8f5e9; color: #1b5e20; text-align: center; font-size: 1.15rem; font-weight: 800; }
-              .prize-box { padding: 0.9rem; margin-bottom: 1.5rem; border: 2px solid #2e7d32; border-radius: 8px; background: #f7fff7; }
-              .section { margin-bottom: 1.5rem; }
-              .label { font-size: 0.9rem; color: #666; margin-bottom: 0.3rem; }
-              .value { font-size: 1rem; font-weight: 600; color: #333; text-decoration: underline; }
-              .number { font-size: 0.95rem; margin-bottom: 1rem; }
-              @media print { body { padding: 0; background: white; } }
+              @page { size: 80mm auto; margin: 2mm; }
+              * { box-sizing: border-box; }
+              html, body { width: 76mm; margin: 0; padding: 0; background: white; }
+              body { font-family: Arial, sans-serif; color: #000; font-size: 10px; }
+              .container { width: 72mm; margin: 0 auto; padding: 1mm 0 3mm; }
+              .title { text-align: center; font-size: 17px; font-weight: bold; padding: 2mm; border: 2px solid #000; margin-bottom: 2mm; }
+              .congrats { padding: 2mm; margin-bottom: 2mm; border: 1px dashed #000; text-align: center; font-size: 14px; font-weight: 800; }
+              .prize-box { padding: 2mm; margin-bottom: 2mm; border: 1px solid #000; }
+              .section { padding: 2mm; border: 1px solid #000; }
+              .value { font-size: 11px; font-weight: 700; }
+              .number { display: flex; justify-content: space-between; gap: 2mm; margin-bottom: 1.5mm; border-bottom: 1px dotted #000; padding-bottom: 1mm; }
+              .number:last-child { margin-bottom: 0; }
+              @media print { html, body { width: 76mm; } }
             </style>
           </head>
           <body>

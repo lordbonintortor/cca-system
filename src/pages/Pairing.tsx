@@ -117,163 +117,115 @@ function PairingPage() {
       <head>
         <title>Fight ${pairing.fight_number}</title>
         <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            background: #f5f5f5;
-          }
+          @page { size: 80mm auto; margin: 2mm; }
+          * { box-sizing: border-box; }
+          html, body { width: 76mm; margin: 0; padding: 0; background: white; }
+          body { font-family: Arial, sans-serif; color: #000; font-size: 10px; }
           .print-container {
-            background: white;
-            padding: 40px;
+            width: 72mm;
             margin: 0 auto;
-            width: 100%;
-            max-width: 600px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1mm 0 3mm;
           }
           .header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #333;
-            padding-bottom: 20px;
+            margin-bottom: 2mm;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 2mm;
           }
           .header h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: 16px;
             font-weight: bold;
           }
           .header h2 {
-            margin: 5px 0 0 0;
-            font-size: 16px;
-            color: #666;
+            margin: 1mm 0 0;
+            font-size: 9px;
           }
           .event-info {
             text-align: center;
-            margin-bottom: 25px;
-            font-size: 14px;
+            margin-bottom: 2mm;
+            font-size: 10px;
           }
-          .event-info p {
-            margin: 5px 0;
-          }
+          .event-info p { margin: 0.7mm 0; overflow-wrap: anywhere; }
           .fight-title {
             text-align: center;
-            font-size: 24px;
+            font-size: 17px;
             font-weight: bold;
-            margin-bottom: 30px;
-            background: #333;
-            color: white;
-            padding: 15px;
+            margin-bottom: 2mm;
+            border: 2px solid #000;
+            padding: 2mm;
           }
           .parada {
             display: flex;
-            gap: 40px;
-            margin-bottom: 30px;
+            flex-direction: column;
+            gap: 2mm;
+            margin-bottom: 2mm;
           }
           .parada-section {
-            flex: 1;
             text-align: center;
+            border: 1px solid #000;
+            padding-bottom: 1.5mm;
           }
           .parada-header {
-            background: #333;
+            background: #000;
             color: white;
-            padding: 10px;
+            padding: 1.5mm;
             font-weight: bold;
-            margin-bottom: 15px;
-            font-size: 16px;
+            margin-bottom: 1mm;
+            font-size: 12px;
           }
           .parada-label {
             font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 8px;
+            font-size: 9px;
+            margin-bottom: 0.5mm;
           }
           .entry-name {
-            font-size: 18px;
+            font-size: 13px;
             font-weight: bold;
-            margin: 10px 0;
-            text-decoration: underline;
-          }
-
-          .weight {
-            font-size: 14px;
-            margin: 8px 0;
-            color: #666;
+            margin: 1mm 1.5mm;
+            overflow-wrap: anywhere;
           }
           .betting {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            margin: 15px 0;
-            padding: 10px;
-            background: #f9f9f9;
-            border-radius: 4px;
+            margin: 1mm 0 0;
           }
           .diferencia-section {
-            background: #f0fff0;
-            padding: 20px;
+            padding: 2mm;
             text-align: center;
-            margin-bottom: 30px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
+            margin-bottom: 2mm;
+            border: 2px solid #000;
           }
           .diferencia-header {
-            background: #333;
-            color: white;
-            padding: 8px;
-            margin-bottom: 15px;
+            padding: 0;
+            margin-bottom: 1mm;
             font-weight: bold;
           }
           .diferencia-amount {
-            font-size: 24px;
+            font-size: 17px;
             font-weight: bold;
-            color: #333;
-          }
-          .signature-section {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 40px;
-          }
-          .signature-line {
-            text-align: center;
-            flex: 1;
-          }
-          .sig-line {
-            border-top: 2px solid #333;
-            margin: 40px 20px 0;
-            min-width: 150px;
-          }
-          .sig-label {
-            margin-top: 8px;
-            font-size: 12px;
           }
           .parejo-section {
-            background: #333;
-            color: white;
-            padding: 15px;
+            border: 1px solid #000;
+            padding: 2mm;
             text-align: center;
-            margin-top: 30px;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 12px;
           }
           .parejo-amount {
-            font-size: 20px;
-            margin-top: 10px;
-            border-top: 2px solid white;
-            border-bottom: 2px solid white;
-            padding: 10px;
+            font-size: 14px;
+            margin-top: 2mm;
+            border-top: 1px solid #000;
+            padding-top: 2mm;
           }
           .footer {
             text-align: center;
-            margin-top: 40px;
-            font-size: 12px;
-            color: #999;
+            margin-top: 2mm;
+            font-size: 8px;
+            border-top: 1px dashed #000;
+            padding-top: 1.5mm;
           }
-          @media print {
-            body {
-              background: white;
-              padding: 0;
-            }
-            .print-container {
-              box-shadow: none;
-            }
-          }
+          @media print { html, body { width: 76mm; } }
         </style>
       </head>
       <body>
