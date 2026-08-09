@@ -551,7 +551,7 @@ function PairingPage() {
                       value={mayronSearch}
                       onChange={(e) => setMayronSearch(e.target.value)}
                       onFocus={() => setMayronDropdownOpen(true)}
-                      onBlur={() => setTimeout(() => setMayronDropdownOpen(false), 150)}
+                      onBlur={() => setMayronDropdownOpen(false)}
                     />
                     {mayronDropdownOpen && (
                       <div style={{
@@ -575,7 +575,8 @@ function PairingPage() {
                           filteredMayronMembers.map((member) => (
                             <div
                               key={member.id}
-                              onClick={() => {
+                              onPointerDown={(event) => {
+                                event.preventDefault()
                                 if (usedMemberIds.has(member.id)) return
                                 setMayronEntry(String(member.id))
                                 setMayronSearch(member.entry_name)
@@ -621,7 +622,7 @@ function PairingPage() {
                       value={walaSearch}
                       onChange={(e) => setWalaSearch(e.target.value)}
                       onFocus={() => setWalaDropdownOpen(true)}
-                      onBlur={() => setTimeout(() => setWalaDropdownOpen(false), 150)}
+                      onBlur={() => setWalaDropdownOpen(false)}
                     />
                     {walaDropdownOpen && (
                       <div style={{
@@ -645,7 +646,8 @@ function PairingPage() {
                           filteredWalaMembers.map((member) => (
                             <div
                               key={member.id}
-                              onClick={() => {
+                              onPointerDown={(event) => {
+                                event.preventDefault()
                                 if (usedMemberIds.has(member.id)) return
                                 setWalaEntry(String(member.id))
                                 setWalaSearch(member.entry_name)
