@@ -57,7 +57,8 @@ function PairingPage() {
     return members.filter((member) => member.event_id === selectedEvent.id || (!member.event_id && member.event_name === selectedEvent.name))
   }, [selectedEvent, members])
 
-  // Show all entries (including Entry #) and do not dedupe
+  // Each registration is one member row; its number_of_entries controls how many
+  // pairing slots are available for that member.
   const selectableMembers = useMemo(() => filteredMembers, [filteredMembers])
 
   const eventPairings = useMemo(() => {
@@ -65,17 +66,24 @@ function PairingPage() {
 
     return pairings
       .filter((pairing) => pairing.event_id === selectedEvent.id)
-      .sort((a, b) => b.fight_number - a.fight_number)
+      .sort((a, b) => a.fight_number - b.fight_number)
   }, [selectedEvent, pairings])
 
-  const usedMemberIds = useMemo(() => {
-    const set = new Set<number>()
+  const memberUsageCounts = useMemo(() => {
+    const counts = new Map<number, number>()
     eventPairings.forEach((p) => {
-      if (p.mayron_entry_id) set.add(p.mayron_entry_id)
-      if (p.wala_entry_id) set.add(p.wala_entry_id)
+      if (p.mayron_entry_id) counts.set(p.mayron_entry_id, (counts.get(p.mayron_entry_id) || 0) + 1)
+      if (p.wala_entry_id) counts.set(p.wala_entry_id, (counts.get(p.wala_entry_id) || 0) + 1)
     })
-    return set
+    return counts
   }, [eventPairings])
+
+  const getMemberUsage = (member: Member) => memberUsageCounts.get(member.id) || 0
+  const isMemberAvailable = (member: Member) => getMemberUsage(member) < Math.max(1, member.number_of_entries)
+  const getSelectableMemberName = (member: Member) => {
+    const nextEntry = getMemberUsage(member) + 1
+    return `${member.entry_name} - Entry ${nextEntry}`
+  }
 
   const filteredMayronMembers = useMemo(() => {
     return selectableMembers.filter(m =>
@@ -104,8 +112,13 @@ function PairingPage() {
     return numberOnly.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
-  const handlePrintFight = (pairing: Pairing, mayronMember: Member | undefined, walaMember: Member | undefined) => {
-    const printWindow = window.open('', '', 'height=800,width=600')
+  const handlePrintFight = (
+    pairing: Pairing,
+    mayronMember: Member | undefined,
+    walaMember: Member | undefined,
+    existingPrintWindow?: Window | null
+  ) => {
+    const printWindow = existingPrintWindow ?? window.open('', '', 'height=800,width=600')
     if (!printWindow) return
 
     const mayronEntry = mayronMember ? getBaseEntryName(mayronMember.entry_name) : 'N/A'
@@ -308,15 +321,15 @@ function PairingPage() {
       return
     }
 
-    if (usedMemberIds.has(Number(mayronEntry)) || usedMemberIds.has(Number(walaEntry))) {
+    const mayronMember = members.find((m) => String(m.id) === mayronEntry)
+    const walaMember = members.find((m) => String(m.id) === walaEntry)
+    if (!mayronMember || !walaMember || !isMemberAvailable(mayronMember) || !isMemberAvailable(walaMember)) {
       alert('One of the selected entries is already used in this event')
       return
     }
 
     const nextFightNumber = Math.max(0, ...pairings.filter((p) => p.event_id === selectedEvent.id).map((p) => p.fight_number)) + 1
 
-    const mayronMember = members.find((m) => String(m.id) === mayronEntry)
-    const walaMember = members.find((m) => String(m.id) === walaEntry)
     const mayronAmount = parseBettingAmount(mayronBetting)
     const walaAmount = parseBettingAmount(walaBetting)
 
@@ -330,10 +343,10 @@ function PairingPage() {
     const newPairing: PairingRecord = {
       id: Date.now(),
       fight_number: nextFightNumber,
-      mayron_entry: shouldSwapStanding ? walaMember?.entry_name || '' : mayronMember?.entry_name || '',
+      mayron_entry: shouldSwapStanding ? getSelectableMemberName(walaMember) : getSelectableMemberName(mayronMember),
       mayron_entry_id: shouldSwapStanding ? walaMember?.id : mayronMember?.id,
       mayron_betting: shouldSwapStanding ? walaBetting : mayronBetting,
-      wala_entry: shouldSwapStanding ? mayronMember?.entry_name || '' : walaMember?.entry_name || '',
+      wala_entry: shouldSwapStanding ? getSelectableMemberName(mayronMember) : getSelectableMemberName(walaMember),
       wala_entry_id: shouldSwapStanding ? mayronMember?.id : walaMember?.id,
       wala_betting: shouldSwapStanding ? mayronBetting : walaBetting,
       diferencia: calculatedDiferencia,
@@ -346,6 +359,8 @@ function PairingPage() {
 
   const handleConfirmPairing = async () => {
     if (pendingPairing) {
+      const printWindow = window.open('', '', 'height=800,width=600')
+
       try {
         // Find member IDs from the stored pending pairing ids
         const mayronMember = members.find((m) => m.id === pendingPairing.mayron_entry_id && selectedEvent && (m.event_id === selectedEvent.id || (!m.event_id && m.event_name === selectedEvent.name)))
@@ -378,8 +393,15 @@ function PairingPage() {
         }
 
         await addPairing(pairingToSave)
+        handlePrintFight(
+          { ...pairingToSave, id: pendingPairing.id },
+          mayronMember,
+          walaMember,
+          printWindow
+        )
       } catch (error) {
         console.error('Error adding pairing:', error)
+        printWindow?.close()
         alert('Failed to save pairing')
       }
     }
@@ -529,22 +551,22 @@ function PairingPage() {
                               key={member.id}
                               onPointerDown={(event) => {
                                 event.preventDefault()
-                                if (usedMemberIds.has(member.id)) return
+                                if (!isMemberAvailable(member)) return
                                 setMayronEntry(String(member.id))
                                 setMayronSearch(member.entry_name)
                                 setMayronDropdownOpen(false)
                               }}
                               style={{
                                 padding: '0.6rem 1rem',
-                                cursor: usedMemberIds.has(member.id) ? 'not-allowed' : 'pointer',
+                                cursor: isMemberAvailable(member) ? 'pointer' : 'not-allowed',
                                 backgroundColor: mayronEntry === String(member.id) ? '#e3f2fd' : 'transparent',
-                                color: usedMemberIds.has(member.id) ? '#ccc' : '#333',
+                                color: isMemberAvailable(member) ? '#333' : '#ccc',
                                 borderBottom: '1px solid #f0f0f0',
                                 fontSize: '0.9rem',
                                 transition: 'background-color 0.1s'
                               }}
                               onMouseEnter={(e) => {
-                                if (!usedMemberIds.has(member.id)) {
+                                if (isMemberAvailable(member)) {
                                   e.currentTarget.style.backgroundColor = '#f5f5f5'
                                 }
                               }}
@@ -556,7 +578,7 @@ function PairingPage() {
                                 }
                               }}
                             >
-                              {member.entry_name}{usedMemberIds.has(member.id) ? ' (used)' : ''}
+                              {getSelectableMemberName(member)}{isMemberAvailable(member) ? '' : ' (used)'}
                             </div>
                           ))
                         )}
@@ -600,22 +622,22 @@ function PairingPage() {
                               key={member.id}
                               onPointerDown={(event) => {
                                 event.preventDefault()
-                                if (usedMemberIds.has(member.id)) return
+                                if (!isMemberAvailable(member)) return
                                 setWalaEntry(String(member.id))
                                 setWalaSearch(member.entry_name)
                                 setWalaDropdownOpen(false)
                               }}
                               style={{
                                 padding: '0.6rem 1rem',
-                                cursor: usedMemberIds.has(member.id) ? 'not-allowed' : 'pointer',
+                                cursor: isMemberAvailable(member) ? 'pointer' : 'not-allowed',
                                 backgroundColor: walaEntry === String(member.id) ? '#e3f2fd' : 'transparent',
-                                color: usedMemberIds.has(member.id) ? '#ccc' : '#333',
+                                color: isMemberAvailable(member) ? '#333' : '#ccc',
                                 borderBottom: '1px solid #f0f0f0',
                                 fontSize: '0.9rem',
                                 transition: 'background-color 0.1s'
                               }}
                               onMouseEnter={(e) => {
-                                if (!usedMemberIds.has(member.id)) {
+                                if (isMemberAvailable(member)) {
                                   e.currentTarget.style.backgroundColor = '#f5f5f5'
                                 }
                               }}
@@ -627,7 +649,7 @@ function PairingPage() {
                                 }
                               }}
                             >
-                              {member.entry_name}{usedMemberIds.has(member.id) ? ' (used)' : ''}
+                              {getSelectableMemberName(member)}{isMemberAvailable(member) ? '' : ' (used)'}
                             </div>
                           ))
                         )}

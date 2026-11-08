@@ -6,6 +6,10 @@ const formatEventOption = (event: Event) => {
   return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
 }
 
+const getBaseEntryName = (entryName: string) => {
+  return entryName.replace(/\s+-\s+Entry\s+\d+$/i, '').trim()
+}
+
 
 
 function Registration() {
@@ -92,23 +96,16 @@ function Registration() {
       return
     }
 
-    const numEntries = parseInt(numberOfEntries)
-    const newMembers: Member[] = []
-
-    // Create multiple member records based on number of entries
-    for (let i = 1; i <= numEntries; i++) {
-      const newMember: Member = {
-        id: Math.max(...members.map(m => m.id), 0) + i,
-        event_id: selectedEvent?.id,
-        entry_name: `${entryName} - Entry ${i}`,
-        event_name: eventName,
-        number_of_entries: 1,
-        registration_date: registrationDate,
-      }
-      newMembers.push(newMember)
+    const newMember: Member = {
+      id: Math.max(...members.map(m => m.id), 0) + 1,
+      event_id: selectedEvent?.id,
+      entry_name: entryName.trim(),
+      event_name: eventName,
+      number_of_entries: parseInt(numberOfEntries),
+      registration_date: registrationDate,
     }
 
-    setPendingMembers(newMembers)
+    setPendingMembers([newMember])
     setShowConfirmation(true)
   }
 
@@ -145,16 +142,52 @@ function Registration() {
       )
     }
 
-    return [...result].sort((a, b) => b.id - a.id)
+    return [...result].sort((a, b) => a.id - b.id)
   }, [searchQuery, selectedEventId, members, events])
+
+  const uniqueMembers = useMemo(() => {
+    const groupedMembers = new Map<string, Member>()
+
+    filteredMembers.forEach((member) => {
+      const baseEntryName = getBaseEntryName(member.entry_name)
+      const key = `${member.event_id ?? member.event_name.toLowerCase()}::${baseEntryName.toLowerCase()}`
+      const existingMember = groupedMembers.get(key)
+
+      if (existingMember) {
+        existingMember.number_of_entries += member.number_of_entries
+        if (member.id > existingMember.id) {
+          existingMember.id = member.id
+          existingMember.registration_date = member.registration_date
+        }
+      } else {
+        groupedMembers.set(key, {
+          ...member,
+          entry_name: baseEntryName,
+        })
+      }
+    })
+
+    return [...groupedMembers.values()]
+  }, [filteredMembers])
+
+  const registeredCount = useMemo(() => {
+    const selectedEvent = events.find(e => String(e.id) === selectedEventId)
+    const names = new Set(
+      (selectedEvent
+        ? members.filter((member) => member.event_id === selectedEvent.id || (!member.event_id && member.event_name === selectedEvent.name))
+        : members
+      ).map((member) => getBaseEntryName(member.entry_name).toLowerCase())
+    )
+    return names.size
+  }, [selectedEventId, members, events])
 
   const paginatedMembers = useMemo(() => {
     const startIdx = (currentPage - 1) * itemsPerPage
     const endIdx = startIdx + itemsPerPage
-    return filteredMembers.slice(startIdx, endIdx)
-  }, [filteredMembers, currentPage])
+    return uniqueMembers.slice(startIdx, endIdx)
+  }, [uniqueMembers, currentPage])
 
-  const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
+  const totalPages = Math.ceil(uniqueMembers.length / itemsPerPage)
 
   const getPaginationPages = () => {
     const pages: (number | string)[] = []
@@ -204,6 +237,11 @@ function Registration() {
       <div className="page-main">
         <h1>Registration</h1>
         <p>Manage member registrations</p>
+        <div style={{ display: 'flex', gap: '1.5rem', margin: '1rem 0', flexWrap: 'wrap' }}>
+          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#f0f8ff', border: '1px solid #2196F3', borderRadius: '5px' }}>
+            <strong>Registered:</strong> {registeredCount}
+          </div>
+        </div>
         <div className="search-action-row registration-controls">
           <div className="registration-event-filter">
             <label htmlFor="registrationEventSelect">Select Event</label>
@@ -236,15 +274,19 @@ function Registration() {
           <table className="events-table">
             <thead>
               <tr>
+                <th>Entry Number</th>
                 <th>Entry Name</th>
+                <th>Pairing Entries</th>
                 <th>Event Name</th>
                 <th>Registration Date</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedMembers.map((member) => (
+              {paginatedMembers.map((member, index) => (
                 <tr key={member.id}>
+                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td>{member.entry_name}</td>
+                  <td>{member.number_of_entries}</td>
                   <td>{member.event_name}</td>
                   <td>{formatDate(member.registration_date)}</td>
                 </tr>
@@ -383,8 +425,8 @@ function Registration() {
               </div>
 
               <div style={{ padding: '1rem', backgroundColor: '#f0f8ff', borderRadius: '5px', border: '2px solid #2196F3' }}>
-                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Entries to be created</p>
-                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2196F3' }}>{pendingMembers.length} {pendingMembers.length === 1 ? 'entry' : 'entries'}</p>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Registration to be created</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2196F3' }}>1 registration ({numberOfEntries} pairing entries)</p>
                 <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#555' }}>
                   {pendingMembers.map((member, idx) => (
                     <div key={idx} style={{ marginBottom: '0.5rem' }}>• {member.entry_name}</div>
