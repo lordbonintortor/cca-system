@@ -333,7 +333,7 @@ function Releasing() {
 
             <div className="modal-footer">
               <button className="btn-cancel" onClick={handleCancelRelease}>Cancel</button>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div className="releasing-modal-actions">
                 <button
                   className="btn-cancel"
                   onClick={handleResetRelease}

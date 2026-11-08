@@ -1,22 +1,106 @@
 .releasing-modal-content {
   width: min(900px, calc(100vw - 2rem));
   max-width: 900px;
-  max-height: 92vh;
+  height: min(92vh, 720px);
+  max-height: calc(100vh - 1rem);
+  min-height: 0;
 }
 
 .releasing-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 1rem;
-  overflow: visible;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.releasing-modal-content .modal-footer {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+}
+
+.releasing-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.releasing-modal-actions button {
+  white-space: nowrap;
+}
+
+@media (max-height: 700px) {
+  .releasing-modal-content {
+    height: calc(100vh - 0.5rem);
+    max-height: calc(100vh - 0.5rem);
+  }
+
+  .releasing-modal-body {
+    padding: 0.5rem;
+    overflow-y: hidden;
+  }
+
+  .releasing-modal-body h3 {
+    margin: 0 !important;
+    font-size: 1.15rem !important;
+  }
+
+  .releasing-modal-body h4 {
+    margin-bottom: 0.35rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .releasing-modal-body p {
+    margin-top: 0 !important;
+    margin-bottom: 0.15rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .releasing-modal-body > div > div[style*="grid-template-columns"] {
+    gap: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .releasing-modal-body > div > div[style*="grid-template-columns"] > div {
+    padding: 0.5rem !important;
+  }
+
+  .releasing-modal-body > div > div[style*="grid-template-columns"] > div > div:empty {
+    display: none;
+  }
+
+  .releasing-modal-body > div > div[style*="background-color: #f0fff0"] {
+    padding: 0.4rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .releasing-modal-body > div > div[style*="background-color: #f0fff0"] p:last-child {
+    font-size: 1.25rem !important;
+  }
+
+  .releasing-modal-body > div > div[style*="background-color: #e3f2fd"] {
+    padding: 0.4rem !important;
+  }
 }
 
 @media (max-width: 700px) {
   .releasing-modal-content {
     width: calc(100vw - 1rem);
-    max-height: 96vh;
+    height: calc(100vh - 1rem);
+    max-height: calc(100vh - 1rem);
   }
 
   .releasing-modal-body {
     padding: 0.75rem;
+  }
+
+  .releasing-modal-content .modal-footer {
+    justify-content: stretch;
+  }
+
+  .releasing-modal-actions {
+    flex: 1 1 100%;
   }
 
   .releasing-modal-body > div > div[style*="grid-template-columns"] {
