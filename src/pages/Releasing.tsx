@@ -2,43 +2,16 @@ import { useState, useMemo, useContext } from 'react'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
 import type { Event } from '../context/DataContext'
+import './Releasing.css'
 
 const formatEventOption = (event: Event) => {
   return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
-}
-
-const getEntryGroup = (entryName: string) => {
-  const match = entryName.match(/^(.*?)\s*-\s*Entry\s*(\d+)$/i)
-
-  return match?.[1]?.trim() || entryName
-}
-
-const getPrizeInfo = (event?: Event) => {
-  const perEntry = Number(event?.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1] || 1)
-  const winsRequired = Number.isFinite(perEntry) && perEntry > 0
-    ? perEntry
-    : event?.type === '3 Wins'
-      ? 3
-      : event?.type === '2 Wins'
-        ? 2
-        : 1
-
-  if (winsRequired >= 3) {
-    return { winsRequired: 3, prize: 25000, label: '3 Wins' }
-  }
-
-  if (winsRequired === 2) {
-    return { winsRequired: 2, prize: 5000, label: '2 Wins' }
-  }
-
-  return { winsRequired: 1, prize: 1000, label: 'Hack Fight' }
 }
 
 function Releasing() {
   const { events, members, pairings, selectedEventId, setSelectedEventId } = useData()
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false)
   const [isReleasing, setIsReleasing] = useState(false)
 
   const context = useContext(TaggingContext)
@@ -83,11 +56,32 @@ function Releasing() {
     setIsReleaseModalOpen(true)
   }
 
+  const handleCancelRelease = () => {
+    setIsReleaseModalOpen(false)
+  }
+
+  const handleResetRelease = async () => {
+    if (!selectedFightId) return
+
+    try {
+      setIsReleasing(true)
+      await updateReleasedFight(selectedFightId, 'unreleased')
+      setIsReleaseModalOpen(false)
+      setSelectedFightId(null)
+    } catch (error) {
+      console.error('Error resetting release:', error)
+      alert('The release was not reset. Check the connection and try again.')
+    } finally {
+      setIsReleasing(false)
+    }
+  }
+
   const handleConfirmRelease = async () => {
     if (selectedFightId) {
       try {
         setIsReleasing(true)
         await updateReleasedFight(selectedFightId, 'released')
+        handlePrintRelease(selectedFightId)
       } catch (error) {
         console.error('Error releasing fight:', error)
         alert('The fight was not released. Check the connection and try again.')
@@ -100,42 +94,12 @@ function Releasing() {
   const handlePrintRelease = (pairingId: number) => {
     const pairing = pairings.find(p => p.id === pairingId)
     const tagged = taggedFights.find(t => t.pairingId === pairingId)
-    const selectedEvent = events.find(event => event.id === pairing?.event_id)
-
     if (pairing && tagged) {
       if (!tagged.outcomeWinner) {
         alert('Draw or cancelled fights do not have a winner release print.')
         return
       }
 
-      const prizeInfo = getPrizeInfo(selectedEvent)
-      const mayronMember = members.find(member => member.id === pairing.mayron_entry_id)
-      const walaMember = members.find(member => member.id === pairing.wala_entry_id)
-      const winnerMember = tagged.outcomeWinner === 'mayron' ? mayronMember : walaMember
-      const winnerGroupName = getEntryGroup(winnerMember?.entry_name || 'N/A')
-      const eventMembers = members.filter(member => (
-        member.event_id === pairing.event_id ||
-        (!member.event_id && selectedEvent && member.event_name === selectedEvent.name)
-      ))
-      const winnerGroupMemberIds = eventMembers
-        .filter(member => getEntryGroup(member.entry_name) === winnerGroupName)
-        .map(member => member.id)
-      const currentWins = pairings
-        .filter(eventPairing => eventPairing.event_id === pairing.event_id)
-        .filter(eventPairing => {
-          const eventTag = taggedFights.find(fight => fight.pairingId === eventPairing.id)
-          if (!eventTag || eventTag.status !== 'tagged') return false
-
-          const side = winnerGroupMemberIds.includes(eventPairing.mayron_entry_id)
-            ? 'mayron'
-            : winnerGroupMemberIds.includes(eventPairing.wala_entry_id)
-              ? 'wala'
-              : null
-
-          return Boolean(side && eventTag.outcomeWinner === side)
-        }).length
-      const prizeQualified = currentWins >= prizeInfo.winsRequired
-      const prizeLabel = prizeQualified ? 'PRIZE AMOUNT' : 'PRIZE IF COMPLETED'
       const winnerBetting = tagged.outcomeWinner === 'mayron'
         ? pairing.mayron_betting
         : pairing.wala_betting
@@ -153,19 +117,19 @@ function Releasing() {
           <head>
             <title>Release Print - Fight #${pairing.fight_number}</title>
             <style>
-              @page { size: 80mm auto; margin: 2mm; }
+              @page { size: 58mm auto; margin: 0; }
               * { box-sizing: border-box; }
-              html, body { width: 76mm; margin: 0; padding: 0; background: white; }
-              body { font-family: Arial, sans-serif; color: #000; font-size: 10px; }
-              .container { width: 72mm; margin: 0 auto; padding: 1mm 0 3mm; }
-              .title { text-align: center; font-size: 17px; font-weight: bold; padding: 2mm; border: 2px solid #000; margin-bottom: 2mm; }
-              .congrats { padding: 2mm; margin-bottom: 2mm; border: 1px dashed #000; text-align: center; font-size: 14px; font-weight: 800; }
-              .prize-box { padding: 2mm; margin-bottom: 2mm; border: 1px solid #000; }
-              .section { padding: 2mm; border: 1px solid #000; }
-              .value { font-size: 11px; font-weight: 700; }
-              .number { display: flex; justify-content: space-between; gap: 2mm; margin-bottom: 1.5mm; border-bottom: 1px dotted #000; padding-bottom: 1mm; }
+              html, body { width: 58mm; margin: 0; padding: 0; background: white; }
+              body { font-family: Arial, sans-serif; color: #000; font-size: 9px; }
+              .container { width: 54mm; margin: 0 auto; padding: 1mm 0 2mm; }
+              .title { text-align: center; font-size: 13px; font-weight: bold; padding: 1.5mm; border: 1px solid #000; margin-bottom: 1.5mm; }
+              .congrats { padding: 1.5mm; margin-bottom: 1.5mm; border: 1px dashed #000; text-align: center; font-size: 11px; font-weight: 800; }
+              .section { padding: 1.5mm; border: 1px solid #000; }
+              .value { font-size: 9px; font-weight: 700; }
+              .number { display: flex; justify-content: flex-start; align-items: baseline; gap: 1mm; margin-bottom: 1mm; border-bottom: 1px dotted #000; padding-bottom: 0.75mm; white-space: nowrap; }
+              .number .value { margin-left: 0.5mm; }
               .number:last-child { margin-bottom: 0; }
-              @media print { html, body { width: 76mm; } }
+              @media print { html, body { width: 58mm; } }
             </style>
           </head>
           <body>
@@ -173,13 +137,6 @@ function Releasing() {
               <div class="title">Sultada: ${pairing.fight_number}</div>
               <div class="congrats">Congratulations!</div>
               
-              <div class="prize-box">
-                <div class="number">EVENT TYPE: <span class="value">${selectedEvent?.type || prizeInfo.label}</span></div>
-                <div class="number">PROGRESS: <span class="value">${Math.min(currentWins, prizeInfo.winsRequired)} / ${prizeInfo.winsRequired} wins</span></div>
-                <div class="number">PRIZE STATUS: <span class="value">${prizeQualified ? 'Qualified' : 'Pending'}</span></div>
-                <div class="number">${prizeLabel}: ₱ <span class="value">${prizeInfo.prize.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-              </div>
-
               <div class="section">
                 <div class="number">PARADA: ₱ <span class="value">${paradasNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                 <div class="number">PLASADA 11%: (₱ <span class="value">${plasadaNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>)</div>
@@ -299,13 +256,13 @@ function Releasing() {
 
       {isReleaseModalOpen && selectedFightId && (
         <div className="modal-overlay" onClick={() => setIsReleaseModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content releasing-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Release Fight</h2>
               <button className="modal-close" onClick={() => setIsReleaseModalOpen(false)}>×</button>
             </div>
             
-            <div className="modal-body" style={{ padding: '2rem', maxHeight: 'calc(100vh - 250px)', overflowY: 'auto' }}>
+            <div className="modal-body releasing-modal-body">
               {(() => {
                 const pairing = pairings.find(p => p.id === selectedFightId)
                 const tagged = taggedFights.find(t => t.pairingId === selectedFightId)
@@ -316,18 +273,18 @@ function Releasing() {
 
                 return pairing ? (
                   <>
-                    <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                      <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#2196F3', fontWeight: 'bold' }}>Fight #{pairing.fight_number}</h3>
+                    <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+                      <h3 style={{ fontSize: '1.35rem', marginBottom: '0.25rem', color: '#2196F3', fontWeight: 'bold' }}>Fight #{pairing.fight_number}</h3>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-                      <div style={{ padding: '1.5rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                        <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1.2rem', color: '#333', textAlign: 'center' }}>MAYRON</h4>
-                        <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                      <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.7rem', color: '#333', textAlign: 'center' }}>MAYRON</h4>
+                        <div style={{ marginBottom: '0.7rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
                           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{mayronEntry}</p>
                         </div>
-                        <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ marginBottom: '0.7rem' }}>
 
                         </div>
                         <div>
@@ -336,13 +293,13 @@ function Releasing() {
                         </div>
                       </div>
 
-                      <div style={{ padding: '1.5rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                        <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1.2rem', color: '#333', textAlign: 'center' }}>WALA</h4>
-                        <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.7rem', color: '#333', textAlign: 'center' }}>WALA</h4>
+                        <div style={{ marginBottom: '0.7rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
                           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{walaEntry}</p>
                         </div>
-                        <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ marginBottom: '0.7rem' }}>
 
                         </div>
                         <div>
@@ -352,17 +309,17 @@ function Releasing() {
                       </div>
                     </div>
 
-                    <div style={{ padding: '1.5rem', backgroundColor: '#f0fff0', borderRadius: '8px', border: '2px solid #4caf50', textAlign: 'center', marginBottom: '2rem' }}>
-                      <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Diferencia</p>
-                      <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#4caf50' }}>₱{pairing.diferencia}</p>
+                    <div style={{ padding: '0.8rem', backgroundColor: '#f0fff0', borderRadius: '8px', border: '2px solid #4caf50', textAlign: 'center', marginBottom: '1rem' }}>
+                      <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.25rem' }}>Diferencia</p>
+                      <p style={{ fontSize: '1.6rem', fontWeight: 'bold', color: '#4caf50' }}>₱{pairing.diferencia}</p>
                     </div>
 
                     {tagged && (
-                      <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                      <div style={{ marginBottom: '0.25rem', textAlign: 'center' }}>
                         <p style={{ fontSize: '0.9rem', color: '#333', fontWeight: '600', marginBottom: '0.5rem' }}>
                           OUTCOME
                         </p>
-                        <div style={{ padding: '1rem', backgroundColor: '#e3f2fd', borderRadius: '8px' }}>
+                        <div style={{ padding: '0.7rem', backgroundColor: '#e3f2fd', borderRadius: '8px' }}>
                           <p style={{ fontSize: '0.9rem', color: '#1565c0', fontWeight: '600', margin: '0' }}>
                             Winner: {tagged.outcome === 'draw' ? 'DRAW' : tagged.outcome === 'cancelled' ? 'CANCELLED' : `${tagged.outcomeWinner === 'mayron' ? 'MAYRON' : 'WALA'}`}
                           </p>
@@ -375,8 +332,15 @@ function Releasing() {
             </div>
 
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setIsReleaseModalOpen(false)}>Cancel</button>
+              <button className="btn-cancel" onClick={handleCancelRelease}>Cancel</button>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className="btn-cancel"
+                  onClick={handleResetRelease}
+                  disabled={isReleasing}
+                >
+                  Reset
+                </button>
                 <button 
                   className="btn-add" 
                   onClick={() => {
@@ -390,30 +354,10 @@ function Releasing() {
                   className="btn-add"
                   onClick={handleConfirmRelease}
                   disabled={isReleasing || getReleaseStatus(selectedFightId) === 'released'}
-                  style={getReleaseStatus(selectedFightId) === 'released' ? { backgroundColor: '#4caf50' } : undefined}
                 >
-                  {isReleasing ? 'Releasing...' : getReleaseStatus(selectedFightId) === 'released' ? 'Released' : 'Release'}
+                  {isReleasing ? 'Releasing...' : 'Release'}
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isConfirmationModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsConfirmationModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Release Complete</h2>
-              <button className="modal-close" onClick={() => setIsConfirmationModalOpen(false)}>×</button>
-            </div>
-            <div className="modal-body" style={{ padding: '2rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✓</div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: '600', color: '#2e7d32', marginBottom: '0.5rem' }}>Fight Released Successfully!</h3>
-              <p style={{ fontSize: '0.95rem', color: '#666' }}>The fight has been marked as released.</p>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-add" onClick={() => setIsConfirmationModalOpen(false)}>Exit</button>
             </div>
           </div>
         </div>

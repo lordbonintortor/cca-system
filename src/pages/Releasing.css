@@ -1,0 +1,25 @@
+.releasing-modal-content {
+  width: min(900px, calc(100vw - 2rem));
+  max-width: 900px;
+  max-height: 92vh;
+}
+
+.releasing-modal-body {
+  padding: 1rem;
+  overflow: visible;
+}
+
+@media (max-width: 700px) {
+  .releasing-modal-content {
+    width: calc(100vw - 1rem);
+    max-height: 96vh;
+  }
+
+  .releasing-modal-body {
+    padding: 0.75rem;
+  }
+
+  .releasing-modal-body > div > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}

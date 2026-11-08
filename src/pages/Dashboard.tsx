@@ -180,20 +180,14 @@ function Dashboard() {
         return {
           id: String(event.id),
           eventName: event.name,
-          fights: eventFights
+          fights: eventFights.slice(-10)
         }
       })
       .filter((row): row is PatternRow => row !== null)
       .reverse()
   }, [pairings, selectedMonthEvents, taggedFights])
 
-  const patternFightCount = useMemo(() => {
-    return Math.max(0, ...patternRows.map((row) => row.fights.length))
-  }, [patternRows])
-
-  const patternFightColumns = useMemo(() => {
-    return Array.from({ length: patternFightCount }, (_, index) => index + 1)
-  }, [patternFightCount])
+  const patternFightColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
   const dashboardStats = useMemo(() => {
     const taggedPairings = eventPairings
@@ -420,7 +414,7 @@ function Dashboard() {
               </div>
             )}
             <p className="dashboard-pattern-note">
-              Each row is one event. Fight columns use color only to show the tagged winner.
+              Each row is one event. Only the latest 10 tagged fights are shown.
             </p>
           </section>
         </div>
