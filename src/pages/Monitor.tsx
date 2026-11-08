@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
@@ -60,6 +60,8 @@ const getTrend = (marks: WinnerMark[]) => {
 
 function Monitor() {
   const navigate = useNavigate()
+  const monitorRef = useRef<HTMLDivElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const { events, pairings, selectedEventId, setSelectedEventId } = useData()
 
   const context = useContext(TaggingContext)
@@ -114,8 +116,30 @@ function Monitor() {
         : 'Draw / Cancelled'
     : 'Waiting for tagged results'
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === monitorRef.current)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    handleFullscreenChange()
+
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+
+  const handleFullscreenToggle = async () => {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen()
+      return
+    }
+
+    if (monitorRef.current) {
+      await monitorRef.current.requestFullscreen()
+    }
+  }
+
   return (
-    <div className="monitor-screen">
+    <div className="monitor-screen" ref={monitorRef}>
       <header className="monitor-header">
         <div>
           <div className="monitor-brand">
@@ -125,7 +149,18 @@ function Monitor() {
               <span>Live Monitor</span>
             </div>
           </div>
-          <h1>{selectedEvent?.name || 'No event selected'}</h1>
+          <div className="monitor-event-title">
+            <h1>{selectedEvent?.name || 'No event selected'}</h1>
+            <button
+              type="button"
+              className="monitor-fullscreen-button"
+              onClick={() => void handleFullscreenToggle()}
+              aria-label={isFullscreen ? 'Exit full screen' : 'Open full screen'}
+              title={isFullscreen ? 'Exit full screen' : 'Open full screen'}
+            >
+              {isFullscreen ? 'Exit full screen' : 'Full screen'}
+            </button>
+          </div>
           <p>{selectedEvent ? new Date(selectedEvent.date).toLocaleDateString() : '-'}</p>
         </div>
         <div className="monitor-controls">

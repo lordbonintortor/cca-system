@@ -88,8 +88,6 @@ function Releasing() {
       try {
         setIsReleasing(true)
         await updateReleasedFight(selectedFightId, 'released')
-        setIsReleaseModalOpen(false)
-        setIsConfirmationModalOpen(true)
       } catch (error) {
         console.error('Error releasing fight:', error)
         alert('The fight was not released. Check the connection and try again.')
@@ -388,8 +386,13 @@ function Releasing() {
                 >
                   Print
                 </button>
-                <button className="btn-add" onClick={handleConfirmRelease} disabled={isReleasing}>
-                  {isReleasing ? 'Releasing...' : 'Release'}
+                <button
+                  className="btn-add"
+                  onClick={handleConfirmRelease}
+                  disabled={isReleasing || getReleaseStatus(selectedFightId) === 'released'}
+                  style={getReleaseStatus(selectedFightId) === 'released' ? { backgroundColor: '#4caf50' } : undefined}
+                >
+                  {isReleasing ? 'Releasing...' : getReleaseStatus(selectedFightId) === 'released' ? 'Released' : 'Release'}
                 </button>
               </div>
             </div>
