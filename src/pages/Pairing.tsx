@@ -81,8 +81,23 @@ function PairingPage() {
   const getMemberUsage = (member: Member) => memberUsageCounts.get(member.id) || 0
   const isMemberAvailable = (member: Member) => getMemberUsage(member) < Math.max(1, member.number_of_entries)
   const getSelectableMemberName = (member: Member) => {
-    const nextEntry = getMemberUsage(member) + 1
-    return `${member.entry_name} - Entry ${nextEntry}`
+    return getBaseEntryName(member.entry_name)
+  }
+  const getFightOptions = (member: Member) => {
+    const totalFights = Math.max(1, member.number_of_entries)
+    return Array.from({ length: totalFights }, (_, index) => {
+      const fightNumber = index + 1
+      return {
+        fightNumber,
+        label: `Fight ${fightNumber}`,
+        used: fightNumber <= getMemberUsage(member),
+      }
+    })
+  }
+  const getEntrySelectionKey = (member: Member, fightNumber: number) => `${member.id}:${fightNumber}`
+  const getMemberIdFromSelection = (selection: string) => selection.split(':')[0]
+  const getPairingEntryName = (member: Member, fightNumber: number) => {
+    return `${getBaseEntryName(member.entry_name)} - Fight ${fightNumber}`
   }
 
   const filteredMayronMembers = useMemo(() => {
@@ -121,8 +136,8 @@ function PairingPage() {
     const printWindow = existingPrintWindow ?? window.open('', '', 'height=800,width=600')
     if (!printWindow) return
 
-    const mayronEntry = mayronMember ? getBaseEntryName(mayronMember.entry_name) : 'N/A'
-    const walaEntry = walaMember ? getBaseEntryName(walaMember.entry_name) : 'N/A'
+    const mayronEntry = mayronMember ? getPairingEntryName(mayronMember, pairing.fight_number) : 'N/A'
+    const walaEntry = walaMember ? getPairingEntryName(walaMember, pairing.fight_number) : 'N/A'
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -316,13 +331,15 @@ function PairingPage() {
       return
     }
 
-    if (mayronEntry === walaEntry) {
+    const mayronMemberId = getMemberIdFromSelection(mayronEntry)
+    const walaMemberId = getMemberIdFromSelection(walaEntry)
+    if (mayronMemberId === walaMemberId) {
       alert('Fighters must be different')
       return
     }
 
-    const mayronMember = members.find((m) => String(m.id) === mayronEntry)
-    const walaMember = members.find((m) => String(m.id) === walaEntry)
+    const mayronMember = members.find((m) => String(m.id) === mayronMemberId)
+    const walaMember = members.find((m) => String(m.id) === walaMemberId)
     if (!mayronMember || !walaMember || !isMemberAvailable(mayronMember) || !isMemberAvailable(walaMember)) {
       alert('One of the selected entries is already used in this event')
       return
@@ -343,10 +360,10 @@ function PairingPage() {
     const newPairing: PairingRecord = {
       id: Date.now(),
       fight_number: nextFightNumber,
-      mayron_entry: shouldSwapStanding ? getSelectableMemberName(walaMember) : getSelectableMemberName(mayronMember),
+      mayron_entry: shouldSwapStanding ? getPairingEntryName(walaMember, nextFightNumber) : getPairingEntryName(mayronMember, nextFightNumber),
       mayron_entry_id: shouldSwapStanding ? walaMember?.id : mayronMember?.id,
       mayron_betting: shouldSwapStanding ? walaBetting : mayronBetting,
-      wala_entry: shouldSwapStanding ? getSelectableMemberName(mayronMember) : getSelectableMemberName(walaMember),
+      wala_entry: shouldSwapStanding ? getPairingEntryName(mayronMember, nextFightNumber) : getPairingEntryName(walaMember, nextFightNumber),
       wala_entry_id: shouldSwapStanding ? mayronMember?.id : walaMember?.id,
       wala_betting: shouldSwapStanding ? mayronBetting : walaBetting,
       diferencia: calculatedDiferencia,
@@ -472,9 +489,9 @@ function PairingPage() {
                 return (
                   <tr key={pairing.id}>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.fight_number}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{mayronMember ? getBaseEntryName(mayronMember.entry_name) : 'N/A'}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{mayronMember ? getPairingEntryName(mayronMember, pairing.fight_number) : 'N/A'}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.mayron_betting}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{walaMember ? getBaseEntryName(walaMember.entry_name) : 'N/A'}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{walaMember ? getPairingEntryName(walaMember, pairing.fight_number) : 'N/A'}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.wala_betting}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem', backgroundColor: '#f0fff0', fontWeight: 'bold' }}>₱{pairing.diferencia}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem', textAlign: 'center' }}>
@@ -546,41 +563,34 @@ function PairingPage() {
                             No members found
                           </div>
                         ) : (
-                          filteredMayronMembers.map((member) => (
-                            <div
-                              key={member.id}
-                              onPointerDown={(event) => {
-                                event.preventDefault()
-                                if (!isMemberAvailable(member)) return
-                                setMayronEntry(String(member.id))
-                                setMayronSearch(member.entry_name)
-                                setMayronDropdownOpen(false)
-                              }}
-                              style={{
-                                padding: '0.6rem 1rem',
-                                cursor: isMemberAvailable(member) ? 'pointer' : 'not-allowed',
-                                backgroundColor: mayronEntry === String(member.id) ? '#e3f2fd' : 'transparent',
-                                color: isMemberAvailable(member) ? '#333' : '#ccc',
-                                borderBottom: '1px solid #f0f0f0',
-                                fontSize: '0.9rem',
-                                transition: 'background-color 0.1s'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (isMemberAvailable(member)) {
-                                  e.currentTarget.style.backgroundColor = '#f5f5f5'
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (mayronEntry === String(member.id)) {
-                                  e.currentTarget.style.backgroundColor = '#e3f2fd'
-                                } else {
-                                  e.currentTarget.style.backgroundColor = 'transparent'
-                                }
-                              }}
-                            >
-                              {getSelectableMemberName(member)}{isMemberAvailable(member) ? '' : ' (used)'}
-                            </div>
-                          ))
+                          filteredMayronMembers.flatMap((member) => {
+                            return getFightOptions(member).map(({ fightNumber, label, used }) => {
+                                const selectionKey = getEntrySelectionKey(member, fightNumber)
+                                return (
+                                  <div
+                                    key={selectionKey}
+                                    onPointerDown={(event) => {
+                                      event.preventDefault()
+                                      if (used) return
+                                      setMayronEntry(selectionKey)
+                                      setMayronSearch(`${getSelectableMemberName(member)} - ${label}`)
+                                      setMayronDropdownOpen(false)
+                                    }}
+                                    style={{
+                                      padding: '0.6rem 1rem',
+                                      cursor: used ? 'not-allowed' : 'pointer',
+                                      backgroundColor: mayronEntry === selectionKey ? '#e3f2fd' : 'transparent',
+                                      color: used ? '#ccc' : '#333',
+                                      borderBottom: '1px solid #f0f0f0',
+                                      fontSize: '0.9rem',
+                                      transition: 'background-color 0.1s'
+                                    }}
+                                  >
+                                    {getSelectableMemberName(member)} - {label}{used ? ' (used)' : ''}
+                                  </div>
+                                )
+                            })
+                          })
                         )}
                       </div>
                     )}
@@ -617,41 +627,34 @@ function PairingPage() {
                             No members found
                           </div>
                         ) : (
-                          filteredWalaMembers.map((member) => (
-                            <div
-                              key={member.id}
-                              onPointerDown={(event) => {
-                                event.preventDefault()
-                                if (!isMemberAvailable(member)) return
-                                setWalaEntry(String(member.id))
-                                setWalaSearch(member.entry_name)
-                                setWalaDropdownOpen(false)
-                              }}
-                              style={{
-                                padding: '0.6rem 1rem',
-                                cursor: isMemberAvailable(member) ? 'pointer' : 'not-allowed',
-                                backgroundColor: walaEntry === String(member.id) ? '#e3f2fd' : 'transparent',
-                                color: isMemberAvailable(member) ? '#333' : '#ccc',
-                                borderBottom: '1px solid #f0f0f0',
-                                fontSize: '0.9rem',
-                                transition: 'background-color 0.1s'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (isMemberAvailable(member)) {
-                                  e.currentTarget.style.backgroundColor = '#f5f5f5'
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (walaEntry === String(member.id)) {
-                                  e.currentTarget.style.backgroundColor = '#e3f2fd'
-                                } else {
-                                  e.currentTarget.style.backgroundColor = 'transparent'
-                                }
-                              }}
-                            >
-                              {getSelectableMemberName(member)}{isMemberAvailable(member) ? '' : ' (used)'}
-                            </div>
-                          ))
+                          filteredWalaMembers.flatMap((member) => {
+                            return getFightOptions(member).map(({ fightNumber, label, used }) => {
+                                const selectionKey = getEntrySelectionKey(member, fightNumber)
+                                return (
+                                  <div
+                                    key={selectionKey}
+                                    onPointerDown={(event) => {
+                                      event.preventDefault()
+                                      if (used) return
+                                      setWalaEntry(selectionKey)
+                                      setWalaSearch(`${getSelectableMemberName(member)} - ${label}`)
+                                      setWalaDropdownOpen(false)
+                                    }}
+                                    style={{
+                                      padding: '0.6rem 1rem',
+                                      cursor: used ? 'not-allowed' : 'pointer',
+                                      backgroundColor: walaEntry === selectionKey ? '#e3f2fd' : 'transparent',
+                                      color: used ? '#ccc' : '#333',
+                                      borderBottom: '1px solid #f0f0f0',
+                                      fontSize: '0.9rem',
+                                      transition: 'background-color 0.1s'
+                                    }}
+                                  >
+                                    {getSelectableMemberName(member)} - {label}{used ? ' (used)' : ''}
+                                  </div>
+                                )
+                            })
+                          })
                         )}
                       </div>
                     )}

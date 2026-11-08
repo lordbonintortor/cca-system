@@ -282,7 +282,9 @@ export const createPairing = async (pairing: {
 export const updatePairingBetting = async (
   id: number,
   pairing: {
+    mayron_entry_id: number
     mayron_betting: string
+    wala_entry_id: number
     wala_betting: string
     diferencia: string
   }

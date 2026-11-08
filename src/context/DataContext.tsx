@@ -108,7 +108,7 @@ interface DataContextType {
   addPairing: (pairing: Omit<Pairing, 'id'>) => Promise<void>
   updatePairingBettingData: (
     id: number,
-    pairing: Pick<Pairing, 'mayron_betting' | 'wala_betting' | 'diferencia'>
+    pairing: Pick<Pairing, 'mayron_entry_id' | 'mayron_betting' | 'wala_entry_id' | 'wala_betting' | 'diferencia'>
   ) => Promise<void>
   addRaffleWinner: (winner: Omit<RaffleWinner, 'id'>) => Promise<void>
   
@@ -366,11 +366,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updatePairingBettingData = async (
     id: number,
-    pairing: Pick<Pairing, 'mayron_betting' | 'wala_betting' | 'diferencia'>
+    pairing: Pick<Pairing, 'mayron_entry_id' | 'mayron_betting' | 'wala_entry_id' | 'wala_betting' | 'diferencia'>
   ) => {
     try {
       await updatePairingBetting(id, {
+        mayron_entry_id: pairing.mayron_entry_id,
         mayron_betting: pairing.mayron_betting,
+        wala_entry_id: pairing.wala_entry_id,
         wala_betting: pairing.wala_betting,
         diferencia: pairing.diferencia,
       })

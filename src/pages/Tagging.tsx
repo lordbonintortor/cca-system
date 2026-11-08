@@ -99,12 +99,34 @@ function Tagging() {
 
     try {
       setIsSavingBetting(true)
+      const pairing = pairings.find((currentPairing) => currentPairing.id === selectedFightId)
+      if (!pairing) {
+        alert('Could not find the selected pairing')
+        return
+      }
+
+      const mayronAmount = Number(mayronBetting.replace(/,/g, ''))
+      const walaAmount = Number(walaBetting.replace(/,/g, ''))
+      if (!Number.isFinite(mayronAmount) || !Number.isFinite(walaAmount) || mayronAmount < 0 || walaAmount < 0) {
+        alert('Please enter valid betting amounts')
+        return
+      }
+
+      const shouldSwapSides = walaAmount > mayronAmount
       await updatePairingBettingData(selectedFightId, {
-        mayron_betting: mayronBetting,
-        wala_betting: walaBetting,
+        mayron_entry_id: shouldSwapSides ? pairing.wala_entry_id : pairing.mayron_entry_id,
+        mayron_betting: shouldSwapSides ? walaBetting : mayronBetting,
+        wala_entry_id: shouldSwapSides ? pairing.mayron_entry_id : pairing.wala_entry_id,
+        wala_betting: shouldSwapSides ? mayronBetting : walaBetting,
         diferencia: editedDiferencia,
       })
-      setBettingSaveMessage('Updated betting amounts have been saved.')
+      if (shouldSwapSides) {
+        setMayronBetting(walaBetting)
+        setWalaBetting(mayronBetting)
+      }
+      setBettingSaveMessage(shouldSwapSides
+        ? 'Betting amounts saved. The higher bet is now Mayron.'
+        : 'Updated betting amounts have been saved.')
     } catch (error) {
       console.error('Error updating betting amounts:', error)
       alert('Failed to update betting amounts')
@@ -294,8 +316,8 @@ function Tagging() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.7rem' }}>
-                      <div style={{ padding: '0.75rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.55rem' }}>
+                      <div style={{ padding: '0.5rem 0.65rem', backgroundColor: '#f9f9f9', borderRadius: '6px', border: '1px solid #e0e0e0' }}>
                         <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.45rem', color: '#333', textAlign: 'center' }}>MAYRON</h4>
                         <div style={{ marginBottom: '0.45rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
@@ -317,7 +339,7 @@ function Tagging() {
                         </div>
                       </div>
 
-                      <div style={{ padding: '0.75rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                      <div style={{ padding: '0.5rem 0.65rem', backgroundColor: '#f9f9f9', borderRadius: '6px', border: '1px solid #e0e0e0' }}>
                         <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.45rem', color: '#333', textAlign: 'center' }}>WALA</h4>
                         <div style={{ marginBottom: '0.45rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
@@ -355,9 +377,9 @@ function Tagging() {
                       </p>
                     )}
 
-                    <div style={{ padding: '0.6rem 1rem', backgroundColor: '#f0fff0', borderRadius: '8px', border: '2px solid #4caf50', textAlign: 'center', marginBottom: '0.7rem' }}>
+                    <div style={{ padding: '0.35rem 1rem', backgroundColor: '#f0fff0', borderRadius: '6px', border: '2px solid #4caf50', textAlign: 'center', marginBottom: '0.55rem' }}>
                       <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Diferencia</p>
-                      <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4caf50' }}>₱{editedDiferencia || '0'}</p>
+                      <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4caf50', margin: 0 }}>₱{editedDiferencia || '0'}</p>
                     </div>
 
                     {tag?.outcomeWinner && (
