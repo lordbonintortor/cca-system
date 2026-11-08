@@ -140,7 +140,11 @@ function Results() {
           totalWins: row.fights.filter(mark => mark === 'W').length,
           firstFightNumber: row.firstFightNumber
         }))
-      .sort((a, b) => a.firstFightNumber - b.firstFightNumber || a.entryName.localeCompare(b.entryName))
+      .sort((a, b) => (
+        b.totalWins - a.totalWins ||
+        a.firstFightNumber - b.firstFightNumber ||
+        a.entryName.localeCompare(b.entryName)
+      ))
   }, [events, members, pairings, selectedEventId, taggedFights])
 
   const handlePrint = () => {
