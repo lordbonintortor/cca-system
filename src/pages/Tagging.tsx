@@ -16,6 +16,7 @@ function Tagging() {
   const [isSavingBetting, setIsSavingBetting] = useState(false)
   const [isSavingOutcome, setIsSavingOutcome] = useState(false)
   const [bettingSaveMessage, setBettingSaveMessage] = useState('')
+  const [showCloseConfirmation, setShowCloseConfirmation] = useState(false)
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -30,14 +31,16 @@ function Tagging() {
   const eventPairings = useMemo(() => {
     return pairings
       .filter((p) => p.event_id === Number(selectedEventId))
-      .sort((a, b) => b.fight_number - a.fight_number)
+      .sort((a, b) => a.fight_number - b.fight_number)
   }, [pairings, selectedEventId])
 
   const handleTagFight = (pairingId: number) => {
     const pairing = pairings.find(p => p.id === pairingId)
+    const existingTag = taggedFights.find(t => t.pairingId === pairingId)
     setMayronBetting(pairing?.mayron_betting || '')
     setWalaBetting(pairing?.wala_betting || '')
     setBettingSaveMessage('')
+    setShowCloseConfirmation(Boolean(existingTag?.outcomeWinner))
     setSelectedFightId(pairingId)
     setIsOutcomeModalOpen(true)
   }
@@ -83,6 +86,7 @@ function Tagging() {
     setMayronBetting('')
     setWalaBetting('')
     setBettingSaveMessage('')
+    setShowCloseConfirmation(false)
   }
 
   const handleSaveBetting = async () => {
@@ -127,10 +131,11 @@ function Tagging() {
           }
           await updateTaggedFight(updatedTag)
         }
-        setIsOutcomeModalOpen(false)
-        setSelectedFightId(null)
-        setMayronBetting('')
-        setWalaBetting('')
+        if (outcome === 'winner') {
+          setShowCloseConfirmation(true)
+        } else {
+          handleCloseOutcomeModal()
+        }
       } catch (error) {
         console.error('Error saving fight outcome:', error)
         alert('The fight outcome was not saved. Check the connection and try again.')
@@ -257,13 +262,13 @@ function Tagging() {
 
       {isOutcomeModalOpen && selectedFightId && (
         <div className="modal-overlay" onClick={handleCloseOutcomeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" style={{ width: 'calc(100vw - 2rem)', maxWidth: '1100px', maxHeight: '96vh' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Fight Details & Tagging</h2>
               <button className="modal-close" onClick={handleCloseOutcomeModal}>×</button>
             </div>
             
-            <div className="modal-body" style={{ padding: '2rem', maxHeight: 'calc(100vh - 250px)', overflowY: 'auto' }}>
+            <div className="modal-body" style={{ padding: '0.75rem 1.25rem', overflow: 'hidden' }}>
               {(() => {
                 const pairing = pairings.find(p => p.id === selectedFightId)
                 const tag = taggedFights.find(t => t.pairingId === selectedFightId)
@@ -273,31 +278,28 @@ function Tagging() {
                 const walaEntry = walaMember?.entry_name || 'N/A'
                 return pairing ? (
                   <>
-                    <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                      <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#2196F3', fontWeight: 'bold' }}>Fight #{pairing.fight_number}</h3>
+                    <div style={{ marginBottom: '0.7rem', textAlign: 'center' }}>
+                      <h3 style={{ fontSize: '1.2rem', marginBottom: '0.2rem', color: '#2196F3', fontWeight: 'bold' }}>Fight #{pairing.fight_number}</h3>
                       <div style={{
                         display: 'inline-block',
-                        padding: '0.5rem 1rem',
+                        padding: '0.3rem 0.75rem',
                         backgroundColor: getStatusBadgeColor(tag?.status || 'pending'),
                         color: (tag?.status || 'pending') === 'pending' ? '#333' : '#fff',
                         borderRadius: '4px',
                         fontWeight: '600',
-                        fontSize: '0.9rem',
-                        marginTop: '0.5rem'
+                        fontSize: '0.8rem',
+                        marginTop: '0.25rem'
                       }}>
                         {tag ? (tag.status === 'pending' ? 'Pending' : tag.status === 'tagged' ? 'Tagged' : 'Completed') : 'Pending'}
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-                      <div style={{ padding: '1.5rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                        <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1.2rem', color: '#333', textAlign: 'center' }}>MAYRON</h4>
-                        <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.7rem' }}>
+                      <div style={{ padding: '0.75rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.45rem', color: '#333', textAlign: 'center' }}>MAYRON</h4>
+                        <div style={{ marginBottom: '0.45rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
                           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{mayronEntry}</p>
-                        </div>
-                        <div style={{ marginBottom: '1rem' }}>
-
                         </div>
                         <div>
                           <label htmlFor="taggingMayronBetting" style={{ display: 'block', fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting Amount</label>
@@ -315,14 +317,11 @@ function Tagging() {
                         </div>
                       </div>
 
-                      <div style={{ padding: '1.5rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                        <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1.2rem', color: '#333', textAlign: 'center' }}>WALA</h4>
-                        <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ padding: '0.75rem', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                        <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.45rem', color: '#333', textAlign: 'center' }}>WALA</h4>
+                        <div style={{ marginBottom: '0.45rem' }}>
                           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Entry</p>
                           <p style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>{walaEntry}</p>
-                        </div>
-                        <div style={{ marginBottom: '1rem' }}>
-
                         </div>
                         <div>
                           <label htmlFor="taggingWalaBetting" style={{ display: 'block', fontSize: '0.85rem', color: '#666', marginBottom: '0.3rem', fontWeight: '500' }}>Betting Amount</label>
@@ -341,13 +340,13 @@ function Tagging() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
                       <button
                         className="btn-add"
                         onClick={handleSaveBetting}
                         disabled={isSavingBetting}
                       >
-                        {isSavingBetting ? 'Saving...' : 'Save Betting Amounts'}
+                        {isSavingBetting ? 'Saving...' : 'Save Betting'}
                       </button>
                     </div>
                     {bettingSaveMessage && (
@@ -356,28 +355,55 @@ function Tagging() {
                       </p>
                     )}
 
-                    <div style={{ padding: '1.5rem', backgroundColor: '#f0fff0', borderRadius: '8px', border: '2px solid #4caf50', textAlign: 'center', marginBottom: '2rem' }}>
+                    <div style={{ padding: '0.6rem 1rem', backgroundColor: '#f0fff0', borderRadius: '8px', border: '2px solid #4caf50', textAlign: 'center', marginBottom: '0.7rem' }}>
                       <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Diferencia</p>
-                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4caf50' }}>₱{editedDiferencia || '0'}</p>
+                      <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4caf50' }}>₱{editedDiferencia || '0'}</p>
                     </div>
+
+                    {tag?.outcomeWinner && (
+                      (() => {
+                        const winningBetting = tag.outcomeWinner === 'mayron' ? mayronBetting : walaBetting
+                        const parada = Number(winningBetting.replace(/,/g, ''))
+                        const plasada = parada * 0.11
+                        const largada = 500
+                        const net = parada - plasada - largada
+                        const formatCurrency = (value: number) => value.toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+
+                        return Number.isFinite(parada) ? (
+                          <div style={{ padding: '0.6rem 0.75rem', backgroundColor: '#f0f8ff', borderRadius: '8px', border: '2px solid #2196F3', marginBottom: '0.7rem' }}>
+                            <h4 style={{ margin: '0 0 0.4rem', textAlign: 'center', color: '#1565c0', fontSize: '0.95rem' }}>Winning Bet Calculation</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '0.5rem', color: '#333', alignItems: 'center', textAlign: 'center', fontSize: '0.85rem' }}>
+                              <p style={{ margin: 0 }}>Winner: <strong>{tag.outcomeWinner === 'mayron' ? 'MAYRON' : 'WALA'}</strong></p>
+                              <p style={{ margin: 0 }}>PARADA: <strong>₱{formatCurrency(parada)}</strong></p>
+                              <p style={{ margin: 0 }}>PLASADA 11%: <strong>(₱{formatCurrency(plasada)})</strong></p>
+                              <p style={{ margin: 0 }}>LARGADA: <strong>(₱{formatCurrency(largada)})</strong></p>
+                              <p style={{ margin: 0, paddingTop: '0.25rem', borderTop: '1px solid #90caf9' }}>NET: <strong>₱{formatCurrency(net)}</strong></p>
+                            </div>
+                          </div>
+                        ) : null
+                      })()
+                    )}
 
                     {!tag || tag.status !== 'tagged' ? (
                       <>
                         <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#333', textAlign: 'center' }}>
                           {tag ? 'Change Winner' : 'Select Winner'}
                         </h4>
-                        <div style={{ marginBottom: '2rem' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div style={{ marginBottom: '0.75rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '0.6rem' }}>
                             <button
                               onClick={() => handleOutcomeSelect('winner', 'mayron')}
                               disabled={isSavingOutcome}
                               style={{
-                                padding: '1rem',
+                                padding: '0.55rem 0.75rem',
                                 backgroundColor: '#e3f2fd',
                                 border: '2px solid #2196F3',
                                 borderRadius: '5px',
                                 cursor: 'pointer',
-                                fontSize: '0.9rem',
+                                fontSize: '0.8rem',
                                 fontWeight: '600',
                                 color: '#2196F3',
                                 transition: 'all 0.2s'
@@ -391,12 +417,12 @@ function Tagging() {
                               onClick={() => handleOutcomeSelect('winner', 'wala')}
                               disabled={isSavingOutcome}
                               style={{
-                                padding: '1rem',
+                                padding: '0.55rem 0.75rem',
                                 backgroundColor: '#e3f2fd',
                                 border: '2px solid #2196F3',
                                 borderRadius: '5px',
                                 cursor: 'pointer',
-                                fontSize: '0.9rem',
+                                fontSize: '0.8rem',
                                 fontWeight: '600',
                                 color: '#2196F3',
                                 transition: 'all 0.2s'
@@ -410,12 +436,12 @@ function Tagging() {
                               onClick={() => handleOutcomeSelect('draw')}
                               disabled={isSavingOutcome}
                               style={{
-                                padding: '1rem',
+                                padding: '0.55rem 0.75rem',
                                 backgroundColor: '#fff3e0',
                                 border: '2px solid #ff9800',
                                 borderRadius: '5px',
                                 cursor: 'pointer',
-                                fontSize: '0.9rem',
+                                fontSize: '0.8rem',
                                 fontWeight: '600',
                                 color: '#ff9800',
                                 transition: 'all 0.2s'
@@ -429,12 +455,12 @@ function Tagging() {
                               onClick={() => handleOutcomeSelect('cancelled')}
                               disabled={isSavingOutcome}
                               style={{
-                                padding: '1rem',
+                                padding: '0.55rem 0.75rem',
                                 backgroundColor: '#ffebee',
                                 border: '2px solid #f44336',
                                 borderRadius: '5px',
                                 cursor: 'pointer',
-                                fontSize: '0.9rem',
+                                fontSize: '0.8rem',
                                 fontWeight: '600',
                                 color: '#f44336',
                                 transition: 'all 0.2s'
@@ -452,8 +478,8 @@ function Tagging() {
                         <p style={{ fontSize: '0.9rem', color: '#333', fontWeight: '600', marginBottom: '0.5rem' }}>
                           OUTCOME
                         </p>
-                        <div style={{ padding: '1.5rem', backgroundColor: '#e8f5e9', borderRadius: '8px' }}>
-                          <p style={{ fontSize: '1rem', fontWeight: '600', color: '#2e7d32', margin: '0' }}>
+                        <div style={{ padding: '0.75rem', backgroundColor: '#e8f5e9', borderRadius: '8px' }}>
+                          <p style={{ fontWeight: '600', color: '#2e7d32', margin: '0', fontSize: '0.9rem' }}>
                             Winner: {tag.outcome === 'draw' ? 'DRAW' : tag.outcome === 'cancelled' ? 'CANCELLED' : `${tag.outcomeWinner === 'mayron' ? 'MAYRON' : 'WALA'}`}
                           </p>
                         </div>
@@ -464,13 +490,20 @@ function Tagging() {
               })()}
             </div>
 
-            <div className="modal-footer">
+            <div className="modal-footer" style={{ padding: '0.6rem 1rem', gap: '0.6rem' }}>
               {(() => {
                 const tag = taggedFights.find(t => t.pairingId === selectedFightId)
                 return tag ? (
-                  <button className="btn-cancel" onClick={handleResetFight} disabled={isSavingOutcome}>
-                    {isSavingOutcome ? 'Saving...' : 'Reset'}
-                  </button>
+                  <>
+                    <button className="btn-cancel" onClick={handleResetFight} disabled={isSavingOutcome}>
+                      {isSavingOutcome ? 'Saving...' : 'Reset'}
+                    </button>
+                    {tag.outcomeWinner && showCloseConfirmation && (
+                      <button className="btn-add" onClick={handleCloseOutcomeModal} disabled={isSavingOutcome}>
+                        Confirm & Close
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <button className="btn-cancel" onClick={handleCloseOutcomeModal}>Close</button>
                 )

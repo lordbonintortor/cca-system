@@ -57,7 +57,7 @@ function Releasing() {
         const pairing = pairings.find(p => p.id === t.pairingId)
         return pairing?.event_id === Number(selectedEventId)
       })
-      .sort((a, b) => b.fightNumber - a.fightNumber)
+      .sort((a, b) => a.fightNumber - b.fightNumber)
   }, [taggedFights, pairings, selectedEventId])
 
   const getReleaseStatus = (pairingId: number): 'unreleased' | 'released' | 'special' => {
