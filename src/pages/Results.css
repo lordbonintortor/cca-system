@@ -34,6 +34,19 @@
   background-color: #256b2b;
 }
 
+.results-export-button {
+  background-color: #1565c0;
+}
+
+.results-export-button:hover {
+  background-color: #0d47a1;
+}
+
+.results-export-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .results-table-wrapper {
   margin-top: 1rem;
 }

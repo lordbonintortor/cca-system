@@ -5,9 +5,11 @@ import type { Event, Pairing, Member } from '../context/DataContext'
 interface PairingRecord {
   id: number
   fight_number: number
+  mayron_fight_number: number
   mayron_entry: string
   mayron_entry_id?: number
   mayron_betting: string
+  wala_fight_number: number
   wala_entry: string
   wala_entry_id?: number
   wala_betting: string
@@ -79,13 +81,13 @@ function PairingPage() {
   }, [eventPairings])
 
   const getMemberUsage = (member: Member) => memberUsageCounts.get(member.id) || 0
-  const isMemberAvailable = (member: Member) => getMemberUsage(member) < Math.max(1, member.number_of_entries)
+  const eventFightLimit = Math.max(1, Number(selectedEvent?.derby_info.match(/(\d+)\s*per\s*Entry/i)?.[1]) || 1)
+  const isMemberAvailable = (member: Member) => getMemberUsage(member) < eventFightLimit
   const getSelectableMemberName = (member: Member) => {
     return getBaseEntryName(member.entry_name)
   }
   const getFightOptions = (member: Member) => {
-    const totalFights = Math.max(1, member.number_of_entries)
-    return Array.from({ length: totalFights }, (_, index) => {
+    return Array.from({ length: eventFightLimit }, (_, index) => {
       const fightNumber = index + 1
       return {
         fightNumber,
@@ -96,8 +98,23 @@ function PairingPage() {
   }
   const getEntrySelectionKey = (member: Member, fightNumber: number) => `${member.id}:${fightNumber}`
   const getMemberIdFromSelection = (selection: string) => selection.split(':')[0]
+  const getFightNumberFromSelection = (selection: string) => Number(selection.split(':')[1])
   const getPairingEntryName = (member: Member, fightNumber: number) => {
     return `${getBaseEntryName(member.entry_name)} - Fight ${fightNumber}`
+  }
+  const getMemberFightNumber = (memberId: number, pairingId: number) => {
+    let fightNumber = 0
+
+    for (const pairing of eventPairings) {
+      if (pairing.mayron_entry_id === memberId || pairing.wala_entry_id === memberId) {
+        fightNumber += 1
+      }
+      if (pairing.id === pairingId) {
+        return fightNumber
+      }
+    }
+
+    return (memberUsageCounts.get(memberId) || 0) + 1
   }
 
   const filteredMayronMembers = useMemo(() => {
@@ -136,8 +153,12 @@ function PairingPage() {
     const printWindow = existingPrintWindow ?? window.open('', '', 'height=800,width=600')
     if (!printWindow) return
 
-    const mayronEntry = mayronMember ? getPairingEntryName(mayronMember, pairing.fight_number) : 'N/A'
-    const walaEntry = walaMember ? getPairingEntryName(walaMember, pairing.fight_number) : 'N/A'
+    const mayronEntry = mayronMember
+      ? getPairingEntryName(mayronMember, getMemberFightNumber(mayronMember.id, pairing.id))
+      : 'N/A'
+    const walaEntry = walaMember
+      ? getPairingEntryName(walaMember, getMemberFightNumber(walaMember.id, pairing.id))
+      : 'N/A'
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -340,6 +361,8 @@ function PairingPage() {
 
     const mayronMember = members.find((m) => String(m.id) === mayronMemberId)
     const walaMember = members.find((m) => String(m.id) === walaMemberId)
+    const mayronFightNumber = getFightNumberFromSelection(mayronEntry)
+    const walaFightNumber = getFightNumberFromSelection(walaEntry)
     if (!mayronMember || !walaMember || !isMemberAvailable(mayronMember) || !isMemberAvailable(walaMember)) {
       alert('One of the selected entries is already used in this event')
       return
@@ -360,10 +383,12 @@ function PairingPage() {
     const newPairing: PairingRecord = {
       id: Date.now(),
       fight_number: nextFightNumber,
-      mayron_entry: shouldSwapStanding ? getPairingEntryName(walaMember, nextFightNumber) : getPairingEntryName(mayronMember, nextFightNumber),
+      mayron_fight_number: shouldSwapStanding ? walaFightNumber : mayronFightNumber,
+      mayron_entry: shouldSwapStanding ? getPairingEntryName(walaMember, walaFightNumber) : getPairingEntryName(mayronMember, mayronFightNumber),
       mayron_entry_id: shouldSwapStanding ? walaMember?.id : mayronMember?.id,
       mayron_betting: shouldSwapStanding ? walaBetting : mayronBetting,
-      wala_entry: shouldSwapStanding ? getPairingEntryName(mayronMember, nextFightNumber) : getPairingEntryName(walaMember, nextFightNumber),
+      wala_fight_number: shouldSwapStanding ? mayronFightNumber : walaFightNumber,
+      wala_entry: shouldSwapStanding ? getPairingEntryName(mayronMember, mayronFightNumber) : getPairingEntryName(walaMember, walaFightNumber),
       wala_entry_id: shouldSwapStanding ? mayronMember?.id : walaMember?.id,
       wala_betting: shouldSwapStanding ? mayronBetting : walaBetting,
       diferencia: calculatedDiferencia,
@@ -489,9 +514,9 @@ function PairingPage() {
                 return (
                   <tr key={pairing.id}>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{pairing.fight_number}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{mayronMember ? getPairingEntryName(mayronMember, pairing.fight_number) : 'N/A'}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{mayronMember ? getPairingEntryName(mayronMember, getMemberFightNumber(mayronMember.id, pairing.id)) : 'N/A'}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.mayron_betting}</td>
-                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{walaMember ? getPairingEntryName(walaMember, pairing.fight_number) : 'N/A'}</td>
+                    <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>{walaMember ? getPairingEntryName(walaMember, getMemberFightNumber(walaMember.id, pairing.id)) : 'N/A'}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem' }}>₱{pairing.wala_betting}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem', backgroundColor: '#f0fff0', fontWeight: 'bold' }}>₱{pairing.diferencia}</td>
                     <td style={{ padding: '0.6rem', fontSize: '0.75rem', textAlign: 'center' }}>

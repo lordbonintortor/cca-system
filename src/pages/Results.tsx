@@ -52,7 +52,7 @@ function Results() {
   if (!context) {
     throw new Error('Results must be used within TaggingProvider')
   }
-  const { taggedFights } = context
+  const { taggedFights, releasedFights } = context
 
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => b.id - a.id)
@@ -126,9 +126,14 @@ function Results() {
           fights: Array.from({ length: getRequiredFightCount(event) }, () => '-'),
           firstFightNumber: Number.MAX_SAFE_INTEGER
         }
-        const targetIndex = Math.min(Math.max(entryGroup.entryNumber - 1, 0), existing.fights.length - 1)
-        existing.fights[targetIndex] = memberFights[0].mark
-        existing.firstFightNumber = Math.min(existing.firstFightNumber, memberFights[0].fightNumber)
+        memberFights.forEach((memberFight, fightIndex) => {
+          const targetIndex = memberFights.length === 1
+            ? Math.min(Math.max(entryGroup.entryNumber - 1, 0), existing.fights.length - 1)
+            : Math.min(fightIndex, existing.fights.length - 1)
+
+          existing.fights[targetIndex] = memberFight.mark
+          existing.firstFightNumber = Math.min(existing.firstFightNumber, memberFight.fightNumber)
+        })
         rowsByEntry.set(entryGroup.baseName, existing)
       })
 
@@ -200,6 +205,44 @@ function Results() {
     }
   }
 
+  const handleExportBackup = () => {
+    if (!selectedEvent) {
+      alert('Select an event before exporting a backup.')
+      return
+    }
+
+    const eventMembers = members.filter(member => (
+      member.event_id === selectedEvent.id ||
+      member.event_name === selectedEvent.name
+    ))
+    const eventPairings = pairings
+      .filter(pairing => pairing.event_id === selectedEvent.id)
+      .sort((a, b) => a.fight_number - b.fight_number)
+    const pairingIds = new Set(eventPairings.map(pairing => pairing.id))
+    const backup = {
+      format: 'Calinan Cockpit Arena event backup',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      event: selectedEvent,
+      members: eventMembers,
+      pairings: eventPairings,
+      taggedFights: taggedFights.filter(fight => pairingIds.has(fight.pairingId)),
+      releasedFights: releasedFights.filter(fight => pairingIds.has(fight.pairingId)),
+      results: eventResults
+    }
+    const fileName = `${selectedEvent.name}-${selectedEvent.date.slice(0, 10)}`
+      .replace(/[^a-z0-9]+/gi, '-')
+      .replace(/^-|-$/g, '')
+      .toLowerCase()
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    const downloadUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `${fileName || 'event'}-backup.json`
+    link.click()
+    URL.revokeObjectURL(downloadUrl)
+  }
+
   return (
     <div className="page-content">
       <div className="page-main">
@@ -223,6 +266,13 @@ function Results() {
           </div>
           <button className="btn-add-event results-print-button" onClick={handlePrint}>
             Print Results
+          </button>
+          <button
+            className="btn-add-event results-export-button"
+            onClick={handleExportBackup}
+            disabled={!selectedEvent}
+          >
+            Export Backup
           </button>
         </div>
 

@@ -23,7 +23,7 @@ function Registration() {
   const [registrationDate, setRegistrationDate] = useState('')
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [pendingMembers, setPendingMembers] = useState<Member[]>([])
-  const itemsPerPage = 10
+  const itemsPerPage = 15
 
   const getTodayInPhilippines = () => {
     const parts = new Intl.DateTimeFormat('en-CA', {
@@ -276,7 +276,6 @@ function Registration() {
               <tr>
                 <th>Entry Number</th>
                 <th>Entry Name</th>
-                <th>Pairing Entries</th>
                 <th>Event Name</th>
                 <th>Registration Date</th>
               </tr>
@@ -286,7 +285,6 @@ function Registration() {
                 <tr key={member.id}>
                   <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td>{member.entry_name}</td>
-                  <td>{member.number_of_entries}</td>
                   <td>{member.event_name}</td>
                   <td>{formatDate(member.registration_date)}</td>
                 </tr>
@@ -361,19 +359,6 @@ function Registration() {
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="numberOfEntries">No. of Entries</label>
-                <input
-                  id="numberOfEntries"
-                  type="number"
-                  className="form-input"
-                  placeholder="—"
-                  value={numberOfEntries}
-                  disabled
-                  readOnly
-                  required
-                />
-              </div>
-              <div className="form-group">
                 <label htmlFor="registrationDate">Registration Date <span className="required-asterisk">*</span></label>
                 <input
                   id="registrationDate"
@@ -408,15 +393,9 @@ function Registration() {
                 <p style={{ fontSize: '1.2rem', fontWeight: '600', color: '#333' }}>{entryName}</p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
-                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Name</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{eventName}</p>
-                </div>
-                <div style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px', border: '1px solid #e0e0e0' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Number of Entries</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{numberOfEntries}</p>
-                </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Event Name</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{eventName}</p>
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
@@ -426,7 +405,7 @@ function Registration() {
 
               <div style={{ padding: '1rem', backgroundColor: '#f0f8ff', borderRadius: '5px', border: '2px solid #2196F3' }}>
                 <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Registration to be created</p>
-                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2196F3' }}>1 registration ({numberOfEntries} pairing entries)</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2196F3' }}>1 registration</p>
                 <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#555' }}>
                   {pendingMembers.map((member, idx) => (
                     <div key={idx} style={{ marginBottom: '0.5rem' }}>• {member.entry_name}</div>

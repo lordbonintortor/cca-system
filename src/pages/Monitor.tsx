@@ -27,7 +27,7 @@ const getTrend = (marks: WinnerMark[]) => {
     return {
       pattern: latestFive.join('-') || '-',
       trend: 'No clear trend',
-      lean: 'Hindi pa klaro'
+      lean: 'Not clear yet'
     }
   }
 
@@ -38,7 +38,7 @@ const getTrend = (marks: WinnerMark[]) => {
   if (isStreak) {
     return {
       pattern: latestFive.join('-'),
-      trend: latest === 'M' ? 'Mayron streak' : 'Wala streak',
+      trend: latest === 'M' ? 'Mayron winning streak' : 'Wala winning streak',
       lean: latest === 'M' ? 'Mayron' : 'Wala'
     }
   }
@@ -54,7 +54,7 @@ const getTrend = (marks: WinnerMark[]) => {
   return {
     pattern: latestFive.join('-'),
     trend: 'No clear trend',
-    lean: 'Hindi pa klaro'
+    lean: 'Not clear yet'
   }
 }
 
@@ -237,7 +237,7 @@ function Monitor() {
           <strong>{trend.trend}</strong>
         </div>
         <div>
-          <span>Posibleng Sunod</span>
+          <span>Possible Next</span>
           <strong>{trend.lean}</strong>
         </div>
       </section>

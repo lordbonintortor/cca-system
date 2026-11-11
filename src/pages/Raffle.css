@@ -1,3 +1,55 @@
+.raffle-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1000px;
+  padding: 1.25rem 1.5rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff8e1 0%, #fff 58%, #e8f5e9 100%);
+  border: 1px solid #f0dfb0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.raffle-page-heading h1 {
+  margin: 0.2rem 0 0.35rem;
+}
+
+.raffle-page-heading p {
+  margin: 0;
+  color: #667085;
+}
+
+.raffle-eyebrow {
+  color: #c77700;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.raffle-event-badge {
+  min-width: 190px;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  text-align: right;
+}
+
+.raffle-event-badge span,
+.raffle-table-heading small {
+  display: block;
+  color: #667085;
+  font-size: 0.75rem;
+}
+
+.raffle-event-badge strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #344054;
+  font-size: 0.88rem;
+}
+
 .raffle-toolbar {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) auto auto;
@@ -141,6 +193,15 @@
   position: relative;
   width: min(350px, 78vw);
   height: min(350px, 78vw);
+  filter: drop-shadow(0 10px 18px rgba(46, 125, 50, 0.18));
+}
+
+.raffle-wheel-spinning {
+  animation: raffle-wheel-pulse 700ms ease-in-out infinite alternate;
+}
+
+.raffle-wheel-ready {
+  animation: raffle-wheel-ready 2.4s ease-in-out infinite;
 }
 
 .raffle-wheel-svg {
@@ -165,6 +226,12 @@
   border-radius: 50%;
   background: #fff;
   font-size: 2.5rem;
+  box-shadow: 0 0 0 6px rgba(255, 152, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.raffle-wheel-center-spinning {
+  animation: raffle-wheel-center-pulse 450ms ease-in-out infinite alternate;
 }
 
 .raffle-wheel-pointer {
@@ -178,6 +245,11 @@
   border-left: 15px solid transparent;
   border-right: 15px solid transparent;
   border-top: 22px solid #e94560;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+}
+
+.raffle-wheel-pointer-spinning {
+  animation: raffle-wheel-pointer-bounce 260ms ease-in-out infinite alternate;
 }
 
 .raffle-wheel-caption {
@@ -186,6 +258,32 @@
   color: #333 !important;
   font-size: 1.05rem !important;
   font-weight: 800 !important;
+}
+
+.raffle-wheel-subcaption {
+  margin: 0.3rem 0 0 !important;
+  color: #777 !important;
+  font-size: 0.8rem !important;
+}
+
+@keyframes raffle-wheel-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.035); }
+}
+
+@keyframes raffle-wheel-ready {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes raffle-wheel-center-pulse {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.12); }
+}
+
+@keyframes raffle-wheel-pointer-bounce {
+  from { transform: translateX(-50%) rotate(-3deg); }
+  to { transform: translateX(-50%) rotate(3deg); }
 }
 
 .raffle-table-panel {
@@ -205,6 +303,11 @@
   color: #333;
   font-size: 1rem;
   text-align: left;
+}
+
+.raffle-table-heading small {
+  margin-top: 0.25rem;
+  text-transform: none;
 }
 
 .raffle-table-heading span {
@@ -326,6 +429,15 @@
 }
 
 @media (max-width: 900px) {
+  .raffle-page-heading {
+    flex-direction: column;
+  }
+
+  .raffle-event-badge {
+    width: 100%;
+    text-align: left;
+  }
+
   .raffle-toolbar,
   .raffle-summary-grid,
   .raffle-content-grid {

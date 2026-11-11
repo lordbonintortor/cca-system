@@ -1,4 +1,5 @@
-import { useState, useMemo, useContext } from 'react'
+import { useState, useMemo, useContext, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
 import type { Event } from '../context/DataContext'
@@ -9,6 +10,7 @@ const formatEventOption = (event: Event) => {
 
 function Tagging() {
   const { events, members, pairings, updatePairingBettingData, selectedEventId, setSelectedEventId } = useData()
+  const navigate = useNavigate()
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false)
   const [mayronBetting, setMayronBetting] = useState('')
@@ -17,6 +19,8 @@ function Tagging() {
   const [isSavingOutcome, setIsSavingOutcome] = useState(false)
   const [bettingSaveMessage, setBettingSaveMessage] = useState('')
   const [showCloseConfirmation, setShowCloseConfirmation] = useState(false)
+  const [isRedirectingToReleasing, setIsRedirectingToReleasing] = useState(false)
+  const redirectTimeoutRef = useRef<number | null>(null)
 
   const context = useContext(TaggingContext)
   if (!context) {
@@ -88,6 +92,30 @@ function Tagging() {
     setBettingSaveMessage('')
     setShowCloseConfirmation(false)
   }
+
+  const handleConfirmAndRedirect = () => {
+    if (!selectedFightId) return
+
+    const pairing = pairings.find((currentPairing) => currentPairing.id === selectedFightId)
+    if (!pairing) {
+      handleCloseOutcomeModal()
+      return
+    }
+
+    handleCloseOutcomeModal()
+    setIsRedirectingToReleasing(true)
+    redirectTimeoutRef.current = window.setTimeout(() => {
+      navigate(`/releasing?event=${pairing.event_id}&fight=${pairing.fight_number}`)
+    }, 450)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current !== null) {
+        window.clearTimeout(redirectTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleSaveBetting = async () => {
     if (!selectedFightId) return
@@ -521,7 +549,7 @@ function Tagging() {
                       {isSavingOutcome ? 'Saving...' : 'Reset'}
                     </button>
                     {tag.outcomeWinner && showCloseConfirmation && (
-                      <button className="btn-add" onClick={handleCloseOutcomeModal} disabled={isSavingOutcome}>
+                      <button className="btn-add" onClick={handleConfirmAndRedirect} disabled={isSavingOutcome}>
                         Confirm & Close
                       </button>
                     )}
@@ -532,6 +560,33 @@ function Tagging() {
               })()}
             </div>
           </div>
+        </div>
+      )}
+
+      {isRedirectingToReleasing && (
+        <div
+          className="modal-overlay"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <div
+            style={{
+              padding: '1.5rem 2rem',
+              backgroundColor: '#fff',
+              borderRadius: '10px',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.18)',
+              color: '#333',
+              fontWeight: '600',
+              animation: 'tagging-transition-fade 450ms ease-in-out'
+            }}
+          >
+            Opening Releasing...
+          </div>
+          <style>{`
+            @keyframes tagging-transition-fade {
+              from { opacity: 0; transform: translateY(8px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
         </div>
       )}
 

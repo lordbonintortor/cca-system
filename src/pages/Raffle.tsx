@@ -6,6 +6,10 @@ const formatEventOption = (event: Event) => {
   return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
 }
 
+const getDisplayName = (name: string) => {
+  return name.replace(/\s+-\s+(?:Entry|Fight)\s+\d+$/i, '').trim()
+}
+
 interface Ticket {
   id: number
   ticket_number: string
@@ -46,8 +50,8 @@ function Raffle() {
     return eventMembers.map((member, index) => ({
       id: member.id,
       ticket_number: `R-${String(index + 1).padStart(3, '0')}`,
-      participant_name: member.entry_name,
-      entry_name: member.entry_name,
+      participant_name: getDisplayName(member.entry_name),
+      entry_name: getDisplayName(member.entry_name),
       event_name: member.event_name,
       event_id: member.event_id,
       created_at: member.registration_date,
@@ -227,8 +231,8 @@ function Raffle() {
               ${eventTickets.map((ticket) => `
                 <tr>
                   <td>${ticket.ticket_number}</td>
-                  <td>${ticket.participant_name}</td>
-                  <td>${ticket.entry_name}</td>
+                  <td>${getDisplayName(ticket.participant_name)}</td>
+                  <td>${getDisplayName(ticket.entry_name)}</td>
                   <td>${ticket.created_at}</td>
                 </tr>
               `).join('')}
@@ -251,7 +255,7 @@ function Raffle() {
                 ${eventWinners.map((winner) => `
                   <tr class="winner-highlight">
                     <td>${winner.ticket_number}</td>
-                    <td>${winner.participant_name}</td>
+                    <td>${getDisplayName(winner.participant_name)}</td>
                     <td>${new Date(winner.drawn_at).toLocaleString()}</td>
                   </tr>
                 `).join('')}
@@ -274,8 +278,17 @@ function Raffle() {
   return (
     <div className="page-content">
       <div className="page-main">
-        <h1>Raffle</h1>
-        <p>Manage raffle drawings and track winners</p>
+        <div className="raffle-page-heading">
+          <div>
+            <span className="raffle-eyebrow">EVENT DRAW</span>
+            <h1>Raffle</h1>
+            <p>Draw winners fairly and keep a clear record of every ticket.</p>
+          </div>
+          <div className="raffle-event-badge">
+            <span>Current event</span>
+            <strong>{selectedEventDetails?.name || 'No event selected'}</strong>
+          </div>
+        </div>
 
         <div className="raffle-toolbar">
           <div className="raffle-event-control">
@@ -297,6 +310,7 @@ function Raffle() {
             className="btn-add-event raffle-draw-button" 
             onClick={handleDraw}
             disabled={isSpinning || eligibleTickets.length === 0}
+            aria-label={eligibleTickets.length === 0 ? 'No eligible raffle tickets' : 'Draw a raffle winner'}
           >
             🎲 Draw Winner
           </button>
@@ -312,13 +326,13 @@ function Raffle() {
             <small>{selectedEventDetails ? new Date(selectedEventDetails.date).toLocaleDateString() : 'No event selected'}</small>
           </div>
           <div className="raffle-summary-card">
-            <span>Eligible Tickets</span>
+            <span>Remaining Draws</span>
             <strong>{eligibleTickets.length}</strong>
             <small>{eventWinners.length} winner{eventWinners.length === 1 ? '' : 's'} already drawn</small>
           </div>
           <div className="raffle-summary-card">
-            <span>Last Winner</span>
-            <strong>{eventWinners[0]?.participant_name || 'None'}</strong>
+            <span>Latest Winner</span>
+            <strong>{eventWinners[0] ? getDisplayName(eventWinners[0].participant_name) : 'None'}</strong>
             <small>{eventWinners[0] ? `${eventWinners[0].ticket_number} · ${new Date(eventWinners[0].drawn_at).toLocaleTimeString()}` : 'Draw a winner to start'}</small>
           </div>
           <div className="raffle-summary-card raffle-search-card">
@@ -343,7 +357,10 @@ function Raffle() {
         <div className="raffle-content-grid">
           <div className="events-table-wrapper raffle-table-panel">
             <div className="raffle-table-heading">
-              <h3>Raffle Participants ({filteredTickets.length})</h3>
+              <div>
+                <h3>Raffle Participants</h3>
+                <small>{filteredTickets.length} shown of {eventTickets.length} tickets</small>
+              </div>
               <span>{eligibleTickets.length} eligible</span>
             </div>
             <table className="events-table">
@@ -363,7 +380,7 @@ function Raffle() {
                   filteredTickets.map((ticket) => (
                     <tr key={ticket.id} className={winnerTicketNumbers.has(ticket.ticket_number) ? 'raffle-ticket-drawn' : ''}>
                       <td style={{ fontWeight: 'bold' }}>{ticket.ticket_number}</td>
-                      <td>{ticket.participant_name}</td>
+                      <td>{getDisplayName(ticket.participant_name)}</td>
                       <td>{ticket.entry_name}</td>
                     </tr>
                   ))
@@ -374,7 +391,10 @@ function Raffle() {
 
           <div className="events-table-wrapper raffle-table-panel">
             <div className="raffle-table-heading">
-              <h3>Draw Winners ({filteredWinners.length})</h3>
+              <div>
+                <h3>Draw Winners</h3>
+                <small>{filteredWinners.length} shown of {eventWinners.length} winners</small>
+              </div>
               <span>{eventWinners.length} total</span>
             </div>
             <table className="events-table">
@@ -394,7 +414,7 @@ function Raffle() {
                   filteredWinners.map((winner) => (
                     <tr key={winner.id} className="raffle-winner-row">
                       <td style={{ fontWeight: 'bold', color: '#2e7d32' }}>{winner.ticket_number}</td>
-                      <td style={{ fontWeight: 'bold', color: '#2e7d32' }}>{winner.participant_name}</td>
+                      <td style={{ fontWeight: 'bold', color: '#2e7d32' }}>{getDisplayName(winner.participant_name)}</td>
                       <td style={{ fontSize: '0.85rem', color: '#666' }}>{new Date(winner.drawn_at).toLocaleDateString()}</td>
                     </tr>
                   ))
@@ -421,7 +441,7 @@ function Raffle() {
             </div>
             <div className="modal-body raffle-winner-modal-body">
               <div className="raffle-wheel-panel raffle-wheel-modal-panel">
-                <div className="raffle-wheel">
+                    <div className={`raffle-wheel ${isSpinning ? 'raffle-wheel-spinning' : 'raffle-wheel-ready'}`}>
                   <svg
                     width="350"
                     height="350"
@@ -472,23 +492,24 @@ function Raffle() {
                             fontWeight="bold"
                             style={{ pointerEvents: 'none', textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
                           >
-                            {ticket.ticket_number}
+                            {getDisplayName(ticket.participant_name).slice(0, 18)}
                           </text>
                         </g>
                       )
                     })}
                   </svg>
 
-                  <div className="raffle-wheel-center">
+                  <div className={`raffle-wheel-center ${isSpinning ? 'raffle-wheel-center-spinning' : ''}`}>
                     🎲
                   </div>
 
-                  <div className="raffle-wheel-pointer" />
+                  <div className={`raffle-wheel-pointer ${isSpinning ? 'raffle-wheel-pointer-spinning' : ''}`} />
                 </div>
 
                 <p className="raffle-wheel-caption">
-                  {isSpinning ? 'Drawing a winner...' : 'Winner selected'}
+                  {isSpinning ? 'The wheel is spinning...' : 'Winner selected!'}
                 </p>
+                {isSpinning && <p className="raffle-wheel-subcaption">Good luck to everyone!</p>}
               </div>
             </div>
           </div>
@@ -511,12 +532,12 @@ function Raffle() {
             <div className="modal-body raffle-winner-modal-body">
               <div className="raffle-winner-details raffle-winner-result-details">
                 <p className="raffle-winner-name">
-                  {drawnWinner.participant_name}
+                  {getDisplayName(drawnWinner.participant_name)}
                 </p>
                 <p className="raffle-winner-ticket">
                   Ticket #: <strong>{drawnWinner.ticket_number}</strong>
                 </p>
-                <p className="raffle-winner-entry">{drawnWinner.entry_name}</p>
+                <p className="raffle-winner-entry">{getDisplayName(drawnWinner.entry_name)}</p>
                 <p className="raffle-winner-time">
                   {new Date(drawnWinner.drawn_at).toLocaleTimeString()}
                 </p>

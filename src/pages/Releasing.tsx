@@ -1,4 +1,5 @@
-import { useState, useMemo, useContext } from 'react'
+import { useState, useMemo, useContext, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useData } from '../context/useDataContext'
 import { TaggingContext } from '../context/tagging'
 import type { Event } from '../context/DataContext'
@@ -10,6 +11,7 @@ const formatEventOption = (event: Event) => {
 
 function Releasing() {
   const { events, members, pairings, selectedEventId, setSelectedEventId } = useData()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [selectedFightId, setSelectedFightId] = useState<number | null>(null)
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
   const [isReleasing, setIsReleasing] = useState(false)
@@ -32,6 +34,25 @@ function Releasing() {
       })
       .sort((a, b) => a.fightNumber - b.fightNumber)
   }, [taggedFights, pairings, selectedEventId])
+
+  useEffect(() => {
+    const eventId = searchParams.get('event')
+    const fightNumber = Number(searchParams.get('fight'))
+
+    if (!eventId || !Number.isInteger(fightNumber) || fightNumber < 1) return
+
+    if (selectedEventId !== eventId) {
+      setSelectedEventId(eventId)
+      return
+    }
+
+    const taggedFight = eventTaggedFights.find((fight) => fight.fightNumber === fightNumber)
+    if (!taggedFight) return
+
+    setSelectedFightId(taggedFight.pairingId)
+    setIsReleaseModalOpen(true)
+    setSearchParams({}, { replace: true })
+  }, [eventTaggedFights, searchParams, selectedEventId, setSelectedEventId, setSearchParams])
 
   const getReleaseStatus = (pairingId: number): 'unreleased' | 'released' | 'special' => {
     const tagged = taggedFights.find(t => t.pairingId === pairingId)
