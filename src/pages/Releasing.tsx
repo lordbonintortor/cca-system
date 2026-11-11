@@ -129,6 +129,11 @@ function Releasing() {
       const plasadaNum = paradasNum * 0.11
       const largadaNum = 500
       const netNum = paradasNum - plasadaNum - largadaNum
+      const winnerMemberId = tagged.outcomeWinner === 'mayron'
+        ? pairing.mayron_entry_id
+        : pairing.wala_entry_id
+      const winnerMember = members.find((member) => member.id === winnerMemberId)
+      const winnerName = winnerMember?.entry_name || 'Winner'
 
       const printWindow = window.open('', '', 'height=600,width=800')
       if (printWindow) {
@@ -142,21 +147,27 @@ function Releasing() {
               * { box-sizing: border-box; }
               html, body { width: 58mm; margin: 0; padding: 0; background: white; }
               body { font-family: Arial, sans-serif; color: #000; font-size: 10px; }
-              .container { width: 52mm; margin: 0 auto; padding: 1mm 0 2mm; }
-              .title { text-align: center; font-size: 15px; font-weight: bold; padding: 1.5mm; border: 1px solid #000; margin-bottom: 1.5mm; }
-              .congrats { padding: 1.5mm; margin-bottom: 1.5mm; border: 1px dashed #000; text-align: center; font-size: 12px; font-weight: 800; }
-              .section { width: 52mm; padding: 1.5mm; border: 1px solid #000; }
+              .container { width: 52mm; min-height: 88mm; margin: 0 auto; padding: 1.5mm 0 2mm; display: flex; flex-direction: column; }
+              .title { text-align: center; font-size: 16px; font-weight: bold; padding: 2mm; border: 1px solid #000; margin-bottom: 2mm; }
+              .event-info { text-align: center; font-size: 9px; margin-bottom: 1.5mm; overflow-wrap: anywhere; }
+              .congrats { padding: 2mm; margin-bottom: 2mm; border: 1px dashed #000; text-align: center; font-size: 13px; font-weight: 800; }
+              .winner { text-align: center; font-size: 11px; font-weight: bold; margin-bottom: 2mm; overflow-wrap: anywhere; }
+              .section { width: 52mm; padding: 2mm; border: 1px solid #000; }
               .value { font-size: 10px; font-weight: 700; }
-              .number { display: flex; justify-content: flex-start; align-items: baseline; gap: 0.5mm; margin-bottom: 1mm; border-bottom: 1px dotted #000; padding-bottom: 0.75mm; white-space: nowrap; }
+              .number { display: flex; justify-content: flex-start; align-items: baseline; gap: 0.5mm; margin-bottom: 1.5mm; border-bottom: 1px dotted #000; padding-bottom: 1mm; white-space: nowrap; }
               .number .value { margin-left: 0.25mm; }
               .number:last-child { margin-bottom: 0; }
+              .printed-at { margin-top: 2mm; text-align: center; font-size: 8px; }
+              .scratch-line { margin-top: auto; padding-top: 5mm; border-top: 1px dashed #000; text-align: center; font-size: 8px; letter-spacing: 0.5px; }
               @media print { html, body { width: 58mm; } }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="title">Sultada: ${pairing.fight_number}</div>
+              <div class="event-info">&nbsp;</div>
               <div class="congrats">Congratulations!</div>
+              <div class="winner">Winner: ${winnerName}</div>
               
               <div class="section">
                 <div class="number">PARADA: ₱ <span class="value">${paradasNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
@@ -164,6 +175,8 @@ function Releasing() {
                 <div class="number">LARGADA: (₱ <span class="value">500.00</span>)</div>
                 <div class="number">NET WINNINGS: ₱ <span class="value">${netNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
               </div>
+              <div class="printed-at">${new Date().toLocaleString()}</div>
+              <div class="scratch-line">---------------- CUT / TEAR HERE ----------------</div>
             </div>
             <script>
               window.print();
