@@ -2,8 +2,18 @@ import { useState, useMemo, useEffect } from 'react'
 import { useData } from '../context/useDataContext'
 import type { Event, Member } from '../context/DataContext'
 
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+
+  const dateOnly = dateString.match(/^\d{4}-\d{2}-\d{2}/)?.[0]
+  const date = new Date(dateOnly ? `${dateOnly}T00:00:00` : dateString)
+  if (Number.isNaN(date.getTime())) return dateString
+
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
 const formatEventOption = (event: Event) => {
-  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+  return `${event.name} - ${formatDate(event.date)}`
 }
 
 const getBaseEntryName = (entryName: string) => {
@@ -25,41 +35,25 @@ function Registration() {
   const [pendingMembers, setPendingMembers] = useState<Member[]>([])
   const itemsPerPage = 15
 
-  const getTodayInPhilippines = () => {
-    const parts = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Manila',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(new Date())
-
-    const year = parts.find((part) => part.type === 'year')?.value ?? ''
-    const month = parts.find((part) => part.type === 'month')?.value ?? ''
-    const day = parts.find((part) => part.type === 'day')?.value ?? ''
-
-    return `${year}-${month}-${day}`
-  }
-
   // Sort events so newest (most recent dates) are at the top
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => b.id - a.id)
   }, [events])
+
+  const selectedEvent = useMemo(() => {
+    return events.find((event) => String(event.id) === selectedEventId)
+  }, [events, selectedEventId])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1)
   }, [searchQuery, selectedEventId])
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-  }
-
   const handleRegisterMember = () => {
-    setRegistrationDate(getTodayInPhilippines())
     const selectedEvent = events.find(e => String(e.id) === selectedEventId) || sortedEvents[0]
     if (selectedEvent) {
       setEventName(selectedEvent.name)
+      setRegistrationDate(selectedEvent.date.slice(0, 10))
       const perEntryMatch = selectedEvent.derby_info.match(/(\d+) per Entry/)
       if (perEntryMatch) {
         setNumberOfEntries(perEntryMatch[1])
@@ -129,7 +123,6 @@ function Registration() {
   }
 
   const filteredMembers = useMemo(() => {
-    const selectedEvent = events.find(e => String(e.id) === selectedEventId)
     const eventMembers = selectedEvent
       ? members.filter((member) => member.event_id === selectedEvent.id || (!member.event_id && member.event_name === selectedEvent.name))
       : members
@@ -143,7 +136,7 @@ function Registration() {
     }
 
     return [...result].sort((a, b) => a.id - b.id)
-  }, [searchQuery, selectedEventId, members, events])
+  }, [searchQuery, selectedEvent, members])
 
   const uniqueMembers = useMemo(() => {
     const groupedMembers = new Map<string, Member>()
@@ -286,7 +279,7 @@ function Registration() {
                   <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td>{member.entry_name}</td>
                   <td>{member.event_name}</td>
-                  <td>{formatDate(member.registration_date)}</td>
+                  <td>{formatDate(selectedEvent?.date || member.registration_date)}</td>
                 </tr>
               ))}
             </tbody>
@@ -365,7 +358,7 @@ function Registration() {
                   type="date"
                   className="form-input"
                   value={registrationDate}
-                  onChange={(e) => setRegistrationDate(e.target.value)}
+                  readOnly
                   required
                 />
               </div>
@@ -423,7 +416,7 @@ function Registration() {
       )}
 
       <div className="page-copyright">
-        © 2026 Calinan Cockpit Arena. All rights reserved.
+        © {new Date().getFullYear()} Calinan Cockpit Arena. All rights reserved.
       </div>
     </div>
   )

@@ -24,8 +24,18 @@ const getBaseEntryName = (entryName: string) => {
   return entryName.replace(/\s+-\s+Entry\s+\d+$/i, '')
 }
 
+const formatEventDate = (dateString: string) => {
+  if (!dateString) return ''
+
+  const dateOnly = dateString.match(/^\d{4}-\d{2}-\d{2}/)?.[0]
+  const date = new Date(dateOnly ? `${dateOnly}T00:00:00` : dateString)
+  if (Number.isNaN(date.getTime())) return dateString
+
+  return date.toLocaleDateString()
+}
+
 const formatEventOption = (event: Event) => {
-  return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
+  return `${event.name} - ${formatEventDate(event.date)}`
 }
 
 const parseBettingAmount = (value: string) => Number(value.replace(/,/g, ''))
@@ -285,7 +295,7 @@ function PairingPage() {
           </div>
           <div class="event-info">
             <p><strong>Event:</strong> ${eventName}</p>
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>Date:</strong> ${selectedEvent ? formatEventDate(selectedEvent.date) : 'N/A'}</p>
           </div>
           <div class="fight-title">FIGHT #${pairing.fight_number}</div>
           <div class="parada">
@@ -807,7 +817,7 @@ function PairingPage() {
       )}
 
       <div className="page-copyright">
-        © 2026 Calinan Cockpit Arena. All rights reserved.
+        © {new Date().getFullYear()} Calinan Cockpit Arena. All rights reserved.
       </div>
     </div>
   )

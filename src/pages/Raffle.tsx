@@ -39,6 +39,7 @@ function Raffle() {
     return events.find((event) => String(event.id) === selectedEventId)
   }, [events, selectedEventId])
 
+  const selectedEventDate = selectedEventDetails?.date.slice(0, 10) ?? ''
   const selectedEventLabel = selectedEventDetails ? formatEventOption(selectedEventDetails) : ''
 
   const eventMembers = useMemo(() => {
@@ -54,9 +55,9 @@ function Raffle() {
       entry_name: getDisplayName(member.entry_name),
       event_name: member.event_name,
       event_id: member.event_id,
-      created_at: member.registration_date,
+      created_at: selectedEventDate,
     }))
-  }, [eventMembers])
+  }, [eventMembers, selectedEventDate])
 
   const eventWinners = useMemo(() => {
     return raffleWinners
