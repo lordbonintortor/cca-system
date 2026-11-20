@@ -230,12 +230,14 @@ function PairingPage() {
             padding-bottom: 1.5mm;
           }
           .parada-header {
-            background: #000;
-            color: white;
+            background-color: #000 !important;
+            color: #fff !important;
             padding: 1.5mm;
             font-weight: bold;
             margin-bottom: 1mm;
             font-size: 12px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           .parada-label {
             font-weight: bold;
@@ -280,6 +282,20 @@ function PairingPage() {
             margin-top: 2mm;
             border-top: 1px solid #000;
             padding-top: 2mm;
+          }
+          .masyador-section {
+            border: 1px solid #000;
+            padding: 2mm;
+            margin-top: 2mm;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+          }
+          .masyador-line {
+            margin-top: 2mm;
+            border-top: 1px solid #000;
+            padding-top: 2mm;
+            min-height: 14mm;
           }
           .footer {
             text-align: center;
@@ -326,6 +342,10 @@ function PairingPage() {
           <div class="parejo-section">
             PAREJO
             <div class="parejo-amount">₱ _____________</div>
+          </div>
+          <div class="masyador-section">
+            MASYADOR
+            <div class="masyador-line"></div>
           </div>
           <div class="footer">
             <p>Printed on ${new Date().toLocaleString()}</p>

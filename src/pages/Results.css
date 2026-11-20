@@ -59,6 +59,13 @@
 
 .results-table th:first-child,
 .results-table td:first-child {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.results-table th:nth-child(2),
+.results-table td:nth-child(2) {
   min-width: 220px;
   text-align: left;
 }

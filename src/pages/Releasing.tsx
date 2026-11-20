@@ -9,6 +9,10 @@ const formatEventOption = (event: Event) => {
   return `${event.name} - ${new Date(event.date).toLocaleDateString()}`
 }
 
+const getBaseEntryName = (entryName: string) => {
+  return entryName.replace(/\s+-\s+Entry\s+\d+$/i, '')
+}
+
 function Releasing() {
   const { events, members, pairings, selectedEventId, setSelectedEventId } = useData()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -133,7 +137,17 @@ function Releasing() {
         ? pairing.mayron_entry_id
         : pairing.wala_entry_id
       const winnerMember = members.find((member) => member.id === winnerMemberId)
-      const winnerName = winnerMember?.entry_name || 'Winner'
+      const winnerFightNumber = pairings
+        .filter((eventPairing) =>
+          eventPairing.event_id === pairing.event_id &&
+          eventPairing.fight_number <= pairing.fight_number &&
+          (eventPairing.mayron_entry_id === winnerMemberId || eventPairing.wala_entry_id === winnerMemberId)
+        )
+        .sort((a, b) => a.fight_number - b.fight_number)
+        .findIndex((eventPairing) => eventPairing.id === pairing.id) + 1
+      const winnerName = winnerMember
+        ? `${getBaseEntryName(winnerMember.entry_name)} - Fight ${winnerFightNumber}`
+        : 'Winner'
 
       const printWindow = window.open('', '', 'height=600,width=800')
       if (printWindow) {

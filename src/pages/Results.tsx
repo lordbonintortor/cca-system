@@ -87,6 +87,7 @@ function Results() {
 
     const rowsByEntry = new Map<string, {
       entryName: string
+      entryFightNumber: number
       fights: string[]
       firstFightNumber: number
     }>()
@@ -123,6 +124,7 @@ function Results() {
 
         const existing = rowsByEntry.get(entryGroup.baseName) || {
           entryName: entryGroup.baseName,
+          entryFightNumber: entryGroup.entryNumber,
           fights: Array.from({ length: getRequiredFightCount(event) }, () => '-'),
           firstFightNumber: Number.MAX_SAFE_INTEGER
         }
@@ -140,7 +142,7 @@ function Results() {
     return Array.from(rowsByEntry.entries())
       .map(([id, row]) => ({
           id,
-          entryName: row.entryName,
+        entryName: `${row.entryName} - Fight ${row.entryFightNumber}`,
           fights: row.fights,
           totalWins: row.fights.filter(mark => mark === 'W').length,
           firstFightNumber: row.firstFightNumber
@@ -169,6 +171,7 @@ function Results() {
           tr { break-inside: avoid; page-break-inside: avoid; }
           tr:nth-child(even) { background: #fafafa; }
           .entry-cell { font-weight: 700; }
+          .number-cell { width: 30px; text-align: center; font-weight: 700; }
           .fight-cell, .wins-cell { text-align: center; font-weight: 700; }
         </style>
       </head>
@@ -178,14 +181,16 @@ function Results() {
         <table>
           <thead>
             <tr>
+              <th>No.</th>
               <th>Entry Name</th>
               ${Array.from({ length: requiredFightCount }, (_, index) => `<th>${index + 1}${index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'} Fight</th>`).join('')}
               <th>Total Wins</th>
             </tr>
           </thead>
           <tbody>
-            ${eventResults.map((row) => `
+            ${eventResults.map((row, index) => `
               <tr>
+                <td class="number-cell">${index + 1}</td>
                 <td class="entry-cell">${escapeHtml(row.entryName)}</td>
                 ${row.fights.map(fight => `<td class="fight-cell">${fight}</td>`).join('')}
                 <td class="wins-cell">${row.totalWins}</td>
@@ -284,6 +289,7 @@ function Results() {
               <table className="events-table results-table">
                 <thead>
                   <tr>
+                    <th>No.</th>
                     <th>Entry Name</th>
                     {Array.from({ length: requiredFightCount }, (_, index) => (
                       <th key={index}>{index + 1}{index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'} Fight</th>
@@ -292,8 +298,9 @@ function Results() {
                   </tr>
                 </thead>
                 <tbody>
-                  {eventResults.map((row) => (
+                  {eventResults.map((row, index) => (
                     <tr key={row.id}>
+                      <td className="results-number">{index + 1}</td>
                       <td className="results-event-name">{row.entryName}</td>
                       {row.fights.map((fight, index) => (
                         <td key={index}>
