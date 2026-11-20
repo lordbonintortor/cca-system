@@ -109,6 +109,10 @@ function PairingPage() {
   const getEntrySelectionKey = (member: Member, fightNumber: number) => `${member.id}:${fightNumber}`
   const getMemberIdFromSelection = (selection: string) => selection.split(':')[0]
   const getFightNumberFromSelection = (selection: string) => Number(selection.split(':')[1])
+  const isSelectionBlocked = (selection: string, otherSelection: string) => {
+    if (!selection || !otherSelection) return false
+    return getMemberIdFromSelection(selection) === getMemberIdFromSelection(otherSelection)
+  }
   const getPairingEntryName = (member: Member, fightNumber: number) => {
     return `${getBaseEntryName(member.entry_name)} - Fight ${fightNumber}`
   }
@@ -477,6 +481,17 @@ function PairingPage() {
     setWalaDropdownOpen(false)
   }
 
+  const handleMemberSearchFocus = (side: 'mayron' | 'wala') => {
+    if (side === 'mayron' && mayronEntry) {
+      setMayronEntry('')
+      setMayronSearch('')
+    }
+    if (side === 'wala' && walaEntry) {
+      setWalaEntry('')
+      setWalaSearch('')
+    }
+  }
+
   return (
     <div className="page-content">
       <div className="page-main">
@@ -575,8 +590,14 @@ function PairingPage() {
                       className="form-input"
                       placeholder="Search member..."
                       value={mayronSearch}
-                      onChange={(e) => setMayronSearch(e.target.value)}
-                      onFocus={() => setMayronDropdownOpen(true)}
+                      onChange={(e) => {
+                        setMayronSearch(e.target.value)
+                        setMayronEntry('')
+                      }}
+                      onFocus={() => {
+                        handleMemberSearchFocus('mayron')
+                        setMayronDropdownOpen(true)
+                      }}
                       onBlur={() => setMayronDropdownOpen(false)}
                     />
                     {mayronDropdownOpen && (
@@ -601,27 +622,29 @@ function PairingPage() {
                           filteredMayronMembers.flatMap((member) => {
                             return getFightOptions(member).map(({ fightNumber, label, used }) => {
                                 const selectionKey = getEntrySelectionKey(member, fightNumber)
+                                const blocked = used || isSelectionBlocked(selectionKey, walaEntry)
                                 return (
                                   <div
                                     key={selectionKey}
                                     onPointerDown={(event) => {
                                       event.preventDefault()
-                                      if (used) return
+                                      if (blocked) return
                                       setMayronEntry(selectionKey)
                                       setMayronSearch(`${getSelectableMemberName(member)} - ${label}`)
                                       setMayronDropdownOpen(false)
                                     }}
                                     style={{
                                       padding: '0.6rem 1rem',
-                                      cursor: used ? 'not-allowed' : 'pointer',
+                                      cursor: blocked ? 'not-allowed' : 'pointer',
                                       backgroundColor: mayronEntry === selectionKey ? '#e3f2fd' : 'transparent',
-                                      color: used ? '#ccc' : '#333',
+                                      color: blocked ? '#ccc' : '#333',
                                       borderBottom: '1px solid #f0f0f0',
                                       fontSize: '0.9rem',
                                       transition: 'background-color 0.1s'
                                     }}
+                                    aria-disabled={blocked}
                                   >
-                                    {getSelectableMemberName(member)} - {label}{used ? ' (used)' : ''}
+                                    {getSelectableMemberName(member)} - {label}{used ? ' (used)' : blocked ? ' (unavailable)' : ''}
                                   </div>
                                 )
                             })
@@ -639,8 +662,14 @@ function PairingPage() {
                       className="form-input"
                       placeholder="Search member..."
                       value={walaSearch}
-                      onChange={(e) => setWalaSearch(e.target.value)}
-                      onFocus={() => setWalaDropdownOpen(true)}
+                      onChange={(e) => {
+                        setWalaSearch(e.target.value)
+                        setWalaEntry('')
+                      }}
+                      onFocus={() => {
+                        handleMemberSearchFocus('wala')
+                        setWalaDropdownOpen(true)
+                      }}
                       onBlur={() => setWalaDropdownOpen(false)}
                     />
                     {walaDropdownOpen && (
@@ -665,27 +694,29 @@ function PairingPage() {
                           filteredWalaMembers.flatMap((member) => {
                             return getFightOptions(member).map(({ fightNumber, label, used }) => {
                                 const selectionKey = getEntrySelectionKey(member, fightNumber)
+                                const blocked = used || isSelectionBlocked(selectionKey, mayronEntry)
                                 return (
                                   <div
                                     key={selectionKey}
                                     onPointerDown={(event) => {
                                       event.preventDefault()
-                                      if (used) return
+                                      if (blocked) return
                                       setWalaEntry(selectionKey)
                                       setWalaSearch(`${getSelectableMemberName(member)} - ${label}`)
                                       setWalaDropdownOpen(false)
                                     }}
                                     style={{
                                       padding: '0.6rem 1rem',
-                                      cursor: used ? 'not-allowed' : 'pointer',
+                                      cursor: blocked ? 'not-allowed' : 'pointer',
                                       backgroundColor: walaEntry === selectionKey ? '#e3f2fd' : 'transparent',
-                                      color: used ? '#ccc' : '#333',
+                                      color: blocked ? '#ccc' : '#333',
                                       borderBottom: '1px solid #f0f0f0',
                                       fontSize: '0.9rem',
                                       transition: 'background-color 0.1s'
                                     }}
+                                    aria-disabled={blocked}
                                   >
-                                    {getSelectableMemberName(member)} - {label}{used ? ' (used)' : ''}
+                                    {getSelectableMemberName(member)} - {label}{used ? ' (used)' : blocked ? ' (unavailable)' : ''}
                                   </div>
                                 )
                             })
