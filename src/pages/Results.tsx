@@ -87,7 +87,6 @@ function Results() {
 
     const rowsByEntry = new Map<string, {
       entryName: string
-      entryFightNumber: number
       fights: string[]
       firstFightNumber: number
     }>()
@@ -124,7 +123,6 @@ function Results() {
 
         const existing = rowsByEntry.get(entryGroup.baseName) || {
           entryName: entryGroup.baseName,
-          entryFightNumber: entryGroup.entryNumber,
           fights: Array.from({ length: getRequiredFightCount(event) }, () => '-'),
           firstFightNumber: Number.MAX_SAFE_INTEGER
         }
@@ -142,7 +140,7 @@ function Results() {
     return Array.from(rowsByEntry.entries())
       .map(([id, row]) => ({
           id,
-        entryName: `${row.entryName} - Fight ${row.entryFightNumber}`,
+        entryName: row.entryName,
           fights: row.fights,
           totalWins: row.fights.filter(mark => mark === 'W').length,
           firstFightNumber: row.firstFightNumber
